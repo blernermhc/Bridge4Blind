@@ -1,11 +1,5 @@
 package gui;
 
-import java.awt.Component;
-import java.awt.Dimension;
-
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import model.Card;
@@ -13,7 +7,6 @@ import model.Contract;
 import model.Direction;
 import model.Game;
 import model.GameListener;
-import model.Player;
 
 /**
  * The GUI that is displayed while the dummy's cards are being scanned in.
@@ -24,13 +17,6 @@ import model.Player;
  */
 public class ScanDummyGUI extends JPanel implements GameListener {
 	private GameGUI gameGUI;
-	private Game game;
-	private Player dummy;
-	
-	private JLabel clubsScanned = new JLabel ("Clubs:  ");
-	private JLabel diamondsScanned = new JLabel ("Diamonds:  ");
-	private JLabel heartsScanned = new JLabel ("Hearts:  ");
-	private JLabel spadesScanned = new JLabel ("Spades:  ");
 
 	/**
 	 * Creates the GUI
@@ -39,29 +25,8 @@ public class ScanDummyGUI extends JPanel implements GameListener {
 	 */
 	public ScanDummyGUI(GameGUI gameGUI, Game game) {
 		this.gameGUI = gameGUI;
-		this.game = game;
 		game.addListener(this);
-		
-		JPanel infoPanel = new JPanel();
-		infoPanel.setLayout (new BoxLayout (infoPanel, BoxLayout.Y_AXIS));
-		//add(GUIUtilities.createTitleLabel("Please scan dummy cards"));
-		infoPanel.add(Box.createRigidArea(new Dimension(0, 50)));
-		JLabel title = new JLabel("Please scan dummy cards");
-		title.setFont(GameStatusGUI.STATUS_FONT);
-		infoPanel.add(title);
-		clubsScanned.setAlignmentX(Component.LEFT_ALIGNMENT);
-		infoPanel.add(Box.createRigidArea(new Dimension(0, 50)));
-		clubsScanned.setFont(GameStatusGUI.STATUS_FONT);
-		clubsScanned.setAlignmentX(Component.LEFT_ALIGNMENT);
-		infoPanel.add(clubsScanned);
-		diamondsScanned.setFont(GameStatusGUI.STATUS_FONT);
-		infoPanel.add(diamondsScanned);
-		heartsScanned.setFont(GameStatusGUI.STATUS_FONT);
-		infoPanel.add(heartsScanned);
-		spadesScanned.setFont(GameStatusGUI.STATUS_FONT);
-		infoPanel.add(spadesScanned);		
-		
-		add(infoPanel);
+		add(GUIUtilities.createTitleLabel("Please scan dummy cards"));
 	}
 
 	@Override
@@ -84,26 +49,8 @@ public class ScanDummyGUI extends JPanel implements GameListener {
 
 	@Override
 	public void cardScanned(Card card) {
-		if (game.isScanningDummy()) {
-			switch (card.getSuit()) {
-			case CLUBS: 
-				updateCardsScanned(card, clubsScanned);
-				break;
-			case DIAMONDS:
-				updateCardsScanned(card, diamondsScanned);
-				break;
-			case HEARTS:
-				updateCardsScanned(card, heartsScanned);
-				break;
-			case SPADES:
-				updateCardsScanned(card, spadesScanned);
-				break;
-			}
-		}
-	}
-
-	private void updateCardsScanned(Card card, JLabel suitCards) {
-		suitCards.setText(suitCards.getText() + "  " + card.getRank());
+		// TODO Auto-generated method stub
+		
 	}
 
 	@Override
@@ -114,11 +61,14 @@ public class ScanDummyGUI extends JPanel implements GameListener {
 
 	@Override
 	public void contractSet(Contract contract) {
-		dummy = game.getDummyPlayer();
+		// TODO Auto-generated method stub
+		
 	}
 
 	@Override
 	public void blindHandScanned() {
+		// TODO Auto-generated method stub
+		
 	}
 
 	/**
@@ -127,6 +77,12 @@ public class ScanDummyGUI extends JPanel implements GameListener {
 	@Override
 	public void dummyHandScanned() {
 		gameGUI.changeFrame();
+	}
+
+	@Override
+	public void cardAddedToHand(Direction dir, Card c) {
+		//Do Nothing.
+		
 	}
 
 

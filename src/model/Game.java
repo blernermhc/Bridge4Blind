@@ -558,10 +558,6 @@ public class Game {
 		System.out.println("State set to " + gameState);
 	}
 
-	public boolean isScanningDummy() {
-		return gameState == GameState.SCANNING_DUMMY;
-	}
-	
 	@SuppressWarnings("javadoc")
 	public String getCurrentHand() {
 		if (turn == null) {
@@ -594,5 +590,4 @@ public class Game {
 		}
 		System.exit(0);
 	}
-
 }

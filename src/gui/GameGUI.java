@@ -1,5 +1,7 @@
 package gui;
 
+import iPad.IpadGameListener;
+
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.awt.FlowLayout;
@@ -54,9 +56,9 @@ public class GameGUI extends JFrame implements GameListener {
 	private JButton quitButton;
 	private JButton resetButton;
 	private JButton helpButton;
-	//private JLabel bidLabel;
-	//private JLabel antennaLabel;
-	//private JLabel trickLabel;
+	private JLabel bidLabel;
+	private JLabel antennaLabel;
+	private JLabel trickLabel;
 	
 	/** Font used to display messsages on the main screen */
 	public static final Font INFO_FONT = new Font("Verdana", Font.BOLD, 30);
@@ -88,7 +90,7 @@ public class GameGUI extends JFrame implements GameListener {
 		// create the main panel
 		JPanel mainPanel = new JPanel();
 		mainPanel.setLayout (new BorderLayout());
-		//mainPanel.add(createInfoPanel(), BorderLayout.NORTH);
+		mainPanel.add(createInfoPanel(), BorderLayout.NORTH);
 		mainPanel.add(cardPanel, BorderLayout.CENTER);
 		mainPanel.add(createButtonPanel(), BorderLayout.SOUTH);
 
@@ -129,8 +131,7 @@ public class GameGUI extends JFrame implements GameListener {
 		cardNames[4] = "trumpSuitGUI";
 		cardNames[5] = "firstCardGUI";
 		cardNames[6] = "scanDummyGUI";
-		//cardNames[7] = "resetGUI";
-		cardNames[7] = "gameStatusGUI";
+		cardNames[7] = "resetGUI";
 		cardNames[8] = "help";
 
 		// add all the GUIs to the card panel
@@ -141,8 +142,7 @@ public class GameGUI extends JFrame implements GameListener {
 		cardPanel.add(new TrumpSuitGUI(this, game), cardNames[4]);
 		cardPanel.add(new FirstCardGUI(this, game), cardNames[5]);
 		cardPanel.add(new ScanDummyGUI(this, game), cardNames[6]);
-		//cardPanel.add(new ResetGUI(game), cardNames[7]);
-		cardPanel.add(new GameStatusGUI(game), cardNames[7]);
+		cardPanel.add(new ResetGUI(game), cardNames[7]);
 		cardPanel.add(new HelpGUI(), cardNames[8]);
 
 		// show the first card
@@ -191,12 +191,12 @@ public class GameGUI extends JFrame implements GameListener {
 	protected JPanel createBidPanel(){
 		
 		JPanel bidPanel = new JPanel(new FlowLayout());
-//		JLabel bid = new JLabel("Bid: ");
-//		bid.setFont(INFO_FONT);
-//		bidPanel.add(bid);
-//		bidLabel = new JLabel("N/A");
-//		bidLabel.setFont(INFO_FONT);
-//		bidPanel.add(bidLabel);
+		JLabel bid = new JLabel("Bid: ");
+		bid.setFont(INFO_FONT);
+		bidPanel.add(bid);
+		bidLabel = new JLabel("N/A");
+		bidLabel.setFont(INFO_FONT);
+		bidPanel.add(bidLabel);
 		return bidPanel;
 		
 	}
@@ -208,12 +208,12 @@ public class GameGUI extends JFrame implements GameListener {
 	protected JPanel createAntennaPanel(){
 		
 		JPanel antennaPanel = new JPanel(new FlowLayout());
-//		JLabel antenna = new JLabel("Next player: ");
-//		antenna.setFont(INFO_FONT);
-//		antennaPanel.add(antenna);
-//		antennaLabel = new JLabel("N/A");
-//		antennaLabel.setFont(INFO_FONT);
-//		antennaPanel.add(antennaLabel);
+		JLabel antenna = new JLabel("Next player: ");
+		antenna.setFont(INFO_FONT);
+		antennaPanel.add(antenna);
+		antennaLabel = new JLabel("N/A");
+		antennaLabel.setFont(INFO_FONT);
+		antennaPanel.add(antennaLabel);
 		return antennaPanel;
 		
 	}
@@ -225,12 +225,12 @@ public class GameGUI extends JFrame implements GameListener {
 	protected JPanel createTrickPanel(){
 		
 		JPanel trickPanel = new JPanel(new FlowLayout());
-//		JLabel trick = new JLabel("Trick: ");
-//		trick.setFont(INFO_FONT);
-//		trickPanel.add(trick);
-//		trickLabel = new JLabel("N/A");
-//		trickLabel.setFont(INFO_FONT);
-//		trickPanel.add(trickLabel);
+		JLabel trick = new JLabel("Trick: ");
+		trick.setFont(INFO_FONT);
+		trickPanel.add(trick);
+		trickLabel = new JLabel("N/A");
+		trickLabel.setFont(INFO_FONT);
+		trickPanel.add(trickLabel);
 		return trickPanel;
 		
 		
@@ -306,11 +306,11 @@ public class GameGUI extends JFrame implements GameListener {
 	}
 
 	private void setAntennaLabel(String text){
-//		antennaLabel.setText(text);
+		antennaLabel.setText(text);
 	}
 	
 	private void setTrickLabel(String text){
-		//trickLabel.setText(text);
+		trickLabel.setText(text);
 	}
 
 	/** Advances to the next GUI in line. */
@@ -320,7 +320,6 @@ public class GameGUI extends JFrame implements GameListener {
 		// advance to the appropriate screen
 		screensViewed.push(currentScreen);
 		currentScreen++;
-		debugMsg ("Switching to screen " + cardNames[currentScreen]);
 		layout.show(cardPanel, cardNames[currentScreen]);
 		requestFocusInWindow();
 	}
@@ -331,7 +330,6 @@ public class GameGUI extends JFrame implements GameListener {
 	@Override
 	public void debugMsg(String msg) {
 		debugArea.append(msg + "\n");
-		debugArea.setCaretPosition(debugArea.getText().length()-1);
 	}
 
 	// Prints out a list of cards in the suit and hand specified.
@@ -354,7 +352,7 @@ public class GameGUI extends JFrame implements GameListener {
 	 */
 	@Override
 	public void contractSet(Contract contract) {
-//		bidLabel.setText(contract.toString());
+		bidLabel.setText(contract.toString());
 		setAntennaLabel(game.getCurrentHand());
 	}
 
@@ -365,7 +363,7 @@ public class GameGUI extends JFrame implements GameListener {
 	public void gameReset() {
 		setAntennaLabel("N/A");
 		setTrickLabel("N/A");
-//		bidLabel.setText("N/A");
+		bidLabel.setText("N/A");
 		
 		// Display the screen directing the players to scan the blind cards,
 		// but set up the back button so that it goes to the screen to set
@@ -415,7 +413,7 @@ public class GameGUI extends JFrame implements GameListener {
 	 */
 	@Override
 	public void cardScanned(Card card) {
-	//	setAntennaLabel(game.getCurrentHand());
+		setAntennaLabel(game.getCurrentHand());
 	}
 
 	/**
@@ -451,16 +449,18 @@ public class GameGUI extends JFrame implements GameListener {
 	}
 
 	/**
-	 * The main program!!!!  Start the server first.
+	 * Tests the game without using the hardware.
 	 * @param args
 	 */
 	public static void main(String[] args) {
+
 		try {
 			Game game = new Game();
 			game.activateAntennas();
 			GameGUI gui = new GameGUI(game);
-			game.addListener(new AudibleGameListener());
 			game.addListener(gui);
+			game.addListener(new AudibleGameListener());
+			game.addListener(new IpadGameListener(game));
 
 			gui.debugMsg("main run");
 		} catch (UnknownHostException e) {
@@ -476,8 +476,17 @@ public class GameGUI extends JFrame implements GameListener {
 		catch (IOException e) {
 			System.err.println("Could not connect to server.");
 			e.printStackTrace();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 
+	}
+
+	@Override
+	public void cardAddedToHand(Direction dir, Card c) {
+		//Do Nothing
+		
 	}
 	
 }

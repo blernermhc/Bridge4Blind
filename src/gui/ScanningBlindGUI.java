@@ -75,4 +75,10 @@ public class ScanningBlindGUI extends JPanel implements GameListener {
 		
 	}
 
+	@Override
+	public void cardAddedToHand(Direction dir, Card c) {
+		//Do Nothing.
+		
+	}
+
 }

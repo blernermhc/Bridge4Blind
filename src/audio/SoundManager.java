@@ -45,24 +45,16 @@ public class SoundManager {
 		//System.out.println("SoundManager.playSounds: Thread " + Thread.currentThread().getName() + " trying to get lock in playSounds");
 		synchronized(this) {
 			//System.out.println("SoundManager.playSounds: Thread " + Thread.currentThread().getName() + " got lock in playSounds");
-			//System.out.println("SoundManager.playSounds got the lock");
+			//System.out.println("playSounds got the lock");
 			// Do not start a new thread if there is one already running.  The
 			// existing thread will play all the sounds that are queued up.
-			if (soundThread != null) {
-				while(soundThread.isAlive()) {
-					System.out.println("Sleeping playSounds - thread alive");
-					try {
-						Thread.sleep(100);
-					} catch (InterruptedException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-				}
+			if (soundThread != null && soundThread.isAlive()) {
+				//System.out.println("Exiting playSounds - thread alive");
+				return;
 			}
 			
 			// Need to keep a separate thread so that it can be stopped.
-			//System.out.println("SoundManager creating Sound Player thread");
-			soundThread = new Thread("Sound Player"){
+			soundThread = new Thread(){
 				
 				public void run(){
 					//System.out.println("SoundManager.playSounds: Thread " + Thread.currentThread().getName() + " trying to get lock in soundThread's run");
@@ -89,7 +81,6 @@ public class SoundManager {
 			};
 			
 			soundThread.start();
-			//System.out.println("SoundManager started sound player thread");
 			//System.out.println("SoundManager.playSounds: Thread " + Thread.currentThread().getName() + " releasing lock");
 		}
 		//System.out.println("Exiting playSounds");
@@ -106,7 +97,7 @@ public class SoundManager {
 				ap.stop();
 				return;
 			}
-			//System.out.println(Thread.currentThread().getName() + " is yieldeing");
+
 			Thread.yield();
 
 		}
@@ -127,7 +118,6 @@ public class SoundManager {
 		// Make sure it starts playing
 		while (!ap.isPlaying()) {
 			//debugMsg("Not started");
-			//System.out.println(Thread.currentThread().getName() + " is yieldeing");
 			Thread.yield();
 		}
 			
@@ -140,7 +130,7 @@ public class SoundManager {
 				ap.stop();
 				return;
 			}
-			//System.out.println(Thread.currentThread().getName() + " is yieldeing");
+
 			Thread.yield();
 
 		} while(ap.isPlaying());

@@ -142,5 +142,10 @@ public class AudibleGameListener implements GameListener {
 		listener.trickWon(Direction.SOUTH);
 	}
 
+	@Override
+	public void cardAddedToHand(Direction dir, Card c) {
+		//Do Nothing.	
+	}
+
 
 }

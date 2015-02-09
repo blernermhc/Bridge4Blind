@@ -55,5 +55,11 @@ public interface GameListener {
 	 * Called when the dummy hand is completely scanned in
 	 */
 	public void dummyHandScanned();
+	
+	/**
+	 * Called when a card is added to any hand
+	 * @param dir
+	 */
+	public void cardAddedToHand(Direction dir, Card c);
 
 }

@@ -1,5 +1,4 @@
-package audio;
-import java.io.BufferedInputStream;
+package audioplayer;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -40,7 +39,7 @@ import javax.sound.sampled.UnsupportedAudioFileException;
  * @author	Code4Fun Team <a href="http://code4fun.org">http://code4fun.org</a> Modified by Melissa Frechette
  * @version 1.0 , 2005/08/17
  */
-public class AudioPlayer implements Runnable {
+public class ModifiedAudioPlayer implements Runnable {
 
 	private Thread 				runner 			 	= null;
 
@@ -66,7 +65,27 @@ public class AudioPlayer implements Runnable {
     /**
      * Default class constructor.
      */
-    public AudioPlayer() { }
+    public ModifiedAudioPlayer() { }
+
+    /**
+     * Obtains the current position in the audio data, in seconds.
+     *
+     * @return 	the current position in the audio data, in seconds.
+     * 			If stream is closed return -1.
+     */
+    public long getPosition() {
+
+    	int availableBytes=-1;
+    	try {
+    		availableBytes =  audioInputStream.available();
+    	} catch (IOException e) { return -1; }
+
+    	float totalBytes = (audioInputStream.getFrameLength() * audioFormat.getFrameSize());
+    	long currentBytes = (long)(totalBytes - availableBytes);
+    	long frameLength = currentBytes/audioFormat.getFrameSize();
+
+    	return (long)(frameLength/audioInputStream.getFormat().getFrameRate());
+    }
 
 	/**
 	 * Initialization routine: check if audio file format is supported and asks
@@ -96,8 +115,8 @@ public class AudioPlayer implements Runnable {
             error = "Null reference passed to init.";
             return false;
         } */
-        
-        audioStream = new BufferedInputStream(getClass().getResourceAsStream(f));
+
+        audioStream = getClass().getResourceAsStream(f);
         
         try {
 
@@ -113,7 +132,6 @@ public class AudioPlayer implements Runnable {
         catch (IOException e) {
         	// Failed or interrupted I/O operations
             error = "Failed or interrupted I/O operations.";
-            e.printStackTrace();
             return false;
         }
         catch (UnsupportedAudioFileException e) {
@@ -124,7 +142,7 @@ public class AudioPlayer implements Runnable {
             error = "Invalid audio file format.";
             return false;
         }
-        
+
         /*
          * We have to construct an Info object that specifies the desired
          * properties for the line we want.
@@ -138,7 +156,7 @@ public class AudioPlayer implements Runnable {
          * big the internal buffer for the line should be.
          */
         DataLine.Info dataLineInfo = new DataLine.Info(SourceDataLine.class, audioFormat, internalBuffer);
-        
+
         try {
 
         	/*
@@ -165,7 +183,7 @@ public class AudioPlayer implements Runnable {
             		"the description.";
             return false;
         }
-        
+
 		// Gets mute control from our SourceDataLine
         try {
         	mute = (BooleanControl)sourceDataLine.getControl(BooleanControl.Type.MUTE);
@@ -174,7 +192,7 @@ public class AudioPlayer implements Runnable {
             error = e.getMessage();
             return false;
         }
-        
+
         // Initializing post-load status
         stop = false;
 
@@ -215,8 +233,6 @@ public class AudioPlayer implements Runnable {
 
            	rawplay(); // Start rawplay routine
         }
-        
-        //System.out.println("audioplayer's run method exiting");
     }
 
     /**
@@ -230,7 +246,7 @@ public class AudioPlayer implements Runnable {
         sourceDataLine.start();
 
         // Ram external buffer
-        byte[] tempBuffer = new byte[externalBuffer];
+        byte tempBuffer[] = new byte[externalBuffer];
         int cnt;
 
         try {
@@ -270,7 +286,7 @@ public class AudioPlayer implements Runnable {
      */
     public void play() {
 
-        if (runner == null || !runner.isAlive()) {
+        if (runner == null) {
 
             runner = new Thread(this);
             runner.start();
@@ -313,9 +329,44 @@ public class AudioPlayer implements Runnable {
     public void stop() {
 
         if (this.isPlaying()) stop = true;
-        if (runner != null) {
-        	abort();
+    }
+
+    /**
+     * Check if audio file is stopped.
+     *
+     * @return <code>true</code> if audio file is stopped;
+     *         <code>false</code> otherwise.
+     */
+    public boolean isStopped() { return this.stop; }
+
+    /**
+     * Mute/Unmute the line.
+     * This works like a two state button, every call the line switch in the
+     * opposite status.
+     */
+    public void mute() {
+
+        if ( mute!=null ) {
+	        if (mute.getValue()) mute.setValue(false);
+	        else mute.setValue(true);
         }
     }
+
+    /**
+     * Enables or disables loop mode.
+     *
+     * @param b <code>true</code> enable loop;
+     * 			<code>false</code> disable loop.
+     *
+     */
+    public void setLoop(boolean b) { this.loop = b; }
+
+    /**
+     * Gets current loop status.
+     *
+     * @return <code>true</code> if loop is enabled;
+     * 		   <code>false</code> otherwise.
+     */
+    public boolean loopStatus() { return this.loop; }
 
 }	// end class

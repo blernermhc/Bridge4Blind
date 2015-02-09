@@ -49,18 +49,21 @@ public class GameSimulation implements Runnable {
 	
 	private void initialize() throws UnknownHostException, IOException {
 		game = new Game();
-		game.addListener(new AudibleGameListener());
-
-		// Set the blind player position
-		System.out.println("Blind player set to North");
-		game.setBlindPosition(Direction.NORTH);
-
+		
 		// Don't start the antenna handler until after the blind position is set.
 		// This is not a problem for the real game since it would be 
 		// getting the command to set the blind position from the
 		// Swing event thread, not the main thread.
 		AntennaHandler handler = game.getHandler();
 		handler.connect();
+		
+		game.addListener(new AudibleGameListener());
+
+		// Set the blind player position
+		System.out.println("Blind player set to North");
+		game.setBlindPosition(Direction.NORTH);
+
+
 		if (handler != null) {
 			// Yikes!  This used to just be handler.start.  Was that causing
 			// our timing problems???
@@ -224,8 +227,9 @@ public class GameSimulation implements Runnable {
 			Thread serverThread = new Thread(t);
 			serverThread.start();
 			System.out.println("Server started");
-			
+
 			Thread.sleep(2000);
+			
 			t.initialize();
 
 		} catch (IOException e) {

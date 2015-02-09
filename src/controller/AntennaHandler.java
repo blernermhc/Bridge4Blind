@@ -153,7 +153,6 @@ public class AntennaHandler implements Runnable {
 			message = requestCard(messageRec);
 			
 			if (message.startsWith("NOCARD")) {
-				//System.out.println("No card");
 				Thread.sleep(CARD_REQUEST_PAUSE);
 			}
 		}
@@ -175,21 +174,19 @@ public class AntennaHandler implements Runnable {
 		synchronized(out) {
 			out.write("T".getBytes());
 			out.flush();
-			//System.out.println("Card request sent");
+			//System.out.println("Command sent: T.");
 			
 			// Thread that switches antennas waits until a card is requested
 			// so that for each antenna switch at least one attempt to 
 			// read a card occurs.  Avoiding starvation.
 			cardRequestSent = true;
-		
-			// Blocking read
-			//System.out.println("Waiting for card");
-			in.read(messageRec);
-			//System.out.println("Got a card");
-
 			out.notify();
-
 		}
+		
+		// Blocking read
+		//System.out.println("Waiting for card");
+		in.read(messageRec);
+		//System.out.println("Got a card");
 		
 		return new String(messageRec);
 	}
@@ -199,7 +196,7 @@ public class AntennaHandler implements Runnable {
 	 * @param str - String that contains the ID number and the location found
 	 */
 	private void process(final String str){
-		new Thread("Card processor") {
+		new Thread() {
 			public void run() {
 				String cardID = str.substring(0, ID_LENGTH);
 				Card thisCard = cards.getCard(cardID);
@@ -279,21 +276,17 @@ public class AntennaHandler implements Runnable {
 		byte[] output = handID.getBytes();
 
 		// Make sure only one thread is talking to the server at a time
-		//System.out.println("switchHand waiting for lock");
 		synchronized(out) {
-			//System.out.println("switchHand got lock");
 			out.write(output);
 			out.flush();
 			//System.out.println("Command sent: " + handID + ".");
 			
 			// If a card hasn't been requested since the last antenna switch, wait
 			while (!cardRequestSent) {
-				//System.out.println("switchHand waiting for card request to happen");
 				//System.out.println("Waiting thread " + Thread.currentThread().getName());
 				out.wait();
 				//System.out.println("Awakened thread " + Thread.currentThread().getName());
 			}
-			//System.out.println("switchHand not waiting");
 			cardRequestSent = false;
 		}
 		
@@ -318,7 +311,7 @@ public class AntennaHandler implements Runnable {
 
 		
 		if (cyclingThread == null) {
-			cyclingThread = new Thread("Cycling thread") {
+			cyclingThread = new Thread() {
 				@Override
 				public void run() {
 					while (!isInterrupted()) {
@@ -337,7 +330,7 @@ public class AntennaHandler implements Runnable {
 			};
 			cyclingThread.start();
 		}
-		//System.out.println("*** SwitchHand returning; switched to " + turn + " ***");		
+		
 	}
 
 	/**

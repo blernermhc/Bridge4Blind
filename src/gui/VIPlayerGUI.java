@@ -40,7 +40,7 @@ public class VIPlayerGUI extends DirectionGUI{
 		if (handler != null) {
 			// Yikes!  This used to just be handler.start.  Was that causing
 			// our timing problems???
-			new Thread(handler, "Antenna handler").start();
+			new Thread(handler).start();
 		}
 		else {
 			System.out.println("Server is not running!");
