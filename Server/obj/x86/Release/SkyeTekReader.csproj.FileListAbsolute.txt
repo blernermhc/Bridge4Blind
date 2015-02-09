@@ -1,0 +1,6 @@
+c:\users\caden\documents\visual studio 2010\Projects\SkyeTekReader\SkyeTekReader\bin\Release\SkyeTekReader.exe
+c:\users\caden\documents\visual studio 2010\Projects\SkyeTekReader\SkyeTekReader\bin\Release\SkyeTekReader.pdb
+c:\users\caden\documents\visual studio 2010\Projects\SkyeTekReader\SkyeTekReader\bin\Release\stapiclr.dll
+c:\users\caden\documents\visual studio 2010\Projects\SkyeTekReader\SkyeTekReader\obj\x86\Release\ResolveAssemblyReference.cache
+c:\users\caden\documents\visual studio 2010\Projects\SkyeTekReader\SkyeTekReader\obj\x86\Release\SkyeTekReader.exe
+c:\users\caden\documents\visual studio 2010\Projects\SkyeTekReader\SkyeTekReader\obj\x86\Release\SkyeTekReader.pdb
