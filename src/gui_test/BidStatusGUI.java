@@ -7,6 +7,7 @@ import javax.swing.JComponent;
 import javax.swing.JPanel;
 
 
+
 //public class BidStatusGUI extends JComponent{
 	
 public class BidStatusGUI extends JPanel{

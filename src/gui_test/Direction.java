@@ -1,6 +1,7 @@
 package gui_test;
 
 
+
 /**The Direction class is an enumerated type corresponding
  * to a cardinal direction.
  * 

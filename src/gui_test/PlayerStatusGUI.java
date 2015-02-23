@@ -22,6 +22,7 @@ import javax.swing.JTextArea;
 import javax.swing.border.Border;
 
 
+
 /*public class PlayerStatusGUI extends JPanel {
 	
 	public final Direction dir ;
