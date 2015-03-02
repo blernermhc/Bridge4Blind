@@ -140,6 +140,12 @@ public class Game {
 			e.printStackTrace();
 		}
 	}
+	
+	
+
+	public Direction getDummyDirection() {
+		return dummyDirection;
+	}
 
 	/**
 	 * Determines who won the current trick.

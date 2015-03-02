@@ -22,7 +22,7 @@ import model.GameListener;
 
 public class GameStatusGUI extends JPanel implements GameListener {
 	
-	public static Font STATUS_FONT = new Font("Verdana", Font.BOLD, 60);
+	public static Font STATUS_FONT = new Font("Helvetica", Font.BOLD, 60);
 	private PlayerStatusGUI[] playerGUIs = new PlayerStatusGUI[4];
 	private BidStatusGUI bidGUI = new BidStatusGUI();
 

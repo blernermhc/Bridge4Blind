@@ -126,6 +126,11 @@ public class ScanDummyGUI extends JPanel implements GameListener {
 	 */
 	@Override
 	public void dummyHandScanned() {
+		
+		debugMsg("Dummy Hand scanned") ;
+		
+		System.out.println("Dummy Hand scanned") ;
+		
 		gameGUI.changeFrame();
 	}
 
