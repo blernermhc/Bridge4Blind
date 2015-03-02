@@ -2,6 +2,7 @@ package gui_test;
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -23,7 +24,7 @@ import javax.swing.border.Border;
 
 
 
-/*public class PlayerStatusGUI extends JPanel {
+public class PlayerStatusGUI extends JPanel {
 	
 	public final Direction dir ;
 	
@@ -34,7 +35,7 @@ import javax.swing.border.Border;
 
 	public PlayerStatusGUI(Direction dir) {
 		
-		super() ;
+		
 		//setLayout(new FlowLayout()) ;
 		
 		//setLayout(new CardLayout());
@@ -47,30 +48,30 @@ import javax.swing.border.Border;
 
 		System.out.println("Player status GUI created at " + dir) ;
 		
-		Border border = BorderFactory.createLineBorder(Color.BLACK, 10) ;
+		Border border = BorderFactory.createLineBorder(Color.BLACK, 3) ;
 		
-		//this.setBorder(border);
+		this.setBorder(border);
+		
+		// both these lines are necessary
+		setPreferredSize(new Dimension(300,200));
+		setMinimumSize(new Dimension(300,200));
 		
 		String s1 = "" + dir ;
 		String s2 = s1 + "\n" + dir ;
 		
-		button = new JButton(s1) ;
-		add(button) ;
-		
-		
+
+
 						
 	}
 
 	
 	
-	public void paint(Graphics g) {
+	public void paintComponent(Graphics g) {
 		
-		super.paint(g);
-				
+			
 		System.out.println("Player Status GUI paint "  + dir);
 		
-		setOpaque(true);
-		
+		Graphics2D g2d = (Graphics2D) g;
 		
 		
 		if(dir == Direction.NORTH){
@@ -99,27 +100,26 @@ import javax.swing.border.Border;
 		
 		
 		//setBackground(color);
-		g.setColor(color);
-		g.fillRect(0, 0, getWidth(), getHeight());
+		g2d.setColor(color);
+		//g2d.fillRect(0, 0, getWidth(), getHeight());
+		
+		//g2d.fillRect(0, 0, 175, 175);
 		
 		System.out.println(getWidth() + " , " + getHeight());
 		
-		g.setColor(Color.BLACK);
-		g.drawRect(0, 0, getWidth(), getHeight());
+		//g.setColor(Color.BLACK);
+		//g.drawRect(0, 0, getWidth(), getHeight());
 		
-		Graphics2D g2d = (Graphics2D) g;
-		g2d.drawString("THIS IS  " + dir, 0, 0);
-
-		
+		g2d.drawString("HELLO WORLD", 50, 50);
 		
 	}
 
 	
 	
 
-}*/
+}
 
-public class PlayerStatusGUI extends JTextArea{
+/*public class PlayerStatusGUI extends JTextArea{
 	
 	
 
@@ -168,4 +168,4 @@ public class PlayerStatusGUI extends JTextArea{
         super.paintComponent(twoDee);
    }
 
-}
+}*/

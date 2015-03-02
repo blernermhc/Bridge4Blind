@@ -29,8 +29,8 @@ public class PlayerStatusGUI extends JComponent {
 	private static final String CLUBS = "\u2663";
 	private static final String HEARTS = "\u2665";
 	private static final String DIAMONDS = "\u2666";
-	private String rankPlayed = "";
-	private String suitPlayed = "";
+	private String rankPlayed = "RANK";
+	private String suitPlayed = "SUIT";
 	private boolean turn = false;
 	private double rotation;
 	private Direction dir;
