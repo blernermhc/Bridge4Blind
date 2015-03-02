@@ -29,11 +29,21 @@ public class FirstCardGUI extends JPanel implements GameListener {
 
 	@Override
 	public void gameReset() {
+		
+		debugMsg("First Card GUI gameReset");
+		debugMsg("alreadyShown " + alreadyShown) ;
+				
 		alreadyShown = false;
+		
+		debugMsg("Now alreadyShown " + alreadyShown) ;
 	}
 
 	@Override
 	public void cardPlayed(Direction turn, Card card) {
+		
+		debugMsg("First Card GUI cardPlayed");
+		debugMsg("alreadyShown " + alreadyShown) ;
+		
 		if (!alreadyShown) {
 			gameGUI.changeFrame();
 		}

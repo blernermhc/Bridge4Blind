@@ -83,6 +83,7 @@ public class AntennaHandler implements Runnable {
 		
 		// get Input and Output streams
 		out = requestSocket.getOutputStream();
+		System.out.println("out: " + out) ;
 		in = requestSocket.getInputStream();
 
 	}
@@ -263,7 +264,7 @@ public class AntennaHandler implements Runnable {
 	}
 
 	/**
-	 * Sene a command to the hardware to server to switch which antenna it is
+	 * Send a command to the hardware to server to switch which antenna it is
 	 * listening to
 	 * @param handID the antenna to listen to
 	 * @throws IOException the connection failed
@@ -279,12 +280,12 @@ public class AntennaHandler implements Runnable {
 		byte[] output = handID.getBytes();
 
 		// Make sure only one thread is talking to the server at a time
-		//System.out.println("switchHand waiting for lock");
+		System.out.println("switchHand waiting for lock");
 		synchronized(out) {
-			//System.out.println("switchHand got lock");
+			System.out.println("switchHand got lock");
 			out.write(output);
 			out.flush();
-			//System.out.println("Command sent: " + handID + ".");
+			System.out.println("Command sent: " + handID + ".");
 			
 			// If a card hasn't been requested since the last antenna switch, wait
 			while (!cardRequestSent) {
@@ -293,7 +294,7 @@ public class AntennaHandler implements Runnable {
 				out.wait();
 				//System.out.println("Awakened thread " + Thread.currentThread().getName());
 			}
-			//System.out.println("switchHand not waiting");
+			System.out.println("switchHand not waiting");
 			cardRequestSent = false;
 		}
 		
@@ -307,17 +308,23 @@ public class AntennaHandler implements Runnable {
 	 * @throws InterruptedException 
 	 */
 	public void switchHand(final Direction turn) throws IOException, InterruptedException {
+
 		
 		System.out.println("*** SwitchHand called; switching to " + turn + " ***");
 		
-		//System.out.println("Cycling timer reset");
+		
+		
+		System.out.println("Cycling timer reset");
 		turnId = getDirectionCode(turn);
+		
+		System.out.println("turnId : " + turnId);
 		//switchHand(currentHand);
 		switchHand(turnId);
-		//System.out.println("Current hand: " + turn);
+		System.out.println("Current hand: " + turn);
 
 		
 		if (cyclingThread == null) {
+			System.out.println("cycling thread is null");
 			cyclingThread = new Thread("Cycling thread") {
 				@Override
 				public void run() {
@@ -336,8 +343,13 @@ public class AntennaHandler implements Runnable {
 				}
 			};
 			cyclingThread.start();
+		}else{
+			
+			System.out.println("cycling thread is not null") ;
 		}
 		//System.out.println("*** SwitchHand returning; switched to " + turn + " ***");		
+		
+		System.out.println("Done Antenna Hadler switchHandler") ;
 	}
 
 	/**

@@ -409,6 +409,7 @@ public class GameGUI extends JFrame implements GameListener {
 		requestFocusInWindow();
 	}
 
+
 	/**
 	 * Updates the antenna label after a card is scanned
 	 * @param card the card just scanned

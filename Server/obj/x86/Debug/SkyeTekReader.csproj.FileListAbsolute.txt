@@ -4,3 +4,8 @@ c:\users\caden\documents\visual studio 2010\Projects\SkyeTekReader\SkyeTekReader
 c:\users\caden\documents\visual studio 2010\Projects\SkyeTekReader\SkyeTekReader\bin\Debug\stapiclr.dll
 c:\users\caden\documents\visual studio 2010\Projects\SkyeTekReader\SkyeTekReader\obj\x86\Debug\SkyeTekReader.exe
 c:\users\caden\documents\visual studio 2010\Projects\SkyeTekReader\SkyeTekReader\obj\x86\Debug\SkyeTekReader.pdb
+C:\Users\orche22h\Documents\Bridge-IndependentStudy\Bridge-Workspace\Bridge4Blind\Server\obj\x86\Debug\SkyeTekReader.exe
+C:\Users\orche22h\Documents\Bridge-IndependentStudy\Bridge-Workspace\Bridge4Blind\Server\obj\x86\Debug\SkyeTekReader.pdb
+C:\Users\orche22h\Documents\Bridge-IndependentStudy\Bridge-Workspace\Bridge4Blind\Server\bin\Debug\SkyeTekReader.exe
+C:\Users\orche22h\Documents\Bridge-IndependentStudy\Bridge-Workspace\Bridge4Blind\Server\bin\Debug\SkyeTekReader.pdb
+C:\Users\orche22h\Documents\Bridge-IndependentStudy\Bridge-Workspace\Bridge4Blind\Server\obj\x86\Debug\SkyeTekReader.csprojResolveAssemblyReference.cache

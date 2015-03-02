@@ -48,6 +48,7 @@ public class VIPlayerGUI extends DirectionGUI{
 
 		if (e.getActionCommand().equals("North")){
 			
+
 			game.setBlindPosition(Direction.NORTH);
 			
 		} else if (e.getActionCommand().equals("East")){

@@ -13,6 +13,7 @@ import java.awt.GridBagLayout;
 import javax.swing.BorderFactory;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.border.Border;
 
 import model.Card;
@@ -41,6 +42,7 @@ public class PlayerStatusGUI extends JComponent {
 		rotation = (dir.ordinal() + 2) * .5 * Math.PI;
 		//cardPlayed = dir.name();
 		this.dir = dir;
+		
 		setPreferredSize();
 	}
 	
@@ -55,6 +57,7 @@ public class PlayerStatusGUI extends JComponent {
 		g2d.drawString(rankPlayed, getLeft(rankPlayed, cardMetrics), getRankBottom());
 		g2d.drawString(suitPlayed, getLeft(suitPlayed, cardMetrics), getSuitBottom(cardMetrics));
 		g2d.rotate(-rotation);
+		
 	}
 	
 	private void setColor(Graphics g) {
@@ -71,10 +74,12 @@ public class PlayerStatusGUI extends JComponent {
 		case NORTH:
 		case SOUTH:
 			setPreferredSize(new Dimension(CARD_WIDTH, CARD_HEIGHT));
+			setMinimumSize(new Dimension(CARD_WIDTH, CARD_HEIGHT));
 			break;
 		case EAST:
 		case WEST:
 			setPreferredSize(new Dimension(CARD_HEIGHT, CARD_WIDTH));
+			setMinimumSize(new Dimension(CARD_HEIGHT, CARD_WIDTH));
 		}
 		assert false;
 	}

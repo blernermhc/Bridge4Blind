@@ -128,6 +128,8 @@ public class Game {
 	}
 
 	private void switchHand(Direction toPlayer) {
+		
+		debugMsg("In switch hand");
 		try {
 			handler.switchHand(toPlayer);
 		} catch (IOException e) {
@@ -452,6 +454,7 @@ public class Game {
 	 * @param blindPosition the position of the blind player
 	 */
 	public void setBlindPosition(Direction blindPosition) {
+		
 		this.blindDirection = blindPosition;
 		players[blindDirection.ordinal()].setBlind(true);
 		switchHand(blindPosition);
