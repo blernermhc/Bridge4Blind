@@ -71,12 +71,14 @@ public class PlayerStatusGUI extends JComponent {
 		case NORTH:
 		case SOUTH:
 			setPreferredSize(new Dimension(CARD_WIDTH, CARD_HEIGHT));
+			setMinimumSize(new Dimension(CARD_WIDTH, CARD_HEIGHT));
 			break;
 		case EAST:
 		case WEST:
 			setPreferredSize(new Dimension(CARD_HEIGHT, CARD_WIDTH));
+			setMinimumSize(new Dimension(CARD_HEIGHT, CARD_WIDTH));
 		}
-		assert false;
+		//assert false;
 	}
 
 	private int getLeft(String text, FontMetrics metrics) {
@@ -91,7 +93,7 @@ public class PlayerStatusGUI extends JComponent {
 		case WEST:
 			return (getHeight()-textWidth)/2;
 		}
-		assert false;
+		//assert false;
 		return 0;
 	}
 	
