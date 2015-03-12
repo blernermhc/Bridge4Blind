@@ -10,7 +10,9 @@ import model.Direction;
 import model.TestCards;
 
 /**
- * Imitates the Antenna Handler. If space is pressed, a new card is introduced, i.e. a new card is dealt or played.
+ * Imitates the Antenna Handler. If space is pressed, a new card is introduced,
+ * i.e. a new card is dealt or played.
+ * 
  * @author Humaira Orchee
  * @version March 12, 2015
  *
@@ -26,7 +28,13 @@ public class DummyHandler extends Handler {
 	private static final int WEST = 3;
 
 	// should equal 78
-	private static final int PLAYER_INDEX_SIZE = 13 + 52 + 13;
+	// private static final int PLAYER_INDEX_SIZE = 13 + 52 + 13;
+
+	// total size = hand1 + hand 2
+	// hand1 = blind + all cards + dummy
+	// hand2 = blind + all cards (no dummy)
+	// should be 143
+	private static final int PLAYER_INDEX_SIZE = 13 + 52 + 13 + 13 + 52;
 
 	private CardDatabase cards;
 
@@ -45,15 +53,76 @@ public class DummyHandler extends Handler {
 	private int position = 0;
 
 	// the order in which player hand is scanned
-	private int[] playerIndex = { EAST, EAST, EAST, EAST, EAST, EAST, EAST,
-			EAST, EAST, EAST, EAST, EAST, EAST, WEST, NORTH, NORTH, NORTH,
-			NORTH, NORTH, NORTH, NORTH, NORTH, NORTH, NORTH, NORTH, NORTH,
-			NORTH, NORTH, EAST, SOUTH, WEST, NORTH, EAST, SOUTH, SOUTH, WEST,
-			NORTH, EAST, SOUTH, WEST, NORTH, EAST, SOUTH, WEST, NORTH, EAST,
-			SOUTH, WEST, NORTH, EAST, SOUTH, WEST, NORTH, EAST, NORTH, EAST,
-			SOUTH, WEST, SOUTH, WEST, NORTH, EAST, NORTH, EAST, SOUTH, WEST,
-			NORTH, EAST, SOUTH, WEST, EAST, SOUTH, WEST, NORTH, WEST, NORTH,
-			EAST, SOUTH };
+	private int[] playerIndex = {
+
+			// hand 1
+
+			// blind
+			EAST,
+			EAST,
+			EAST,
+			EAST,
+			EAST,
+			EAST,
+			EAST,
+			EAST,
+			EAST,
+			EAST,
+			EAST,
+			EAST,
+			EAST,
+
+			// first card
+			WEST,
+
+			// dummy
+			NORTH, NORTH, NORTH, NORTH,
+			NORTH,
+			NORTH,
+			NORTH,
+			NORTH,
+			NORTH,
+			NORTH,
+			NORTH,
+			NORTH,
+			NORTH,
+			NORTH,
+
+			// play starts
+			EAST, SOUTH, WEST, NORTH, EAST, SOUTH, SOUTH, WEST, NORTH, EAST,
+			SOUTH, WEST, NORTH, EAST, SOUTH, WEST, NORTH, EAST, SOUTH, WEST,
+			NORTH, EAST, SOUTH, WEST, NORTH, EAST, NORTH, EAST, SOUTH, WEST,
+			SOUTH, WEST, NORTH, EAST, NORTH, EAST, SOUTH, WEST,
+			NORTH,
+			EAST,
+			SOUTH,
+			WEST,
+			EAST,
+			SOUTH,
+			WEST,
+			NORTH,
+			WEST,
+			NORTH,
+			EAST,
+			SOUTH,
+
+			// hand 2
+
+			// blind
+			EAST, EAST, EAST, EAST, EAST, EAST, EAST, EAST,
+			EAST,
+			EAST,
+			EAST,
+			EAST,
+			EAST,
+
+			// play starts
+			NORTH, EAST, SOUTH, WEST, WEST, NORTH, EAST, SOUTH, SOUTH, WEST,
+			NORTH, EAST, WEST, NORTH, EAST, SOUTH, EAST, SOUTH, WEST, NORTH,
+			EAST, SOUTH, WEST, NORTH, WEST, NORTH, EAST, SOUTH, WEST, NORTH,
+			EAST, SOUTH, WEST, NORTH, EAST, SOUTH, WEST, NORTH, EAST, SOUTH,
+			EAST, SOUTH, WEST, NORTH, SOUTH, WEST, NORTH, EAST, NORTH, EAST,
+			SOUTH, WEST };
 
 	// Id of the current player antenna
 	private String turnId;
@@ -67,13 +136,11 @@ public class DummyHandler extends Handler {
 		assert playerIndex.length == PLAYER_INDEX_SIZE;
 	}
 
-
 	public void connect() {
 
 		System.out.println("Dummy Connection has been made");
 
 	}
-
 
 	public void addHandListener(CardListener listener, Direction direction) {
 
@@ -81,12 +148,10 @@ public class DummyHandler extends Handler {
 
 	}
 
-	
-	public void addIdListener(CardListener listener){
+	public void addIdListener(CardListener listener) {
 		iDListen = listener;
 	}
 
-	
 	public void switchHand(Direction turn) {
 
 		System.out.println("Switching hand to " + turn + " ***");
@@ -141,7 +206,6 @@ public class DummyHandler extends Handler {
 
 	}
 
-	
 	private void scanDummyCards() {
 		while (position < 27) {
 
@@ -169,7 +233,7 @@ public class DummyHandler extends Handler {
 
 		}
 	}
-	
+
 	@Override
 	public void keyPressed(KeyEvent e) {
 
@@ -183,7 +247,6 @@ public class DummyHandler extends Handler {
 
 			cardRequestSent = true;
 
-
 			Card nextCard = testCards.getNextCard();
 
 			hands[playerIndex[position]].cardFound(nextCard);
@@ -191,10 +254,9 @@ public class DummyHandler extends Handler {
 			position++;
 
 			assert position < PLAYER_INDEX_SIZE;
-	
+
 		}
 	}
-
 
 	@Override
 	public void keyReleased(KeyEvent e) {
@@ -209,27 +271,20 @@ public class DummyHandler extends Handler {
 	}
 
 	public void setRightGUI(boolean rightGUI) {
-				
+
 		this.rightGUI = rightGUI;
 	}
-
-
 
 	@Override
 	public void run() {
 		// TODO Auto-generated method stub
-		
-	}
 
+	}
 
 	@Override
 	public String requestCard(byte[] messageRec) throws IOException {
 		// TODO Auto-generated method stub
 		return null;
 	}
-
-
-	
-	
 
 }

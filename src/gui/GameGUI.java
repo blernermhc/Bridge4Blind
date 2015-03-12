@@ -66,7 +66,7 @@ public class GameGUI extends JFrame implements GameListener {
 
 	protected static final int SWITCH_TO_DUMMY = 12;
 
-	protected static final int SWITCH_TO_VI_PLAYER = 13;
+	protected static final int SWITCH_TO_SCANNING_BLIND = 13;
 
 	// remembers to which screen should be displayed if GameStatusGUI invokes
 	// changeFrame()
@@ -83,6 +83,18 @@ public class GameGUI extends JFrame implements GameListener {
 
 	// The history of screens viewed, used for the back button
 	private Stack<Integer> screensViewed = new Stack<Integer>();
+
+	// game status giu
+	private GameStatusGUI gameStatusGUI;
+
+	// bid position gui
+	private BidPositionGUI bidPositionGUI;
+
+	// bid number gui
+	private BidNumberGUI bidNumberGUI;
+
+	// trump suit gui
+	private TrumpSuitGUI trumpSuitGUI;
 
 	private JButton backButton;
 	private JButton quitButton;
@@ -122,6 +134,20 @@ public class GameGUI extends JFrame implements GameListener {
 			addKeyListener(game.getHandler());
 			setFocusable(true);
 		}
+
+		// initialize some of the guis before createCards()
+
+		// game status giu
+		gameStatusGUI = new GameStatusGUI(this, game);
+
+		// bid position gui
+		bidPositionGUI = new BidPositionGUI(this, game);
+
+		// bid number gui
+		bidNumberGUI = new BidNumberGUI(this, game);
+
+		// trump suit gui
+		trumpSuitGUI = new TrumpSuitGUI(this, game);
 
 		createCards();
 
@@ -182,15 +208,16 @@ public class GameGUI extends JFrame implements GameListener {
 		cardPanel.add(new VIPlayerGUI(this, game), cardNames[VI_PLAYER_GUI]);
 		cardPanel.add(new ScanningBlindGUI(this, game),
 				cardNames[SCANNING_BLIND_GUI]);
-		cardPanel.add(new BidPositionGUI(this, game),
-				cardNames[BID_POSITION_GUI]);
-		cardPanel.add(new BidNumberGUI(this, game), cardNames[BID_NUMBER_GUI]);
-		cardPanel.add(new TrumpSuitGUI(this, game), cardNames[TRUMP_SUIT_GUI]);
+
+		cardPanel.add(bidPositionGUI, cardNames[BID_POSITION_GUI]);
+		cardPanel.add(bidNumberGUI, cardNames[BID_NUMBER_GUI]);
+
+		cardPanel.add(trumpSuitGUI, cardNames[TRUMP_SUIT_GUI]);
 		// cardPanel.add(new FirstCardGUI(this, game),
 		// cardNames[FIRST_CARD_GUI]);
-		cardPanel
-				.add(new GameStatusGUI(this, game), cardNames[GAME_STATUS_GUI]);
-		
+
+		cardPanel.add(gameStatusGUI, cardNames[GAME_STATUS_GUI]);
+
 		cardPanel.add(new ScanDummyGUI(this, game), cardNames[SCAN_DUMMY_GUI]);
 		// cardPanel.add(new ResetGUI(game), cardNames[7]);
 		// cardPanel.add(new GameStatusGUI(game), cardNames[GAME_STATUS_GUI]);
@@ -393,7 +420,7 @@ public class GameGUI extends JFrame implements GameListener {
 			// GameStatusGUI to VI_PLAYER_GUI. If, after the first card has been
 			// played and blind person is not dummy, then screen needs to switch
 			// from GameStatusGUI to SCAN_DUMMY_GUI. Else, do nothing.
-			if (switchFromGameStatusGUI == SWITCH_TO_VI_PLAYER) {
+			if (switchFromGameStatusGUI == SWITCH_TO_SCANNING_BLIND) {
 
 				currentScreen = VI_PLAYER_GUI;
 
@@ -416,8 +443,8 @@ public class GameGUI extends JFrame implements GameListener {
 		debugMsg("Switching to screen " + cardNames[currentScreen]);
 
 		// Note : its position/order is important
-		if(Game.isTestMode()){
-		determineIfRightGUI();
+		if (Game.isTestMode()) {
+			determineIfRightGUI();
 		}
 
 		layout.show(cardPanel, cardNames[currentScreen]);
@@ -425,7 +452,7 @@ public class GameGUI extends JFrame implements GameListener {
 
 		// debugMsg("currentScreen " + currentScreen);
 	}
-	
+
 	private void determineIfRightGUI() {
 		// figure out if it is the right gui for listening to key press
 		if (currentScreen == VI_PLAYER_GUI || currentScreen == HELP_GUI
@@ -433,14 +460,13 @@ public class GameGUI extends JFrame implements GameListener {
 				|| currentScreen == BID_NUMBER_GUI
 				|| currentScreen == BID_POSITION_GUI) {
 
-			((DummyHandler)game.getHandler()).setRightGUI(false);
+			((DummyHandler) game.getHandler()).setRightGUI(false);
 
 		} else {
 
-			((DummyHandler)game.getHandler()).setRightGUI(true);
+			((DummyHandler) game.getHandler()).setRightGUI(true);
 		}
 	}
-
 
 	/**
 	 * Adds a message to the debugging panel
@@ -482,6 +508,9 @@ public class GameGUI extends JFrame implements GameListener {
 	 */
 	@Override
 	public void gameReset() {
+
+		System.out.println("Game reset");
+
 		setAntennaLabel("N/A");
 		setTrickLabel("N/A");
 		// bidLabel.setText("N/A");
@@ -489,9 +518,21 @@ public class GameGUI extends JFrame implements GameListener {
 		// Display the screen directing the players to scan the blind cards,
 		// but set up the back button so that it goes to the screen to set
 		// where the blind player is sitting.
-		currentScreen = 1;
+		currentScreen = SCANNING_BLIND_GUI;
 		screensViewed.clear();
 		screensViewed.push(SCANNING_BLIND_GUI);
+		switchFromGameStatusGUI = SWITCH_TO_SCANNING_BLIND;
+
+		// create the guis again? otherwise does not work
+		
+		gameStatusGUI.setFirstCardPlayed(false);
+
+		if (Game.isTestMode()) {
+			
+			trumpSuitGUI.setHandNum(2);
+			bidNumberGUI.setHandNum(2);
+			bidPositionGUI.setHandNum(2);
+		}
 
 		layout.show(cardPanel, cardNames[currentScreen]);
 		this.requestFocusInWindow();
@@ -574,7 +615,7 @@ public class GameGUI extends JFrame implements GameListener {
 		// TODO Auto-generated method stub
 
 	}
-	
+
 	public void setSwitchFromGameStatusGUI(int switchFromGameStatusGUI) {
 		this.switchFromGameStatusGUI = switchFromGameStatusGUI;
 	}

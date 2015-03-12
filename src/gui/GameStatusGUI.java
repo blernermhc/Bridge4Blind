@@ -214,6 +214,12 @@ public class GameStatusGUI extends JPanel implements GameListener {
 		// TODO Auto-generated method stub
 
 	}
+	
+	
+
+	public void setFirstCardPlayed(boolean firstCardPlayed) {
+		this.firstCardPlayed = firstCardPlayed;
+	}
 
 	/**
 	 * Adds direction labels to the PlayerStatusGUIs

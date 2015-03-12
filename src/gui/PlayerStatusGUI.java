@@ -8,6 +8,8 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import javax.swing.BorderFactory;
 import javax.swing.JComponent;
@@ -163,6 +165,8 @@ public class PlayerStatusGUI extends JComponent {
 		// so that this thread is called first before the audio starts playing
 		// and the painting of the last card is delayed
 		paintImmediately(0, 0, getWidth(), getHeight());
+		
+	
 
 	}
 

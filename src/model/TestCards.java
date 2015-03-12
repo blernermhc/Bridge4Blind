@@ -5,9 +5,12 @@ public class TestCards {
 		
 	
 	// total size should be 13 + 52 + 13 = 78 ; (blind + all cards + dummy)
-	private Card[] cards = new Card[13+52+13]; 
+	//	private Card[] cards = new Card[13+52+13]; 
 	
-	//private Card[] cards = new Card[(13+52+13) + (13 + 52)]; 
+	// total size = hand1 + hand 2
+	// hand1 = blind + all cards + dummy
+	// hand2 = blind + all cards (no dummy)
+	private Card[] cards = new Card[(13+52+13) + (13 + 52)]; 
 		
 	private int index = -1 ;
 
@@ -78,6 +81,142 @@ public class TestCards {
 	public TestCards(){
 		// Refer to http://www.rpbridge.net/1a00.htm
 		
+		createHand1();
+		
+		createHand2();
+				
+
+	}
+
+
+	private void createHand2() {
+		// Hand 2
+		
+		// Bid is No Trump - 3
+		// West is declarer. Blind is east. So blind is dummy.
+		
+		// blind hand
+		cards[78] = THREE_SPADES ;
+		cards[79] = TWO_SPADES ;
+		cards[80] = FIVE_HEARTS ;
+		cards[81] = FOUR_HEARTS ;
+		cards[82] = THREE_HEARTS ;
+		cards[83] = ACE_DIAMONDS ;
+		cards[84] = FOUR_DIAMONDS ;
+		cards[85] = THREE_DIAMONDS ;
+		cards[86] = TWO_DIAMONDS ;
+		cards[87] = KING_CLUBS ;
+		cards[88] = QUEEN_CLUBS ;
+		cards[89] = JACK_CLUBS ;
+		cards[90] = SEVEN_CLUBS ;
+		
+		// Trick 1. North goes first since west is declarer
+		cards[91] = QUEEN_SPADES ; // north
+		cards[92] = TWO_SPADES ; // east
+		cards[93] = FOUR_SPADES ; // south
+		cards[94] = KING_SPADES ; // west
+		
+		// West wins.
+		
+		// Trick 2. West goes first
+		cards[95] = FOUR_CLUBS ; // west
+		cards[96] = TWO_CLUBS ; // north
+		cards[97] = JACK_CLUBS ; // east
+		cards[98] = ACE_CLUBS ; // south
+		
+		// south wins
+		
+		// Trick 3. South goes first
+		cards[99] = FIVE_SPADES ; // south
+		cards[100] = ACE_SPADES ; // west
+		cards[101] = EIGHT_SPADES ; // north
+		cards[102] = THREE_SPADES ; // east
+		
+		// west wins
+		
+		// Trick 4. West goes first
+		cards[103] = FIVE_CLUBS ; // west
+		cards[104] = TEN_CLUBS ; // north
+		cards[105] = QUEEN_CLUBS ; // east
+		cards[106] = THREE_CLUBS ; // south
+		
+		// east wins
+		
+		// Trick 5. East goes first.
+		cards[107] = KING_CLUBS ; // east
+		cards[108] = EIGHT_CLUBS ; // south
+		cards[109] = SIX_CLUBS ; // west
+		cards[110] = NINE_DIAMONDS ; // north
+		
+		// east wins.
+		
+		// Trick 6. East goes first
+		cards[111] = THREE_HEARTS ; // east
+		cards[112] = EIGHT_HEARTS ; // south
+		cards[113] = QUEEN_HEARTS ; // west
+		cards[114] = SIX_HEARTS ; // north
+		
+		// west wins
+		
+		// Trick 7. West goes first
+		cards[115] = KING_HEARTS ; // west
+		cards[116] = SEVEN_HEARTS ; // north
+		cards[117] = FOUR_HEARTS ; // east
+		cards[118] = NINE_HEARTS ; // south
+		
+		// west wins
+		
+		// Trick 8. West goes first
+		cards[119] = ACE_HEARTS ; // west
+		cards[120] = JACK_HEARTS ; // north
+		cards[121] = FIVE_HEARTS ; // east
+		cards[122] = TEN_HEARTS ; // south
+		
+		// west wins
+		
+		// Trick 9. West goes first
+		cards[123] = TWO_HEARTS ; // west
+		cards[124] = NINE_SPADES ; // north
+		cards[125] = TWO_DIAMONDS ; // east
+		cards[126] = SIX_SPADES ; // south
+		
+		// west wins
+		
+		// Trick 10. West goes first
+		cards[127] = FIVE_DIAMONDS ; // west
+		cards[128] = JACK_DIAMONDS ; // north
+		cards[129] = ACE_DIAMONDS ; // east
+		cards[130] = TEN_DIAMONDS ; // south
+		
+		// East wins
+		
+		// Trick 11. East goes first
+		cards[131] = SEVEN_CLUBS ; // east
+		cards[132] = NINE_CLUBS ; // south
+		cards[133] = SIX_DIAMONDS ; // west
+		cards[134] = TEN_SPADES ; // north
+		
+		// south wins
+		
+		// Trick 12. South goes first
+		cards[135] = SEVEN_SPADES ; // south
+		cards[136] = SEVEN_DIAMONDS ; // west
+		cards[137] = JACK_SPADES ; // north
+		cards[138] = THREE_DIAMONDS ; // east
+		
+		// north wins
+		
+		//Trick 13. North goes first
+		cards[139] = KING_DIAMONDS ; // north
+		cards[140] = FOUR_DIAMONDS ; // east
+		cards[141] = QUEEN_DIAMONDS ; // south
+		cards[142] = EIGHT_DIAMONDS ; // west
+		
+		// north wins
+	}
+
+
+	private void createHand1() {
 		// Hand 1
 		
 		// Bid is 4 Hearts.
@@ -219,37 +358,6 @@ public class TestCards {
 		cards[77] = QUEEN_HEARTS ; // south
 		
 		// south wins
-		
-//		// Hand 2
-//		
-//		// Bid is No Trump - 3
-//		// South is declarer. Blind is north. So blind is dummy.
-//		
-//		// blind hand
-//		cards[78] = THREE_SPADES ;
-//		cards[79] = TWO_SPADES ;
-//		cards[80] = FIVE_HEARTS ;
-//		cards[81] = FOUR_HEARTS ;
-//		cards[82] =  THREE_HEARTS ;
-//		cards[83] = ACE_DIAMONDS ;
-//		cards[84] = FOUR_DIAMONDS ;
-//		cards[85] = THREE_DIAMONDS ;
-//		cards[86] = TWO_DIAMONDS ;
-//		cards[87] = KING_CLUBS ;
-//		cards[88] = QUEEN_CLUBS ;
-//		cards[89] = JACK_CLUBS ;
-//		cards[90] = SEVEN_CLUBS ;
-//		
-//		// Trick 1. West goes first since south is declarer
-//		cards[91] = QUEEN_SPADES ; // west
-//		cards[92] = TWO_SPADES ; // north
-//		cards[93] = FOUR_SPADES ; // east
-//		cards[94] = KING_SPADES ; // south
-//		
-//		// South wins.
-//		
-//		// Trick 2. South goes first
-//		
 	}
 	
 
