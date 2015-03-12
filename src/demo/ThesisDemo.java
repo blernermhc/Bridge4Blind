@@ -9,6 +9,7 @@ import model.Game;
 import audio.AudioPlayer;
 import controller.AntennaHandler;
 import controller.CardIdentifier;
+import controller.Handler;
 
 /**The ThesisDemo class is a small demonstration for my thesis defense.
 * @author Allison DeJordy
@@ -21,7 +22,10 @@ public class ThesisDemo extends Game{
 	private AntennaHandler ah;
 	private CardIdentifier cardID;
 	private AudioPlayer ap;
+	
 	public ThesisDemo () throws IOException {
+		
+		super(new AntennaHandler(new CardDatabase()), false) ;
 		
 		data = new CardDatabase();
 		ah = new AntennaHandler(data);
@@ -44,7 +48,7 @@ public class ThesisDemo extends Game{
 		
 	}
 	
-	public AntennaHandler getHandler() {
+	public Handler getHandler() {
 		
 		return ah;
 		

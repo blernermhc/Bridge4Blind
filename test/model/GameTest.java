@@ -9,7 +9,7 @@ import static org.junit.Assert.fail;
 import org.junit.Before;
 import org.junit.Test;
 
-import audio.AudibleGameListener;
+import controller.AntennaHandler;
 
 public class GameTest {
 	private static final Direction DUMMY_DIRECTION = Direction.SOUTH;
@@ -35,7 +35,7 @@ public class GameTest {
 
 	@Before
 	public void setUp() throws Exception {
-		game = new Game();
+		game = new Game(new AntennaHandler(new CardDatabase()), false);
 		game.setBlindPosition(BLIND_DIRECTION);
 		game.initPlayingPhase(BLIND_DIRECTION);
 	}

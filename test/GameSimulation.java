@@ -5,12 +5,14 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
+import model.CardDatabase;
 import model.Direction;
 import model.Game;
 import model.Suit;
 import server.StubCSharpServer;
 import audio.AudibleGameListener;
 import controller.AntennaHandler;
+import controller.Handler;
 
 
 public class GameSimulation implements Runnable {
@@ -48,7 +50,7 @@ public class GameSimulation implements Runnable {
 	}
 	
 	private void initialize() throws UnknownHostException, IOException {
-		game = new Game();
+		game = new Game(new AntennaHandler(new CardDatabase()), false);
 		game.addListener(new AudibleGameListener());
 
 		// Set the blind player position
@@ -59,7 +61,7 @@ public class GameSimulation implements Runnable {
 		// This is not a problem for the real game since it would be 
 		// getting the command to set the blind position from the
 		// Swing event thread, not the main thread.
-		AntennaHandler handler = game.getHandler();
+		Handler handler = game.getHandler();
 		handler.connect();
 		if (handler != null) {
 			// Yikes!  This used to just be handler.start.  Was that causing

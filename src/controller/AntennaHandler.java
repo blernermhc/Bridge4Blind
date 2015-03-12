@@ -1,5 +1,6 @@
 package controller;
 
+import java.awt.event.KeyEvent;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -15,9 +16,9 @@ import model.Direction;
  * and sends them to the apporiate Hands or CardId events
  * 
  * @author Caden Friedenbach
- *
+ * @version March 12, 2015
  */
-public class AntennaHandler implements Runnable {
+public class AntennaHandler extends Handler {
 	// Length of time to pause after requesting a card and not finding one
 	private static final int CARD_REQUEST_PAUSE = 200;
 	
@@ -170,7 +171,7 @@ public class AntennaHandler implements Runnable {
 	 * @return the server response
 	 * @throws IOException the connection failed
 	 */
-	protected String requestCard(byte[] messageRec)
+	public String requestCard(byte[] messageRec)
 			throws IOException {
 		synchronized(out) {
 			out.write("T".getBytes());
@@ -263,14 +264,14 @@ public class AntennaHandler implements Runnable {
 	}
 
 	/**
-	 * Sene a command to the hardware to server to switch which antenna it is
+	 * Send a command to the hardware to server to switch which antenna it is
 	 * listening to
 	 * @param handID the antenna to listen to
 	 * @throws IOException the connection failed
 	 * @throws InterruptedException the thread was interrupted while waiting for
 	 *   a card request command to happen
 	 */
-	protected void switchHand(String handID) throws IOException, InterruptedException{
+	public void switchHand(String handID) throws IOException, InterruptedException{
 		if (out == null) {
 			System.out.println("Server is not running.");
 			return;
@@ -376,6 +377,24 @@ public class AntennaHandler implements Runnable {
 		}
 
 		onPlayerHand = !onPlayerHand;
+	}
+
+	@Override
+	public void keyPressed(KeyEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void keyReleased(KeyEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void keyTyped(KeyEvent arg0) {
+		// TODO Auto-generated method stub
+		
 	}
 }
 

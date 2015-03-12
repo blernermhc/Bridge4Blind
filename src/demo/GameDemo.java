@@ -11,7 +11,9 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
+import controller.AntennaHandler;
 import model.Card;
+import model.CardDatabase;
 import model.Direction;
 import model.Game;
 import model.Player;
@@ -51,7 +53,7 @@ public class GameDemo extends JFrame{
 		setFocusTraversalKeysEnabled(false);
 		
 		//initialize the game
-		game = new Game();
+		game = new Game(new AntennaHandler(new CardDatabase()), false);
 		//get the hands from the game
 		players = game.getPlayers();
 		//initialize the deck

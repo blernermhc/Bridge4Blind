@@ -12,6 +12,10 @@ import model.Contract;
 import model.Direction;
 import model.Suit;
 
+/**
+ * CLASS HAS NOT BEEN USED
+ *
+ */
 public class BidStatusGUI extends JComponent {
 	private static final Font BID_FONT = GameStatusGUI.STATUS_FONT.deriveFont(36f);
 	private static final int SPACING = 20;

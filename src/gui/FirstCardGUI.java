@@ -9,13 +9,19 @@ import model.Direction;
 import model.Game;
 import model.GameListener;
 
+/**
+ * Class is not used anymore
+ */
 public class FirstCardGUI extends JPanel implements GameListener {
 	private GameGUI gameGUI;
 	private boolean alreadyShown = false;
 	
+	private Game game ;
+	
 	public FirstCardGUI(GameGUI gameGUI, Game game) {
 		this.gameGUI = gameGUI;
-		game.addListener(this);
+		this.game = game ;
+		this.game.addListener(this);
 		JLabel instructions = new JLabel("Please play the first card.");
 		instructions.setFont(GameGUI.INFO_FONT);
 		add (instructions);

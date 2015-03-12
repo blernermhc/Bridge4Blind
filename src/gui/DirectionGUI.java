@@ -16,15 +16,17 @@ import javax.swing.JPanel;
 * cardinal directions.
 *
 * @author Allison DeJordy
+* @version March 12, 2015* 
+* 
 **/
 
 public abstract class DirectionGUI extends JPanel implements ActionListener {
 	
 	private JPanel buttonPanel;
-	private JButton northButton;
-	private JButton westButton;
-	private JButton eastButton;
-	private JButton southButton;
+	protected JButton northButton;
+	protected JButton westButton;
+	protected JButton eastButton;
+	protected JButton southButton;
 	
 	/**
 	 * Create the panel that displays directional buttons

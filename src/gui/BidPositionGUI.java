@@ -9,6 +9,8 @@ import model.Game;
 * made the winning bid.
 * 
 * @author Allison DeJordy
+* @version March 12, 2015
+* 
 **/
 
 public class BidPositionGUI extends DirectionGUI {
@@ -23,6 +25,18 @@ public class BidPositionGUI extends DirectionGUI {
 		super("What position is the declarer?");
 		this.game = game;		
 		this.gameGUI = gameGUI;
+		
+		if(Game.isTestMode()){
+			
+			// the declarer should be south
+			northButton.setEnabled(false);
+			eastButton.setEnabled(false);
+			westButton.setEnabled(false);
+			//westButton.setEnabled(true); // if west is declarer , i.e. east is dummy
+			
+			southButton.setEnabled(true); // if south is declarer , i.e. north is dummy
+			//southButton.setEnabled(false);
+		}
 	}
 	
 	@Override

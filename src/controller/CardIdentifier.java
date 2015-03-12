@@ -6,6 +6,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import model.Card;
+import model.CardDatabase;
 import model.Game;
 import model.Rank;
 import model.Suit;
@@ -14,6 +15,8 @@ import model.Suit;
  * Listens to the id antenna. Tells the game what card has been seen, but if the
  * same card is seen repeatedly, it only reports the card once every 500
  * milliseconds.
+ * 
+ * @version March 12, 2015
  * 
  */
 public class CardIdentifier implements CardListener {
@@ -78,7 +81,7 @@ public class CardIdentifier implements CardListener {
 	 * @param args none
 	 */
 	public static void main(String[] args) {
-		final CardIdentifier ider = new CardIdentifier(new Game() {
+		final CardIdentifier ider = new CardIdentifier(new Game(new AntennaHandler(new CardDatabase()), false) {
 			@Override
 			public void cardIded(Card c) {
 				System.out.println("Game sees " + c.toString());

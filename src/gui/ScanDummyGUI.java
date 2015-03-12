@@ -2,6 +2,8 @@ package gui;
 
 import java.awt.Component;
 import java.awt.Dimension;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -21,6 +23,7 @@ import model.Player;
  * It listens to the game.  When the dummy hand is completely scanned in,
  * it advances to the next screen.
  *
+ *@version March 12, 2015
  */
 public class ScanDummyGUI extends JPanel implements GameListener {
 	private GameGUI gameGUI;
@@ -126,7 +129,22 @@ public class ScanDummyGUI extends JPanel implements GameListener {
 	 */
 	@Override
 	public void dummyHandScanned() {
-		gameGUI.changeFrame();
+
+		// wait 2 seconds before switching screen so that the last dummy card is visible
+		TimerTask timertask = new TimerTask() {
+			
+			@Override
+			public void run() {
+
+				gameGUI.changeFrame();
+				
+			}
+		};
+				
+		Timer timer = new Timer(true) ;
+		timer.schedule(timertask, 2000);
+		
+
 	}
 
 

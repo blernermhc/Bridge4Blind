@@ -2,6 +2,8 @@ package gui;
 
 import javax.swing.JFrame;
 
+import controller.AntennaHandler;
+import model.CardDatabase;
 import model.Game;
 
 public class GUITest extends JFrame{
@@ -10,7 +12,7 @@ public class GUITest extends JFrame{
 		
 		this.setExtendedState(JFrame.MAXIMIZED_BOTH);
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE );
-		GameGUI gui = new GameGUI(new Game());
+		GameGUI gui = new GameGUI(new Game(new AntennaHandler(new CardDatabase()), false));
 		gui.setVisible(true);
 		
 	}

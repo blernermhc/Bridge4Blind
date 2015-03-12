@@ -18,6 +18,8 @@ import model.Suit;
 /** The TrumpSuitGUI allows the sighted players to specify the trump suit.
  * 
  * @author Allison DeJordy
+ * 
+ * @version March 12, 2015
  */
 
 public class TrumpSuitGUI extends JPanel  {
@@ -129,6 +131,15 @@ public class TrumpSuitGUI extends JPanel  {
 			}
 			
 		});
+		
+		if(Game.isTestMode()){
+			
+			// only hear can be the trump for the first hand
+			spadesButton.setEnabled(false);
+			diamondsButton.setEnabled(false);
+			clubsButton.setEnabled(false);
+			noTrumpButton.setEnabled(false);
+		}
 		return panel;
 		
 	}

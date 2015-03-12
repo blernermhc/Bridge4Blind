@@ -7,10 +7,9 @@ import java.util.HashSet;
 import java.util.Set;
 
 import audio.SoundManager;
-
-import controller.AntennaHandler;
 import controller.CardIdentifier;
 import controller.HandAntenna;
+import controller.Handler;
 
 /**
  * The Game class controls the logic for a game of bridge.
@@ -28,6 +27,9 @@ public class Game {
 	/** The number of players in the game */
 	public static final int NUM_PLAYERS = 4;
 	
+	// true is Bridege is being played in Test mode (i.e. without hardware). False if Bridge is actually being played (i.e. with the hardware)
+	private static boolean isTestMode ;
+	
 	// The collection of players
 	private Player[] players;
 
@@ -44,7 +46,8 @@ public class Game {
 	private Direction lastWinner;
 	
 	// the antenna handler
-	private AntennaHandler handler;
+	private Handler handler ;
+	//private AntennaHandler handler;
 	
 	// the current contract that the team winning the bid must make
 	private Contract contract = new Contract();
@@ -61,17 +64,23 @@ public class Game {
 	// All the cards that have been played in the current hand
 	private Set<Card> cardsPlayed = new HashSet<Card>();
 	
-	/** Create a new game  */
-	public Game() {
+	/** Create a new game  
+	 * @param handler TODO
+	 * @param isTestMode TODO*/
+	public Game(Handler handler, boolean isTestMode) {
 
+		this.isTestMode = isTestMode ;
+		
 		// construct the four hands
 		players = new Player[NUM_PLAYERS];
 		for (int i = 0; i < players.length; i++) {
 			players[i] = new Player();
 		}
+		
+		this.handler = handler ;
 
 		// construct the antenna handler
-		handler = new AntennaHandler(new CardDatabase());
+		//handler = new AntennaHandler(new CardDatabase());
 	}
 
 	/**
@@ -548,7 +557,7 @@ public class Game {
 	}
 
 	@SuppressWarnings("javadoc")
-	public AntennaHandler getHandler() {
+	public Handler getHandler() {
 		return handler;
 	}
 
@@ -594,5 +603,11 @@ public class Game {
 		}
 		System.exit(0);
 	}
+
+	public static boolean isTestMode() {
+		return isTestMode;
+	}
+	
+	
 
 }

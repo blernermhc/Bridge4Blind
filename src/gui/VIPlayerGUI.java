@@ -2,8 +2,8 @@ package gui;
 
 import java.awt.event.ActionEvent;
 
-import controller.AntennaHandler;
-
+import controller.Handler;
+import controller.DummyHandler;
 import model.Direction;
 import model.Game;
 
@@ -11,6 +11,8 @@ import model.Game;
  * the visually impaired player is.
  * 
  * @author Allison DeJordy
+ * 
+ * @version March 12, 2015
  */
 
 public class VIPlayerGUI extends DirectionGUI{
@@ -26,6 +28,19 @@ public class VIPlayerGUI extends DirectionGUI{
 		super ("What position is the visually impaired player?");
 		this.game = game;
 		this.gameGUI = gameGUI;
+		
+		if(Game.isTestMode()){
+			
+			// the blind player can only be east in the test case
+			northButton.setEnabled(false);
+			southButton.setEnabled(false);
+			westButton.setEnabled(false);
+			
+			eastButton.setEnabled(true);
+			
+
+			((DummyHandler) game.getHandler()).setRightGUI(false);
+		}
 	}
 
 	/**
@@ -36,7 +51,7 @@ public class VIPlayerGUI extends DirectionGUI{
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		// gui.debugMsg("Not listening to the antenna");
-		AntennaHandler handler = game.getHandler();
+		Handler handler = game.getHandler();
 		if (handler != null) {
 			// Yikes!  This used to just be handler.start.  Was that causing
 			// our timing problems???
