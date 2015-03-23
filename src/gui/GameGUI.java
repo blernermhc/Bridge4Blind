@@ -66,7 +66,7 @@ public class GameGUI extends JFrame implements GameListener {
 
 	protected static final int SWITCH_TO_SCAN_DUMMY = 12;
 
-	protected static final int SWITCH_TO_SCANNING_BLIND = 13;
+	//protected static final int SWITCH_TO_SCANNING_BLIND = 13;
 
 	// remembers to which screen should be displayed if GameStatusGUI invokes
 	// changeFrame()
@@ -97,9 +97,10 @@ public class GameGUI extends JFrame implements GameListener {
 	private TrumpSuitGUI trumpSuitGUI;
 
 	private JButton backButton;
-	private JButton quitButton;
 	private JButton resetButton;
 	private JButton helpButton;
+	private JButton quitButton;
+
 	// private JLabel bidLabel;
 	// private JLabel antennaLabel;
 	// private JLabel trickLabel;
@@ -427,7 +428,9 @@ public class GameGUI extends JFrame implements GameListener {
 
 				currentScreen = SCANNING_BLIND_GUI;
 
-			} else*/ if (switchFromGameStatusGUI == SWITCH_TO_SCAN_DUMMY) {
+			} else*/ 
+			
+			if (switchFromGameStatusGUI == SWITCH_TO_SCAN_DUMMY) {
 
 				currentScreen = SCAN_DUMMY_GUI;
 
@@ -529,7 +532,7 @@ public class GameGUI extends JFrame implements GameListener {
 		//switchFromGameStatusGUI = SWITCH_TO_SCANNING_BLIND;
 		switchFromGameStatusGUI = NONE ;
 		
-		gameStatusGUI.setFirstCardPlayed(false);
+		//gameStatusGUI.setFirstCardPlayed(false);
 
 		if (Game.isTestMode()) {
 			

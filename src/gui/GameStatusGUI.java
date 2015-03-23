@@ -117,6 +117,9 @@ public class GameStatusGUI extends JPanel implements GameListener {
 		}
 		
 		bidGUI.clear();
+		
+		firstCardPlayed = false ;
+		trickOverHandled = true ;
 	}
 
 	@Override
@@ -356,4 +359,6 @@ public class GameStatusGUI extends JPanel implements GameListener {
 
 		add(new JLabel(dir.toString()), dirLabelConstraint);
 	}
+	
+	
 }
