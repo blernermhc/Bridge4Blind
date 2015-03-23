@@ -3,7 +3,7 @@ package gui;
 import java.awt.event.ActionEvent;
 
 import controller.Handler;
-import controller.DummyHandler;
+import controller.TestHandler;
 import model.Direction;
 import model.Game;
 
@@ -39,7 +39,7 @@ public class VIPlayerGUI extends DirectionGUI{
 			eastButton.setEnabled(true);
 			
 
-			((DummyHandler) game.getHandler()).setRightGUI(false);
+			((TestHandler) game.getHandler()).setRightGUI(false);
 		}
 	}
 

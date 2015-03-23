@@ -20,7 +20,8 @@ import model.Card;
 import model.Direction;
 
 /**
- * This class displays the rank and suit of the current card of the players in each cardianl direction
+ * This class displays the rank and suit of the current card of the players in
+ * each cardianl direction
  * 
  * @author Barbara Lerner
  * @version March 12, 2015
@@ -44,6 +45,8 @@ public class PlayerStatusGUI extends JComponent {
 	private double rotation;
 	private Direction dir;
 
+	private boolean trickOver = true;
+
 	public PlayerStatusGUI(Direction dir) {
 		setBorder(PLAYER_BORDER);
 
@@ -54,14 +57,21 @@ public class PlayerStatusGUI extends JComponent {
 	}
 
 	public void paintComponent(Graphics g) {
+
 		Graphics2D g2d = (Graphics2D) g;
 		// g2d.drawRect((getWidth() - CARD_WIDTH) / 2, (getHeight() -
 		// CARD_HEIGHT)/2, CARD_WIDTH, CARD_HEIGHT);
 
-		setColor(g2d);
+		drawWhiteBackground(g);
+
 		setFont(GameStatusGUI.STATUS_FONT);
 		FontMetrics cardMetrics = g2d.getFontMetrics();
 		g2d.rotate(rotation);
+
+		g2d.setColor(Color.WHITE);
+		g2d.fillRect(0, 0, CARD_WIDTH, CARD_HEIGHT);
+
+		setColor(g2d);
 		g2d.drawString(rankPlayed, getLeft(rankPlayed, cardMetrics),
 				getRankBottom());
 		g2d.drawString(suitPlayed, getLeft(suitPlayed, cardMetrics),
@@ -74,6 +84,28 @@ public class PlayerStatusGUI extends JComponent {
 			g.setColor(Color.RED);
 		} else {
 			g.setColor(Color.BLACK);
+		}
+	}
+
+	/**
+	 * The background of the cards is white and not gray
+	 * 
+	 * @param g
+	 */
+	private void drawWhiteBackground(Graphics g) {
+
+		g.setColor(Color.WHITE);
+
+		switch (dir) {
+		case NORTH:
+		case SOUTH:
+			g.fillRect(0, 0, CARD_WIDTH, CARD_HEIGHT);
+
+			break;
+		case EAST:
+		case WEST:
+			g.fillRect(0, 0, CARD_HEIGHT, CARD_WIDTH);
+
 		}
 	}
 
@@ -140,6 +172,9 @@ public class PlayerStatusGUI extends JComponent {
 	}
 
 	public void cardPlayed(Card card) {
+
+		System.out.println("player status gui card played " + dir);
+
 		setBorder(PLAYER_BORDER);
 		rankPlayed = card.getRank().toString();
 
@@ -163,23 +198,73 @@ public class PlayerStatusGUI extends JComponent {
 		}
 
 		// so that this thread is called first before the audio starts playing
-		// and the painting of the last card is delayed
-		paintImmediately(0, 0, getWidth(), getHeight());
+		// and the painting of the last card is not delayed
+
+		synchronized (this) {
+
+			try {
+				while (!trickOver) {
+					
+					System.out.println("waiting for trick to be over ");
+
+					wait();
+				}
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			paintImmediately(0, 0, getWidth(), getHeight());
+			trickOver = false ; 
+		}
 		
-	
+		
 
 	}
 
 	public void trickOver() {
+
+		System.out.println("player status gui trick over " + dir);
+
 		rankPlayed = "";
 		suitPlayed = "";
 		setBorder(PLAYER_BORDER);
-		repaint();
+	//	repaint();
+		
+		synchronized (this) {
+		
+			trickOver = true ;
+			
+			notify();
+			
+			System.out.println("notified trick over");
+			
+			paintImmediately(0, 0, getWidth(), getHeight());
+			
+			//repaint() ;
+			
+		}
+		
+		//repaint();
+
+		// paintImmediately(0, 0, getWidth(), getHeight());
 	}
 
 	public void nextPlayer() {
+
+		System.out.println("player status gui next player " + dir);
+
 		setBorder(NEXT_PLAYER_BORDER);
 		repaint();
+	}
+	
+	public void clear(){
+		
+		suitPlayed = "" ;
+		rankPlayed = "" ;
+		setBorder(PLAYER_BORDER);
+		repaint();
+		
 	}
 
 	public static void main(String[] args) {

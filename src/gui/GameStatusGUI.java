@@ -39,6 +39,8 @@ public class GameStatusGUI extends JPanel implements GameListener {
 	private Game game;
 
 	private GameGUI gameGUI;
+	
+	private boolean trickOverHandled = true ;
 
 	public GameStatusGUI(GameGUI gameGUI, Game game) {
 
@@ -108,6 +110,12 @@ public class GameStatusGUI extends JPanel implements GameListener {
 
 	@Override
 	public void gameReset() {
+		
+		for(int i = 0 ; i < playerGUIs.length ; i++){
+			
+			playerGUIs[i].clear(); 
+		}
+		
 		bidGUI.clear();
 	}
 
@@ -119,6 +127,36 @@ public class GameStatusGUI extends JPanel implements GameListener {
 
 		System.out.println("game status gui card played: " + turn);
 
+		//playerGUIs[turn.ordinal()].cardPlayed(card);
+		
+		// the first player of the next hand
+		if ((currentPlayer % 4) == 1) {
+
+			synchronized (GameStatusGUI.this) {
+
+				try {
+
+					System.out.println("trickOverHandled " + trickOverHandled);
+
+					while (!trickOverHandled) {
+
+						System.out.println("waiting for trickOverHandled");
+
+						GameStatusGUI.this.wait();
+					}
+
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+
+				trickOverHandled = false;
+
+			}
+
+		}
+
+		
 		playerGUIs[turn.ordinal()].cardPlayed(card);
 
 		// if the current player is the last person to play for the trick, then
@@ -126,45 +164,98 @@ public class GameStatusGUI extends JPanel implements GameListener {
 		// determined by trickWon()
 		if ((currentPlayer % 4) != 0) {
 
+			System.out.println("not last player so choosing next player from cardPlayed()");
+			
 			playerGUIs[(turn.ordinal() + 1) % 4].nextPlayer();
+
 		}
+					
+		
+		
+/*
+		// if the current player is the last person to play for the trick, then
+		// next player should not be determined here. Next player should be
+		// determined by trickWon()
+		if ((currentPlayer % 4) != 0) {
+			
+			// the first player of the next hand
+			if((currentPlayer % 4) == 1){
+				
+				synchronized (this) {
+					
+					
+					try {
+						
+						System.out.println("trickOverHandled " + trickOverHandled);
+						
+						while(!trickOverHandled){
+							
+							System.out.println("waiting");
+							
+							wait() ;
+						}
+						
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					
+					//trickOverHandled = false ;
+					
+				}
+				
+				
+			}
+			
+			trickOverHandled = false ;
+
+			playerGUIs[(turn.ordinal() + 1) % 4].nextPlayer();
+			
+			
+			
+		}
+		*/
 
 		// the frame should be changed to ScanDummyGUI only after the first card
 		// has been played
 		if (!firstCardPlayed) {
 
-			// gameGUI.debugMsg("Switching to scan dummy screen");
+			switchToScanDummy();
+		}
+	}
 
-			firstCardPlayed = true;
+	private void switchToScanDummy() {
+		// gameGUI.debugMsg("Switching to scan dummy screen");
 
-			// if blind player is NOT dummy player, then change frame to
-			// SCAN_DUMMY_GUI
+		firstCardPlayed = true;
 
-			debugMsg("Blind position " + game.getBlindPosition());
+		// if blind player is NOT dummy player, then change frame to
+		// SCAN_DUMMY_GUI
 
-			debugMsg("Dummy Position " + game.getDummyPosition());
+		System.out.println("Blind position " + game.getBlindPosition());
 
-			if (!game.getBlindPosition().equals(game.getDummyPosition())) {
+		System.out.println("Dummy Position " + game.getDummyPosition());
 
-				// Do the task - changeFrame - after 2 seconds has passed.
-				// without this, the screen changes to ScanDummyGUI too fast and
-				// the first card is not shown
-				TimerTask timertask = new TimerTask() {
+		if (!game.getBlindPosition().equals(game.getDummyPosition())) {
 
-					@Override
-					public void run() {
+			// Do the task - changeFrame - after 2 seconds has passed.
+			// without this, the screen changes to ScanDummyGUI too fast and
+			// the first card is not shown
+			TimerTask timertask = new TimerTask() {
 
-						gameGUI.setSwitchFromGameStatusGUI(GameGUI.SWITCH_TO_DUMMY);
+				@Override
+				public void run() {
 
-						gameGUI.changeFrame();
+					gameGUI.setSwitchFromGameStatusGUI(GameGUI.SWITCH_TO_SCAN_DUMMY);
 
-					}
-				};
+					gameGUI.changeFrame();
 
-				Timer timer = new Timer(true);
-				timer.schedule(timertask, 2000);
+				}
+			};
 
-			}
+			Timer timer = new Timer(true);
+			timer.schedule(timertask, 2000);
+
 		}
 	}
 
@@ -176,25 +267,48 @@ public class GameStatusGUI extends JPanel implements GameListener {
 
 	@Override
 	public void trickWon(final Direction winner) {
+		
+		
+		System.out.println("game status gui trickWon " + winner);
 
 		TimerTask timerTask = new TimerTask() {
 
 			@Override
 			public void run() {
+				
 
 				for (PlayerStatusGUI playerGUI : playerGUIs) {
 
 					// problems here
 					playerGUI.trickOver();
 
-					playerGUIs[winner.ordinal()].nextPlayer();
+					
 				}
+				
+				playerGUIs[winner.ordinal()].nextPlayer();
+				
+				
+				synchronized (GameStatusGUI.this) {
+					
+
+					System.out.println("trickOverHandled before changing value " + trickOverHandled);
+					
+					trickOverHandled = true ;
+					
+					System.out.println("trickOverHandled after changing value " + trickOverHandled);
+					
+					GameStatusGUI.this.notify() ;
+					
+					System.out.println("notified in trickWon");
+				}
+	
 
 			}
 		};
 
 		Timer timer = new Timer(true);
 		timer.schedule(timerTask, 4000);
+		
 
 	}
 

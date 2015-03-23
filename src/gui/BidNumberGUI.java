@@ -27,9 +27,9 @@ public class BidNumberGUI extends JPanel implements ActionListener {
 	private JButton[] buttons;
 	private Game game;
 	private GameGUI gameGUI;
-	
+
 	// for test mode only. For now, hand number can be 1 or 2.
-	private int handNum = 1 ;
+	private int handNum = 1;
 
 	/**
 	 * Create the panel
@@ -84,27 +84,37 @@ public class BidNumberGUI extends JPanel implements ActionListener {
 			}
 		}
 
-		// for testing, only 4 bids is allowed for first hand. 3 bids is allowed in the second hand
+		// for testing, only 4 bids is allowed for first hand. 3 bids is allowed
+		// in the second hand
 		if (Game.isTestMode()) {
 
-			if(handNum == 1){
-				
-			buttons[3].setEnabled(true);
-			
-			}else if(handNum == 2){
-				
-				buttons[3].setEnabled(false);
-				buttons[2].setEnabled(true);
-				
-			} else {
-
-				throw new AssertionError(
-						"BidNumberGUI : There are only two hands");
-			}
+			enableAndDisableButtons();
 		}
 
 		return mainPanel;
 
+	}
+
+	/**
+	 * Depending on what hand it is, it only enables the button corresponding to
+	 * the appropriate bid number
+	 * 
+	 * @throws AssertionError
+	 */
+	private void enableAndDisableButtons() throws AssertionError {
+		if (handNum == 1) {
+
+			buttons[3].setEnabled(true);
+
+		} else if (handNum == 2) {
+
+			buttons[3].setEnabled(false);
+			buttons[2].setEnabled(true);
+
+		} else {
+
+			throw new AssertionError("BidNumberGUI : There are only two hands");
+		}
 	}
 
 	@Override
@@ -123,8 +133,8 @@ public class BidNumberGUI extends JPanel implements ActionListener {
 	 */
 	public void setHandNum(int handNum) {
 		this.handNum = handNum;
+		
+		enableAndDisableButtons();
 	}
-	
-	
 
 }

@@ -34,27 +34,37 @@ public class BidPositionGUI extends DirectionGUI {
 
 		if (Game.isTestMode()) {
 
-			if (handNum == 1) {
+			enableAndDisableButtons();
+		}
+	}
 
-				// the declarer should be south for hand 1. North is dummy. East
-				// is blind.
-				northButton.setEnabled(false);
-				eastButton.setEnabled(false);
-				westButton.setEnabled(false);
+	/**
+	 * Depending on what hand it is, it only enables the button corresponding to
+	 * the appropriate bid position
+	 * 
+	 * @throws AssertionError
+	 */
+	private void enableAndDisableButtons() throws AssertionError {
+		if (handNum == 1) {
 
-				southButton.setEnabled(true);
+			// the declarer should be south for hand 1. North is dummy. East
+			// is blind.
+			northButton.setEnabled(false);
+			eastButton.setEnabled(false);
+			westButton.setEnabled(false);
 
-			} else if (handNum == 2) {
+			southButton.setEnabled(true);
 
-				// the declarer should be west. East is blind and dummy
-				southButton.setEnabled(false);
-				westButton.setEnabled(true);
+		} else if (handNum == 2) {
 
-			} else {
+			// the declarer should be west. East is blind and dummy
+			southButton.setEnabled(false);
+			westButton.setEnabled(true);
 
-				throw new AssertionError(
-						"BidPositionGUI : There are only two hands");
-			}
+		} else {
+
+			throw new AssertionError(
+					"BidPositionGUI : There are only two hands");
 		}
 	}
 
@@ -84,6 +94,8 @@ public class BidPositionGUI extends DirectionGUI {
 	 */
 	public void setHandNum(int handNum) {
 		this.handNum = handNum;
+		
+		enableAndDisableButtons();
 	}
 
 }

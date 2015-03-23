@@ -30,6 +30,7 @@ public class BridgeActualGame implements BridgeMode{
 			game.addListener(gui);
 
 			gui.debugMsg("main run");
+			
 		} catch (UnknownHostException e) {
 			System.err.println("Could not connect to server.  Host unknown.");
 		}

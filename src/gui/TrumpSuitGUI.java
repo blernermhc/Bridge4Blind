@@ -30,6 +30,11 @@ public class TrumpSuitGUI extends JPanel {
 
 	// for test mode only. For now, hand number can be 1 or 2.
 	private int handNum = 1;
+	private JButton spadesButton;
+	private JButton heartsButton;
+	private JButton diamondsButton;
+	private JButton clubsButton;
+	private JButton noTrumpButton;
 
 	/**
 	 * Creates the GUI
@@ -71,7 +76,7 @@ public class TrumpSuitGUI extends JPanel {
 		// set the panel's layout to a grid with 3 rows and 1 column
 		panel.setLayout(new GridLayout(2, 0));
 		// create and add the spades button
-		JButton spadesButton = GUIUtilities.createButton("Spades");
+		spadesButton = GUIUtilities.createButton("Spades");
 		panel.add(GUIUtilities.packageButton(spadesButton, FlowLayout.CENTER));
 		// set the action command for the spades button
 		spadesButton.addActionListener(new ActionListener() {
@@ -85,7 +90,7 @@ public class TrumpSuitGUI extends JPanel {
 		});
 
 		// create and add the hearts button
-		JButton heartsButton = GUIUtilities.createButton("Hearts");
+		heartsButton = GUIUtilities.createButton("Hearts");
 		panel.add(GUIUtilities.packageButton(heartsButton, FlowLayout.CENTER));
 		// set the action command for the hearts button
 		heartsButton.addActionListener(new ActionListener() {
@@ -99,7 +104,7 @@ public class TrumpSuitGUI extends JPanel {
 		});
 
 		// create and add the diamonds button
-		JButton diamondsButton = GUIUtilities.createButton("Diamonds");
+		diamondsButton = GUIUtilities.createButton("Diamonds");
 		panel.add(GUIUtilities.packageButton(diamondsButton, FlowLayout.CENTER));
 		// set the action command for the diamonds button
 		diamondsButton.addActionListener(new ActionListener() {
@@ -113,7 +118,7 @@ public class TrumpSuitGUI extends JPanel {
 		});
 
 		// create and add the clubs button
-		JButton clubsButton = GUIUtilities.createButton("Clubs");
+		clubsButton = GUIUtilities.createButton("Clubs");
 		panel.add(GUIUtilities.packageButton(clubsButton, FlowLayout.CENTER));
 		// set the action command for the clubs button
 		clubsButton.addActionListener(new ActionListener() {
@@ -127,7 +132,7 @@ public class TrumpSuitGUI extends JPanel {
 		});
 
 		// create and add the notrump button
-		JButton noTrumpButton = GUIUtilities.createButton("No Trump");
+		noTrumpButton = GUIUtilities.createButton("No Trump");
 		panel.add(GUIUtilities.packageButton(noTrumpButton, FlowLayout.CENTER));
 		// set the action command for the notrump button
 		noTrumpButton.addActionListener(new ActionListener() {
@@ -142,29 +147,38 @@ public class TrumpSuitGUI extends JPanel {
 
 		if (Game.isTestMode()) {
 
-			if (handNum == 1) {
-
-				// only heart can be the trump for the first hand
-				spadesButton.setEnabled(false);
-				diamondsButton.setEnabled(false);
-				clubsButton.setEnabled(false);
-				noTrumpButton.setEnabled(false);
-
-			} else if (handNum == 2) {
-
-				// only no trump can be the trump suit in second hand
-
-				heartsButton.setEnabled(false);
-				noTrumpButton.setEnabled(true);
-
-			} else {
-
-				throw new AssertionError(
-						"TrumpSuitGUI : There are only two hands");
-			}
+			enableAndDisableButtons();
 		}
 		return panel;
 
+	}
+
+	/**
+	 * Depending on what hand it is, it only enables the button corresponding to the appropriate trump suit for bid
+	 * @throws AssertionError
+	 */
+	private void enableAndDisableButtons() throws AssertionError {
+		
+		if (handNum == 1) {
+
+			// only heart can be the trump for the first hand
+			spadesButton.setEnabled(false);
+			diamondsButton.setEnabled(false);
+			clubsButton.setEnabled(false);
+			noTrumpButton.setEnabled(false);
+
+		} else if (handNum == 2) {
+
+			// only no trump can be the trump suit in second hand
+
+			heartsButton.setEnabled(false);
+			noTrumpButton.setEnabled(true);
+
+		} else {
+
+			throw new AssertionError(
+					"TrumpSuitGUI : There are only two hands");
+		}
 	}
 
 	/**
@@ -173,6 +187,8 @@ public class TrumpSuitGUI extends JPanel {
 	 */
 	public void setHandNum(int handNum) {
 		this.handNum = handNum;
+		
+		enableAndDisableButtons();
 	}
 
 }

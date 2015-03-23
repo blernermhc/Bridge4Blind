@@ -75,8 +75,12 @@ public class ScanDummyGUI extends JPanel implements GameListener {
 
 	@Override
 	public void gameReset() {
-		// TODO Auto-generated method stub
-		
+
+		clubsScanned.setText("Clubs:  ");
+		diamondsScanned.setText("Diamonds:  ");
+		heartsScanned.setText("Hearts:  ");
+		spadesScanned.setText("Spades:  ");
+		repaint();
 	}
 
 	@Override

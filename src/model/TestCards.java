@@ -1,6 +1,11 @@
 package model;
 
-
+/**
+ * The cards for the first two hands are hardcoded. This class provides the DummyHandler with the next card.
+ * @author Humaira Orchee
+ * @version March 12, 2015
+ *
+ */
 public class TestCards {
 		
 	
@@ -89,6 +94,9 @@ public class TestCards {
 	}
 
 
+	/**
+	 * Creates Hand 2. Bid is 3 No Trump. West is declarer. East is dummy. East is also blind. 
+	 */
 	private void createHand2() {
 		// Hand 2
 		
@@ -216,6 +224,9 @@ public class TestCards {
 	}
 
 
+	/**
+	 * Creates Hand 1. Bid is 4 Hearts. Blind is east. South is declarer. North is dummy.
+	 */
 	private void createHand1() {
 		// Hand 1
 		

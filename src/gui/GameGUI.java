@@ -21,7 +21,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 
-import controller.DummyHandler;
+import controller.TestHandler;
 import model.Card;
 import model.Contract;
 import model.Direction;
@@ -64,7 +64,7 @@ public class GameGUI extends JFrame implements GameListener {
 	// GameStatusGUI should switch to the following three screens
 	protected static final int NONE = 11;
 
-	protected static final int SWITCH_TO_DUMMY = 12;
+	protected static final int SWITCH_TO_SCAN_DUMMY = 12;
 
 	protected static final int SWITCH_TO_SCANNING_BLIND = 13;
 
@@ -402,7 +402,7 @@ public class GameGUI extends JFrame implements GameListener {
 	@SuppressWarnings("boxing")
 	protected void changeFrame() {
 
-		// debugMsg("before change frame currentScreen " + currentScreen);
+		System.out.println("before change frame currentScreen " + currentScreen);
 
 		// advance to the appropriate screen
 		screensViewed.push(currentScreen);
@@ -415,16 +415,19 @@ public class GameGUI extends JFrame implements GameListener {
 			currentScreen = GAME_STATUS_GUI;
 
 		} else if (currentScreen == GAME_STATUS_GUI) {
+			
+			System.out.println("current screen is game status gui");
 
 			// if a new hand is started, then screen should change from
-			// GameStatusGUI to VI_PLAYER_GUI. If, after the first card has been
+			// GameStatusGUI to SCANNING_BLIND_GUI. If, after the first card has been
 			// played and blind person is not dummy, then screen needs to switch
 			// from GameStatusGUI to SCAN_DUMMY_GUI. Else, do nothing.
-			if (switchFromGameStatusGUI == SWITCH_TO_SCANNING_BLIND) {
+			
+			/*if (switchFromGameStatusGUI == SWITCH_TO_SCANNING_BLIND) {
 
-				currentScreen = VI_PLAYER_GUI;
+				currentScreen = SCANNING_BLIND_GUI;
 
-			} else if (switchFromGameStatusGUI == SWITCH_TO_DUMMY) {
+			} else*/ if (switchFromGameStatusGUI == SWITCH_TO_SCAN_DUMMY) {
 
 				currentScreen = SCAN_DUMMY_GUI;
 
@@ -449,6 +452,8 @@ public class GameGUI extends JFrame implements GameListener {
 
 		layout.show(cardPanel, cardNames[currentScreen]);
 		requestFocusInWindow();
+		
+		System.out.println("after change frame currentScreen " + currentScreen);
 
 		// debugMsg("currentScreen " + currentScreen);
 	}
@@ -460,11 +465,11 @@ public class GameGUI extends JFrame implements GameListener {
 				|| currentScreen == BID_NUMBER_GUI
 				|| currentScreen == BID_POSITION_GUI) {
 
-			((DummyHandler) game.getHandler()).setRightGUI(false);
+			((TestHandler) game.getHandler()).setRightGUI(false);
 
 		} else {
 
-			((DummyHandler) game.getHandler()).setRightGUI(true);
+			((TestHandler) game.getHandler()).setRightGUI(true);
 		}
 	}
 
@@ -521,9 +526,8 @@ public class GameGUI extends JFrame implements GameListener {
 		currentScreen = SCANNING_BLIND_GUI;
 		screensViewed.clear();
 		screensViewed.push(SCANNING_BLIND_GUI);
-		switchFromGameStatusGUI = SWITCH_TO_SCANNING_BLIND;
-
-		// create the guis again? otherwise does not work
+		//switchFromGameStatusGUI = SWITCH_TO_SCANNING_BLIND;
+		switchFromGameStatusGUI = NONE ;
 		
 		gameStatusGUI.setFirstCardPlayed(false);
 
@@ -617,7 +621,10 @@ public class GameGUI extends JFrame implements GameListener {
 	}
 
 	public void setSwitchFromGameStatusGUI(int switchFromGameStatusGUI) {
+		
 		this.switchFromGameStatusGUI = switchFromGameStatusGUI;
+		
+		System.out.println("switchFromGameStatusGUI " + switchFromGameStatusGUI);
 	}
 
 	/*	*//**
