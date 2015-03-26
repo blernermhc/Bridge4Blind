@@ -26,6 +26,7 @@ import model.Player;
  *@version March 12, 2015
  */
 public class ScanDummyGUI extends JPanel implements GameListener {
+	
 	private GameGUI gameGUI;
 	private Game game;
 	private Player dummy;

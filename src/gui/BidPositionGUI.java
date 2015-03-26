@@ -15,6 +15,7 @@ import model.Game;
  **/
 
 public class BidPositionGUI extends DirectionGUI {
+	
 	private Game game;
 	private GameGUI gameGUI;
 

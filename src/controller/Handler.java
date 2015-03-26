@@ -91,5 +91,7 @@ public abstract class Handler implements Runnable, KeyListener {
 	 */
 	public abstract void switchHand(final Direction turn) throws IOException,
 			InterruptedException;
+	
+	
 
 }

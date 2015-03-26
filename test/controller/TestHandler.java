@@ -244,6 +244,8 @@ public class TestHandler extends Handler {
 		}
 
 		if (e.getKeyCode() == KeyEvent.VK_SPACE) {
+			
+			System.out.println("***********************************************************");
 
 			cardRequestSent = true;
 

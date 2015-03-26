@@ -28,7 +28,7 @@ public class CardIdentifier implements CardListener {
 	private Card lastIded;
 
 	private static final Timer DUPLICATE_TIMER = new Timer(true);
-	
+
 	private TimerTask clearLastFoundTask;
 
 	/**
@@ -41,9 +41,11 @@ public class CardIdentifier implements CardListener {
 		game = g;
 	}
 
-	/** 
+	/**
 	 * Called when a card is found on an antenna
-	 * @param c the card found
+	 * 
+	 * @param c
+	 *            the card found
 	 */
 	@Override
 	public synchronized void cardFound(Card c) {
@@ -54,15 +56,23 @@ public class CardIdentifier implements CardListener {
 			if (clearLastFoundTask != null) {
 				clearLastFoundTask.cancel();
 			}
+
 			clearLastFoundTask = new TimerTask() {
 				@Override
 				public void run() {
-					synchronized (CardIdentifier.this) {
-						System.out.println("Resetting lastfound.  Was " + lastIded.toString());
-						lastIded = null;
+
+					try {
+						synchronized (CardIdentifier.this) {
+							System.out.println("Resetting lastfound.  Was "
+									+ lastIded.toString());
+							lastIded = null;
+						}
+					} catch (Exception e) {
+
+						e.printStackTrace();
 					}
 				}
-				
+
 			};
 			DUPLICATE_TIMER.schedule(clearLastFoundTask, 5000);
 		}
@@ -70,31 +80,36 @@ public class CardIdentifier implements CardListener {
 
 	/**
 	 * Tell the game that the card was found by the hardware
-	 * @param c the card found
+	 * 
+	 * @param c
+	 *            the card found
 	 */
 	protected void tellGameAboutCard(Card c) {
 		game.cardIded(c);
 	}
-	
+
 	/**
 	 * Tests the CardIdentifier class
-	 * @param args none
+	 * 
+	 * @param args
+	 *            none
 	 */
 	public static void main(String[] args) {
-		final CardIdentifier ider = new CardIdentifier(new Game(new AntennaHandler(new CardDatabase()), false) {
+		final CardIdentifier ider = new CardIdentifier(new Game(
+				new AntennaHandler(new CardDatabase()), false) {
 			@Override
 			public void cardIded(Card c) {
 				System.out.println("Game sees " + c.toString());
 			}
 		});
-		
+
 		final Card c = new Card(Rank.ACE, Suit.CLUBS);
 		Card c2 = new Card(Rank.ACE, Suit.DIAMONDS);
 		ider.cardFound(c);
 		ider.cardFound(c);
 		ider.cardFound(c2);
 		ider.cardFound(c);
-		
+
 		// Bizarrely, if I just call Thread.sleep, the thread never wakes up.
 		Timer t = new Timer(true);
 		t.schedule(new TimerTask() {
@@ -103,9 +118,9 @@ public class CardIdentifier implements CardListener {
 				ider.cardFound(c);
 				System.exit(0);
 			}
-			
+
 		}, 1000, 1000);
-		
+
 		// Prevent the main method from exiting.
 		try {
 			Thread.sleep(5000);

@@ -17,6 +17,7 @@ import model.Suit;
  *
  */
 public class BidStatusGUI extends JComponent {
+	
 	private static final Font BID_FONT = GameStatusGUI.STATUS_FONT.deriveFont(36f);
 	private static final int SPACING = 20;
 	private String bid = "3" + Suit.DIAMONDS;
@@ -36,14 +37,14 @@ public class BidStatusGUI extends JComponent {
 	
 	private int getLeft(String text, FontMetrics metrics) {
 		int textWidth = metrics.stringWidth(text);
-		System.out.println("component width = " + getWidth());
-		System.out.println("left = " + (getWidth()-textWidth)/2);
+		//System.out.println("component width = " + getWidth());
+		//System.out.println("left = " + (getWidth()-textWidth)/2);
 		return (getWidth()-textWidth)/2;
 	}
 	
 	private int getBidBottom() {
-		System.out.println("component height = " + getHeight());
-		System.out.println("Bottom = " + getHeight()/3);
+		//System.out.println("component height = " + getHeight());
+		//System.out.println("Bottom = " + getHeight()/3);
 		return getHeight() / 3;
 	}
 	

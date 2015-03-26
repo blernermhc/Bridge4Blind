@@ -105,7 +105,7 @@ public class GameGUI extends JFrame implements GameListener {
 	// private JLabel antennaLabel;
 	// private JLabel trickLabel;
 
-	/** Font used to display messsages on the main screen */
+	/** Font used to display messages on the main screen */
 	public static final Font INFO_FONT = new Font("Verdana", Font.BOLD, 30);
 
 	private String[] cardNames;
@@ -403,7 +403,7 @@ public class GameGUI extends JFrame implements GameListener {
 	@SuppressWarnings("boxing")
 	protected void changeFrame() {
 
-		System.out.println("before change frame currentScreen " + currentScreen);
+		//System.out.println("before change frame currentScreen " + currentScreen);
 
 		// advance to the appropriate screen
 		screensViewed.push(currentScreen);
@@ -417,7 +417,7 @@ public class GameGUI extends JFrame implements GameListener {
 
 		} else if (currentScreen == GAME_STATUS_GUI) {
 			
-			System.out.println("current screen is game status gui");
+			//System.out.println("current screen is game status gui");
 
 			// if a new hand is started, then screen should change from
 			// GameStatusGUI to SCANNING_BLIND_GUI. If, after the first card has been
@@ -456,7 +456,7 @@ public class GameGUI extends JFrame implements GameListener {
 		layout.show(cardPanel, cardNames[currentScreen]);
 		requestFocusInWindow();
 		
-		System.out.println("after change frame currentScreen " + currentScreen);
+		//System.out.println("after change frame currentScreen " + currentScreen);
 
 		// debugMsg("currentScreen " + currentScreen);
 	}

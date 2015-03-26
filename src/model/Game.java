@@ -19,6 +19,7 @@ import controller.Handler;
  */
 
 public class Game {
+	
 	private static final int DELAY_AFTER_SCANNING_DUMMY = 1000;
 
 	/** Number of tricks that make up a hand */
@@ -122,8 +123,11 @@ public class Game {
 	public void initPlayingPhase(Direction declarer) {
 
 		contract.setBidWinner(declarer);
+		
 		dummyDirection = declarer.getPartner();
+		
 		players[dummyDirection.ordinal()].setDummy(true);
+		
 		turn = declarer.getNextDirection();
 		try {
 			handler.switchHand(turn);
@@ -170,6 +174,8 @@ public class Game {
 	/** Clears all hands of cards and sets the game back into the dealing phase. */
 	// TODO:  Do I need this method or just resetGame?
 	public void resetHands() {
+		
+		System.out.println("Game resetHand");
 
 		for (int i = 0; i < players.length; i++) {
 			players[i].newHand();
@@ -180,6 +186,9 @@ public class Game {
 	 * Reinitializes everything to prepare to play a new hand.
 	 */
 	public void resetGame() {
+		
+		System.out.println("Game resetGame");
+		
 		resetHands();
 		currentTrick = new Trick();
 		contract = new Contract();
@@ -191,6 +200,8 @@ public class Game {
 		for (GameListener listener : listeners) {
 			listener.gameReset();
 		}
+		
+		
 	}
 
 	/**
@@ -420,13 +431,16 @@ public class Game {
 		return (players[direction.ordinal()]).getTricksWon();
 	}
 
-	private boolean allTricksOver() {
+	public boolean allTricksOver() {
+		
 		int totalTricks = 0;
 
 		for (int i = 0; i < players.length; i++) {
 			totalTricks += players[i].getTricksWon();
 		}
 
+		System.out.println("All tricks over? totalTricks " + totalTricks);
+		
 		if (totalTricks == TRICKS_IN_HAND) {
 			return true;
 		}
@@ -607,6 +621,12 @@ public class Game {
 	public static boolean isTestMode() {
 		return isTestMode;
 	}
+	
+	public Direction getBidWinner(){
+		
+		return contract.getBidWinner() ;
+	}
+	
 	
 	
 

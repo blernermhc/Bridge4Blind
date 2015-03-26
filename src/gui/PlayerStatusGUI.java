@@ -235,11 +235,13 @@ public class PlayerStatusGUI extends JComponent {
 		
 			trickOver = true ;
 			
-			notify();
+			
 			
 			System.out.println("notified trick over");
 			
 			paintImmediately(0, 0, getWidth(), getHeight());
+			
+			notify();
 			
 			//repaint() ;
 			
@@ -254,6 +256,8 @@ public class PlayerStatusGUI extends JComponent {
 
 		System.out.println("player status gui next player " + dir);
 
+		//Thread.dumpStack();
+		
 		setBorder(NEXT_PLAYER_BORDER);
 		repaint();
 	}
