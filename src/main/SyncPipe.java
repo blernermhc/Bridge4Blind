@@ -1,9 +1,11 @@
 package main;
+
 import java.io.InputStream;
 import java.io.OutputStream;
 
 class SyncPipe implements Runnable {
 	/**
+	 * Needed to give commands to the command line through the Java application
 	 * Code from
 	 * http://stackoverflow.com/questions/4157303/how-to-execute-cmd-commands
 	 * -via-java

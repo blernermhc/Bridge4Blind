@@ -73,6 +73,12 @@ public class BridgeActualGame implements BridgeMode {
 
 	}
 
+	/**
+	 * Starts the C# Server
+	 * 
+	 * @throws IOException
+	 * @throws InterruptedException
+	 */
 	private void startServer() throws IOException, InterruptedException {
 
 		// got code from
