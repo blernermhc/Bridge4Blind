@@ -278,6 +278,7 @@ public class TestCards {
 		
 		cards[30] =  ACE_SPADES ; // west
 		cards[31] = SEVEN_SPADES ; // north
+		//cards[32] = SIX_SPADES ; // east. To check that the blind player cannot play a card it does not have
 		cards[32] = THREE_SPADES ; // east
 		cards[33] =  FIVE_HEARTS ; // south
 		
@@ -286,6 +287,7 @@ public class TestCards {
 		// TRICK 3. SOUTH plays first
 		cards[34] = KING_HEARTS ; // south
 		cards[35] = TWO_HEARTS ; // west
+		//cards[36] = ACE_HEARTS ; // north. To check that the dummy player cannot play a card it does not have
 		cards[36] = SIX_HEARTS ; // north
 		cards[37] = FOUR_HEARTS ; // east
 		

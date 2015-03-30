@@ -117,10 +117,7 @@ public class GameStatusGUI extends JPanel implements GameListener {
 
 		System.out.println("GameStatusGui gameReset  " + count);
 
-		for (int i = 0; i < playerGUIs.length; i++) {
-
-			playerGUIs[i].clear();
-		}
+		
 
 		bidGUI.clear();
 
@@ -293,6 +290,14 @@ public class GameStatusGUI extends JPanel implements GameListener {
 	@Override
 	public void contractSet(Contract contract) {
 		bidGUI.setBid(contract);
+		
+		for (int i = 0; i < playerGUIs.length; i++) {
+
+			playerGUIs[i].clear();
+		}
+		
+		// highlight the first player of each hand
+		playerGUIs[contract.getBidWinner().getNextDirection().ordinal()].nextPlayer();
 	}
 
 	@Override

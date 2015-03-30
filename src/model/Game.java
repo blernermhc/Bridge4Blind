@@ -356,9 +356,12 @@ public class Game {
 			currentTrick.setLedSuit(card.getSuit());
 		}
 		
+		// TODO LOOK HERE
+		// isLegal
 		if (currentTrick.getCard(position) == null) {
 			//System.out.println("Adding card to trick");
 			if (!players[position].isLegal(card, currentTrick.getLedSuit())) {
+				
 				System.out.println("*** Not a legal card: " + card.toString());
 				SoundManager soundManager = SoundManager.getInstance();
 				

@@ -24,8 +24,11 @@ public class BidStatusGUI extends JComponent {
 	private String declarer = Direction.NORTH.toString();
 	
 	public void paintComponent(Graphics g) {
-		System.out.println("Painting the bid");
+		
+		//System.out.println("Painting the bid");
+		
 		Graphics2D g2d = (Graphics2D) g;
+		
 		//g2d.drawRect((getWidth() - CARD_WIDTH) / 2, (getHeight() - CARD_HEIGHT)/2, CARD_WIDTH, CARD_HEIGHT);
 
 		setFont(BID_FONT);

@@ -33,7 +33,7 @@ public class TestHandler extends Handler {
 	// total size = hand1 + hand 2
 	// hand1 = blind + all cards + dummy
 	// hand2 = blind + all cards (no dummy)
-	// should be 143
+	// should be 145
 	private static final int PLAYER_INDEX_SIZE = 13 + 52 + 13 + 13 + 52;
 
 	private CardDatabase cards;
@@ -76,7 +76,8 @@ public class TestHandler extends Handler {
 			WEST,
 
 			// dummy
-			NORTH, NORTH, NORTH, NORTH,
+			NORTH, NORTH,
+			NORTH,
 			NORTH,
 			NORTH,
 			NORTH,
@@ -89,10 +90,11 @@ public class TestHandler extends Handler {
 			NORTH,
 
 			// play starts
-			EAST, SOUTH, WEST, NORTH, EAST, SOUTH, SOUTH, WEST, NORTH, EAST,
-			SOUTH, WEST, NORTH, EAST, SOUTH, WEST, NORTH, EAST, SOUTH, WEST,
-			NORTH, EAST, SOUTH, WEST, NORTH, EAST, NORTH, EAST, SOUTH, WEST,
-			SOUTH, WEST, NORTH, EAST, NORTH, EAST, SOUTH, WEST,
+			NORTH, EAST, SOUTH, WEST, NORTH, EAST, SOUTH, SOUTH, WEST, NORTH,
+			EAST, SOUTH, WEST, NORTH, EAST, SOUTH, WEST, NORTH, EAST, SOUTH,
+			WEST, NORTH, EAST, SOUTH, WEST, NORTH, EAST, NORTH, EAST, SOUTH,
+			WEST, SOUTH, WEST, NORTH, EAST, NORTH, EAST, SOUTH,
+			WEST,
 			NORTH,
 			EAST,
 			SOUTH,
@@ -244,8 +246,11 @@ public class TestHandler extends Handler {
 		}
 
 		if (e.getKeyCode() == KeyEvent.VK_SPACE) {
+
+			System.out
+					.println("***********************************************************");
 			
-			System.out.println("***********************************************************");
+			System.out.println("position " + position);
 
 			cardRequestSent = true;
 
@@ -253,7 +258,10 @@ public class TestHandler extends Handler {
 
 			hands[playerIndex[position]].cardFound(nextCard);
 
-			position++;
+
+				position++;
+
+			
 
 			assert position < PLAYER_INDEX_SIZE;
 

@@ -172,7 +172,7 @@ public class GameGUI extends JFrame implements GameListener {
 		this.setVisible(true);
 		this.requestFocusInWindow();
 
-		System.out.println("current screen initially " + currentScreen);
+		//System.out.println("current screen initially " + currentScreen);
 
 	}
 
