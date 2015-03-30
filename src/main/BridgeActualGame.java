@@ -1,22 +1,49 @@
 package main;
 
+import main.SyncPipe;
 import gui.GameGUI;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.net.ConnectException;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import controller.AntennaHandler;
 import model.CardDatabase;
 import model.Game;
 import audio.AudibleGameListener;
 
-public class BridgeActualGame implements BridgeMode{
-	
-	public BridgeActualGame() {
+public class BridgeActualGame implements BridgeMode {
 
-		start();
+	// path where the .exe is
+	private static final String PATH = "C://Users//orche22h//Documents//Bridge-IndependentStudy//Bridge-Workspace//Bridge4BlindNew//Server//bin//Debug//SkyeTekReader";
+
+	// command to start the .exe file
+	// the space at the end is important
+	private static final String COMMAND = "start ";
+
+	public BridgeActualGame() throws IOException, InterruptedException {
+
+		startServer();
+
+		// start the game 15 seconds after starting the C# Server
+		TimerTask timerTask = new TimerTask() {
+
+			@Override
+			public void run() {
+
+				start();
+
+			}
+
+		};
+
+		Timer timer = new Timer(true);
+		timer.schedule(timerTask, 10000);
+
 	}
 
 	@Override
@@ -30,27 +57,47 @@ public class BridgeActualGame implements BridgeMode{
 			game.addListener(gui);
 
 			gui.debugMsg("main run");
-			
+
 		} catch (UnknownHostException e) {
 			System.err.println("Could not connect to server.  Host unknown.");
-		}
-		catch (ConnectException connectExc) {
+		} catch (ConnectException connectExc) {
 			System.err.println("The server is not running!");
-		}
-		catch (SocketException socketEsc) {
-			System.err.println("Check that there is no virus scanner blocking IRC connections.");
+		} catch (SocketException socketEsc) {
+			System.err
+					.println("Check that there is no virus scanner blocking IRC connections.");
 			socketEsc.printStackTrace();
-		} 
-		catch (IOException e) {
+		} catch (IOException e) {
 			System.err.println("Could not connect to server.");
 			e.printStackTrace();
 		}
-		
+
 	}
-	
-	public static void main(String[] args){
-		
-		new BridgeActualGame() ;
+
+	private void startServer() throws IOException, InterruptedException {
+
+		// got code from
+		// http://stackoverflow.com/questions/4157303/how-to-execute-cmd-commands-via-java
+
+		Process process = Runtime.getRuntime().exec("cmd");
+
+		new Thread(new SyncPipe(process.getErrorStream(), System.err)).start();
+		new Thread(new SyncPipe(process.getInputStream(), System.out)).start();
+
+		PrintWriter stdin = new PrintWriter(process.getOutputStream());
+
+		// stdin.println("dir");
+
+		stdin.println(COMMAND + PATH);
+
+		stdin.close();
+
+		System.out.println("return code " + process.waitFor());
+	}
+
+	public static void main(String[] args) throws IOException,
+			InterruptedException {
+
+		new BridgeActualGame();
 	}
 
 }
