@@ -19,7 +19,7 @@ import controller.Handler;
  */
 
 public class Game {
-	
+
 	private static final int DELAY_AFTER_SCANNING_DUMMY = 1000;
 
 	/** Number of tricks that make up a hand */
@@ -27,75 +27,79 @@ public class Game {
 
 	/** The number of players in the game */
 	public static final int NUM_PLAYERS = 4;
-	
-	// true is Bridege is being played in Test mode (i.e. without hardware). False if Bridge is actually being played (i.e. with the hardware)
-	private static boolean isTestMode ;
-	
+
+	// true is Bridege is being played in Test mode (i.e. without hardware).
+	// False if Bridge is actually being played (i.e. with the hardware)
+	private static boolean isTestMode;
+
 	// The collection of players
 	private Player[] players;
 
 	// the position of the blind player
 	private Direction blindDirection;
-	
+
 	// the position of the dummy hand
 	private Direction dummyDirection;
 
 	/** whose turn it is */
 	protected Direction turn;
-	
-	//who won the last trick
+
+	// who won the last trick
 	private Direction lastWinner;
-	
+
 	// the antenna handler
-	private Handler handler ;
-	//private AntennaHandler handler;
-	
+	private Handler handler;
+	// private AntennaHandler handler;
+
 	// the current contract that the team winning the bid must make
 	private Contract contract = new Contract();
-	
+
 	/** The current trick */
 	protected Trick currentTrick = new Trick();
-	
+
 	// the GUI associated with this game
 	private ArrayList<GameListener> listeners = new ArrayList<GameListener>();
-	
-	/** the current state of the game:  DEALING, FIRSTCARD, PLAYING */
+
+	/** the current state of the game: DEALING, FIRSTCARD, PLAYING */
 	protected GameState gameState = GameState.DEALING;
-	
+
 	// All the cards that have been played in the current hand
 	private Set<Card> cardsPlayed = new HashSet<Card>();
-	
-	/** Create a new game  
-	 * @param handler TODO
-	 * @param isTestMode TODO*/
+
+	/**
+	 * Create a new game
+	 * 
+	 * @param handler
+	 *            TODO
+	 * @param isTestMode
+	 *            TODO
+	 */
 	public Game(Handler handler, boolean isTestMode) {
 
-		this.isTestMode = isTestMode ;
-		
+		this.isTestMode = isTestMode;
+
 		// construct the four hands
 		players = new Player[NUM_PLAYERS];
 		for (int i = 0; i < players.length; i++) {
 			players[i] = new Player();
 		}
-		
-		this.handler = handler ;
+
+		this.handler = handler;
 
 		// construct the antenna handler
-		//handler = new AntennaHandler(new CardDatabase());
+		// handler = new AntennaHandler(new CardDatabase());
 	}
 
 	/**
-	 * Connect to the RFID server and begin listening for messages
-	 * from the server.  There is a separate object listening to 
-	 * each of the 5 antennas.	 * 
+	 * Connect to the RFID server and begin listening for messages from the
+	 * server. There is a separate object listening to each of the 5 antennas. *
 	 * 
-	 * @throws UnknownHostException if the host name being used to 
-	 * 		connect to he server is wrong
-	 * @throws IOException any other I/O problem when establishing
-	 *      the connection
+	 * @throws UnknownHostException
+	 *             if the host name being used to connect to he server is wrong
+	 * @throws IOException
+	 *             any other I/O problem when establishing the connection
 	 */
-	public void activateAntennas()
-			throws UnknownHostException, IOException {
+	public void activateAntennas() throws UnknownHostException, IOException {
 		HandAntenna[] handAntennas = new HandAntenna[NUM_PLAYERS];
 		Direction[] directions = Direction.values();
 		for (int i = 0; i < players.length; i++) {
@@ -107,10 +111,14 @@ public class Game {
 		handler.connect();
 
 		// add the listeners for the antenna handler
-		handler.addHandListener(handAntennas[Direction.NORTH.ordinal()], Direction.NORTH);
-		handler.addHandListener(handAntennas[Direction.EAST.ordinal()], Direction.EAST);
-		handler.addHandListener(handAntennas[Direction.SOUTH.ordinal()], Direction.SOUTH);
-		handler.addHandListener(handAntennas[Direction.WEST.ordinal()], Direction.WEST);
+		handler.addHandListener(handAntennas[Direction.NORTH.ordinal()],
+				Direction.NORTH);
+		handler.addHandListener(handAntennas[Direction.EAST.ordinal()],
+				Direction.EAST);
+		handler.addHandListener(handAntennas[Direction.SOUTH.ordinal()],
+				Direction.SOUTH);
+		handler.addHandListener(handAntennas[Direction.WEST.ordinal()],
+				Direction.WEST);
 		handler.addIdListener(id);
 	}
 
@@ -123,11 +131,11 @@ public class Game {
 	public void initPlayingPhase(Direction declarer) {
 
 		contract.setBidWinner(declarer);
-		
+
 		dummyDirection = declarer.getPartner();
-		
+
 		players[dummyDirection.ordinal()].setDummy(true);
-		
+
 		turn = declarer.getNextDirection();
 		try {
 			handler.switchHand(turn);
@@ -172,9 +180,9 @@ public class Game {
 	}
 
 	/** Clears all hands of cards and sets the game back into the dealing phase. */
-	// TODO:  Do I need this method or just resetGame?
+	// TODO: Do I need this method or just resetGame?
 	public void resetHands() {
-		
+
 		System.out.println("Game resetHand");
 
 		for (int i = 0; i < players.length; i++) {
@@ -186,9 +194,9 @@ public class Game {
 	 * Reinitializes everything to prepare to play a new hand.
 	 */
 	public void resetGame() {
-		
+
 		System.out.println("Game resetGame");
-		
+
 		resetHands();
 		currentTrick = new Trick();
 		contract = new Contract();
@@ -200,30 +208,41 @@ public class Game {
 		for (GameListener listener : listeners) {
 			listener.gameReset();
 		}
-		
-		
+
 	}
 
 	/**
-	 * <p>Takes the appropriate action when a card is read over a directional antenna.</p>
+	 * <p>
+	 * Takes the appropriate action when a card is read over a directional
+	 * antenna.
+	 * </p>
 	 * 
-	 * <p>During dealing, the card is added to the blind person's hand if scanned over
-	 * that person's antenna.  Does nothing if scanned over somebody else's antenna.</p>
+	 * <p>
+	 * During dealing, the card is added to the blind person's hand if scanned
+	 * over that person's antenna. Does nothing if scanned over somebody else's
+	 * antenna.
+	 * </p>
 	 * 
-	 * <p>After dealing but before the first card is complete, if the player following
-	 * the declarer scans a card, it is played into the trick.  If the dummy scans
-	 * cards, they are added to the dummy's hand.</p>
+	 * <p>
+	 * After dealing but before the first card is complete, if the player
+	 * following the declarer scans a card, it is played into the trick. If the
+	 * dummy scans cards, they are added to the dummy's hand.
+	 * </p>
 	 * 
-	 * <p>After the dummy's hand is scanned in, any further cards found are played into
-	 * the trick if they are scanned over the appropriate person's antenna</p>
+	 * <p>
+	 * After the dummy's hand is scanned in, any further cards found are played
+	 * into the trick if they are scanned over the appropriate person's antenna
+	 * </p>
 	 * 
-	 * @param direction the antenna direction that saw a card
-	 * @param card the card seen
+	 * @param direction
+	 *            the antenna direction that saw a card
+	 * @param card
+	 *            the card seen
 	 */
 	public synchronized void cardFound(Direction direction, Card card) {
 
 		debugMsg("card found");
-		
+
 		if (gameState == GameState.DEALING) {
 			debugMsg("dealing phase");
 			if (direction == blindDirection) {
@@ -232,43 +251,42 @@ public class Game {
 				scanCardIntoHand(blindDirection, card);
 				if (players[blindDirection.ordinal()].hasFullHand()) {
 					setGameState(GameState.FIRSTCARD);
-					
+
 					for (GameListener listener : listeners) {
 						listener.blindHandScanned();
 					}
-					
+
 				}
 			}
 
 		} else if (gameState == GameState.FIRSTCARD) {
 			assert dummyDirection != null;
-			//System.out.println("State is FIRSTCARD");
-			//System.out.println("direction = " + direction);
-			//System.out.println("turn = " + turn);
-			//System.out.println("blindDirection = " + blindDirection);
-			//System.out.println("dummyDirection = " + dummyDirection);
-			
+			// System.out.println("State is FIRSTCARD");
+			// System.out.println("direction = " + direction);
+			// System.out.println("turn = " + turn);
+			// System.out.println("blindDirection = " + blindDirection);
+			// System.out.println("dummyDirection = " + dummyDirection);
+
 			// First card is being played before the dummy is revealed.
 			if (direction == turn) {
 				assert dummyDirection.follows(direction);
 				playCard(card);
 
-				if (dummyDirection == blindDirection){
+				if (dummyDirection == blindDirection) {
 					for (GameListener listener : listeners) {
 						listener.dummyHandScanned();
 					}
 					setGameState(GameState.PLAYING);
-				}
-				else {
-					setGameState (GameState.SCANNING_DUMMY);
+				} else {
+					setGameState(GameState.SCANNING_DUMMY);
 				}
 				return;
 			}
 		}
-		
-		else if (gameState == GameState.SCANNING_DUMMY){ 
 
-			// First card has been played.  Time to expose the dummy hand.
+		else if (gameState == GameState.SCANNING_DUMMY) {
+
+			// First card has been played. Time to expose the dummy hand.
 			if (direction == dummyDirection) {
 				debugMsg("Adding card to dummy hand at " + dummyDirection);
 				scanCardIntoHand(dummyDirection, card);
@@ -276,7 +294,7 @@ public class Game {
 					for (GameListener listener : listeners) {
 						listener.dummyHandScanned();
 					}
-					
+
 					// Delay going into the playing state so that the last
 					// card scanned is not immediately played.
 					try {
@@ -298,7 +316,7 @@ public class Game {
 					debugMsg("Trick over");
 					endTrick();
 				}
-	
+
 				if (allTricksOver()) {
 					debugMsg("Round over");
 					gameState = GameState.DEALING;
@@ -330,10 +348,11 @@ public class Game {
 	}
 
 	/**
-	 * Play a card into the trick.  Does not add the card if the
-	 * card has been previously played in this hand, or if it 
-	 * is not legal to play the card.
-	 * @param card the card played
+	 * Play a card into the trick. Does not add the card if the card has been
+	 * previously played in this hand, or if it is not legal to play the card.
+	 * 
+	 * @param card
+	 *            the card played
 	 * @return true if the card was added to the trick.
 	 */
 	private boolean playCard(Card card) {
@@ -344,31 +363,31 @@ public class Game {
 		if (cardsPlayed.contains(card)) {
 			return false;
 		}
-		
-		//System.out.println("Staring playCard");
+
+		// System.out.println("Staring playCard");
 		// Ignore multiple antenna readings of the same card
 		int position = turn.ordinal();
-		
+
 		// First card in game or first card in a new trick
 		if (currentTrick.isEmpty() || currentTrick.isOver()) {
-			//System.out.println("Starting new trick");
+			// System.out.println("Starting new trick");
 			currentTrick = new Trick();
 			currentTrick.setLedSuit(card.getSuit());
 		}
-		
+
 		// TODO LOOK HERE
 		// isLegal
 		if (currentTrick.getCard(position) == null) {
-			//System.out.println("Adding card to trick");
+			// System.out.println("Adding card to trick");
 			if (!players[position].isLegal(card, currentTrick.getLedSuit())) {
-				
+
 				System.out.println("*** Not a legal card: " + card.toString());
 				SoundManager soundManager = SoundManager.getInstance();
-				
+
 				// Need a better sound here!!!
 				soundManager.addSound("/sounds/bidding/0.WAV");
 				soundManager.playSounds();
-				
+
 				return false;
 			}
 
@@ -377,57 +396,72 @@ public class Game {
 			cardsPlayed.add(card);
 			players[position].removeCard(card);
 			currentTrick.add(card, position);
-			//System.out.println("Notifying listeners");
+			// System.out.println("Notifying listeners");
 			for (GameListener listener : listeners) {
 				listener.cardPlayed(turn, card);
 			}
-			//System.out.println("Done notifying listeners");
+			// System.out.println("Done notifying listeners");
 			turn = turn.getNextDirection();
-			//System.out.println("Switching antenna");
+			// System.out.println("Switching antenna");
 			switchHand(turn);
 			return true;
 		}
-		
-		// This should never happen.  It would mean that the wrong antenna
+
+		// This should never happen. It would mean that the wrong antenna
 		// was being listened to.
 		assert false;
 		return false;
-		
-		//System.out.println("Returning from playCard");
+
+		// System.out.println("Returning from playCard");
 	}
 
 	/**
 	 * Scan a card into a hand, reading it out loud
-	 * @param dir the direction of the hand being scanned into
-	 * @param card the card being scanned
+	 * 
+	 * @param dir
+	 *            the direction of the hand being scanned into
+	 * @param card
+	 *            the card being scanned
 	 */
 	protected void scanCardIntoHand(Direction dir, Card card) {
+
+		int pos = dir.ordinal();
+
+		// dummy and blind, dont say the card out loud if the player already has
+		// the card
+		if (players[pos].isBlind() || players[pos].isDummy()) {
+			if (players[pos].getHand().containsCard(card)) {
+
+				return;
+			}
+		}
 		for (GameListener listener : listeners) {
 			listener.cardScanned(card);
 		}
-				
-		int pos = dir.ordinal();
+
+		// int pos = dir.ordinal();
 		players[pos].addCard(card);
-		//System.out.println("Game.scanCardIntoHand returning");
+		// System.out.println("Game.scanCardIntoHand returning");
 	}
 
 	/**
-	 * Called when a card is identified on the id antenna.  Passes the 
-	 * message on to all the listeners of the game using their cardScanned
-	 * method.
+	 * Called when a card is identified on the id antenna. Passes the message on
+	 * to all the listeners of the game using their cardScanned method.
 	 * 
-	 * @param c the card that was identified.
+	 * @param c
+	 *            the card that was identified.
 	 */
 	public void cardIded(Card c) {
-		for (GameListener listener : listeners) { 
+		for (GameListener listener : listeners) {
 			listener.cardScanned(c);
 		}
 	}
 
 	/**
 	 * 
-	 * @param direction the position of the player whose number of tricks won
-	 * 		is reported
+	 * @param direction
+	 *            the position of the player whose number of tricks won is
+	 *            reported
 	 * @return the number of tricks won by that player's team.
 	 */
 	public int getTricksWon(Direction direction) {
@@ -435,7 +469,7 @@ public class Game {
 	}
 
 	public boolean allTricksOver() {
-		
+
 		int totalTricks = 0;
 
 		for (int i = 0; i < players.length; i++) {
@@ -443,7 +477,7 @@ public class Game {
 		}
 
 		System.out.println("All tricks over? totalTricks " + totalTricks);
-		
+
 		if (totalTricks == TRICKS_IN_HAND) {
 			return true;
 		}
@@ -470,12 +504,13 @@ public class Game {
 	public Player[] getPlayers() {
 		return players;
 	}
-	
+
 	/**
-	 * Set the position of the blind player and switches the server to 
-	 * listen to the blind person's antenna.
+	 * Set the position of the blind player and switches the server to listen to
+	 * the blind person's antenna.
 	 * 
-	 * @param blindPosition the position of the blind player
+	 * @param blindPosition
+	 *            the position of the blind player
 	 */
 	public void setBlindPosition(Direction blindPosition) {
 		this.blindDirection = blindPosition;
@@ -509,16 +544,17 @@ public class Game {
 	}
 
 	/**
-	 * Undoes the playing of the last card into the trick.  Does nothing if the
+	 * Undoes the playing of the last card into the trick. Does nothing if the
 	 * trick is empty.
 	 */
-	public void undo(){
+	public void undo() {
 
 		System.out.println("undo card");
 
-		if (!currentTrick.isEmpty()){
+		if (!currentTrick.isEmpty()) {
 			int predecessorPos = turn.getPreviousDirection().ordinal();
-			players[predecessorPos].addCard(currentTrick.getCard(predecessorPos));
+			players[predecessorPos].addCard(currentTrick
+					.getCard(predecessorPos));
 			currentTrick.clearCard(predecessorPos);
 			turn = turn.getPreviousDirection();
 			switchHand(turn);
@@ -526,27 +562,26 @@ public class Game {
 	}
 
 	/**
-	 * Undo an entire trick.  Does nothing if the trick is empty or over.
+	 * Undo an entire trick. Does nothing if the trick is empty or over.
 	 */
-	public void undoTrick(){
+	public void undoTrick() {
 		if (currentTrick.isEmpty() || currentTrick.isOver()) {
 			return;
 		}
 
 		System.out.println("undo trick");
 
-		for (int i = 0; i < 4; i++){
+		for (int i = 0; i < 4; i++) {
 			Card c = currentTrick.getCard(i);
-			if (c != null){
+			if (c != null) {
 				players[i].addCard(c);
 			}
 		}
 
 		currentTrick = new Trick();
-		if (lastWinner != null){
+		if (lastWinner != null) {
 			turn = lastWinner;
-		} 
-		else {
+		} else {
 			turn = getDummyPosition().getPartner();
 		}
 
@@ -561,7 +596,7 @@ public class Game {
 	 */
 	public void setTrump(Suit suit) {
 		contract.setTrump(suit);
-		
+
 		for (GameListener listener : listeners) {
 			listener.contractSet(contract);
 		}
@@ -587,7 +622,7 @@ public class Game {
 	public boolean isScanningDummy() {
 		return gameState == GameState.SCANNING_DUMMY;
 	}
-	
+
 	@SuppressWarnings("javadoc")
 	public String getCurrentHand() {
 		if (turn == null) {
@@ -624,13 +659,10 @@ public class Game {
 	public static boolean isTestMode() {
 		return isTestMode;
 	}
-	
-	public Direction getBidWinner(){
-		
-		return contract.getBidWinner() ;
+
+	public Direction getBidWinner() {
+
+		return contract.getBidWinner();
 	}
-	
-	
-	
 
 }

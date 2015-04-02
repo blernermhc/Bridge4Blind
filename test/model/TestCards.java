@@ -235,6 +235,7 @@ public class TestCards {
 		// first 13 are blind person's cards. Remember to make blind East
 		cards[0] = EIGHT_SPADES ;
 		cards[1] = FIVE_SPADES ;
+		//cards[1] = EIGHT_SPADES ;
 		cards[2] = THREE_SPADES ;
 		cards[3] = TWO_SPADES ;
 		cards[4] = JACK_CLUBS ;
