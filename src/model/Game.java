@@ -432,7 +432,20 @@ public class Game {
 		if (players[pos].isBlind() || players[pos].isDummy()) {
 			if (players[pos].getHand().containsCard(card)) {
 
+				System.out.println("The player already has the card");
+				
 				return;
+			}
+		}
+		
+		// dont let the blind player's cards be scanned into the dummy's hand
+		if(players[pos].isDummy() && !players[pos].isBlind()){
+			
+			if(getBlindPlayer().getHand().containsCard(card)){
+				
+				System.out.println("These are blind player's cards. Cannot be scanned into the dummy hand.");
+				
+				return ;
 			}
 		}
 		for (GameListener listener : listeners) {

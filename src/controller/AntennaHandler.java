@@ -5,8 +5,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.util.Timer;
+import java.util.TimerTask;
 
+import main.BridgeActualGame;
 import model.Card;
 import model.CardDatabase;
 import model.Direction;
@@ -64,8 +68,10 @@ public class AntennaHandler extends Handler {
 	// Id of the current player antenna
 	private String turnId;
 	
+
+	
 	/**
-	 * Creates a new AntennaHandler with the apporiate Card Database
+	 * Creates a new AntennaHandler with the appropriate Card Database
 	 * @param data the database to be used
 	 */
 	public AntennaHandler(CardDatabase data){
@@ -174,6 +180,8 @@ public class AntennaHandler extends Handler {
 	public String requestCard(byte[] messageRec)
 			throws IOException {
 		synchronized(out) {
+			
+			try{
 			out.write("T".getBytes());
 			out.flush();
 			//System.out.println("Card request sent");
@@ -189,6 +197,12 @@ public class AntennaHandler extends Handler {
 			//System.out.println("Got a card");
 
 			out.notify();
+			
+			}catch(SocketException e){
+				
+				
+				//e.printStackTrace();
+			}
 
 		}
 		

@@ -22,6 +22,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 
 import controller.TestHandler;
+import main.BridgeActualGame;
 import model.Card;
 import model.Contract;
 import model.Direction;
@@ -96,7 +97,9 @@ public class GameGUI extends JFrame implements GameListener {
 	// trump suit gui
 	private TrumpSuitGUI trumpSuitGUI;
 
-	private JButton backButton;
+	// If the server stops for any reason, clicking this button should let the
+	// players continue with the game
+	private JButton resumeButton;
 	private JButton resetButton;
 	private JButton helpButton;
 	private JButton quitButton;
@@ -178,7 +181,7 @@ public class GameGUI extends JFrame implements GameListener {
 
 	private JPanel createButtonPanel() {
 		JPanel southPanel = new JPanel(new GridLayout(1, 0));
-		southPanel.add(createBackButtonPanel());
+		southPanel.add(createResumeButtonPanel());
 		southPanel.add(createHelpButtonPanel());
 		southPanel.add(createResetButtonPanel());
 		southPanel.add(createQuitPanel());
@@ -369,25 +372,41 @@ public class GameGUI extends JFrame implements GameListener {
 	}
 
 	/**
-	 * Creates the "back" button panel at the bottom of the screen.
+	 * Creates the "resume" button panel at the bottom of the screen.
 	 * 
 	 * @return A JPanel containing a single, left-oriented "back" button.
 	 */
-	protected JPanel createBackButtonPanel() {
+	protected JPanel createResumeButtonPanel() {
 
 		// create a new JPanel with a FlowLayout
 		JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 5));
-		backButton = GUIUtilities.createButton("Back");
-		backButton.addActionListener(new ActionListener() {
+		resumeButton = GUIUtilities.createButton("Resume");
+		resumeButton.addActionListener(new ActionListener() {
 
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
-				reverse();
+				//reverse();
+				
+				try {
+					
+					//BridgeActualGame.getGame().activateAntennas();
+					
+					BridgeActualGame.startServer();
+					
+					BridgeActualGame.getGame().activateAntennas() ;
+					
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
 
 		});
 
-		panel.add(GUIUtilities.packageButton(backButton, FlowLayout.LEFT));
+		panel.add(GUIUtilities.packageButton(resumeButton, FlowLayout.LEFT));
 		return panel;
 	}
 
