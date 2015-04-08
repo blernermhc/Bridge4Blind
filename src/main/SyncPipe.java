@@ -3,7 +3,7 @@ package main;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-class SyncPipe implements Runnable {
+public class SyncPipe implements Runnable {
 	/**
 	 * Needed to give commands to the command line through the Java application
 	 * Code from

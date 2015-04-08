@@ -48,7 +48,7 @@ public class Game {
 	private Direction lastWinner;
 
 	// the antenna handler
-	private Handler handler;
+	protected Handler handler;
 	// private AntennaHandler handler;
 
 	// the current contract that the team winning the bid must make
