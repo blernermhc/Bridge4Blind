@@ -393,7 +393,9 @@ public class GameGUI extends JFrame implements GameListener {
 					
 					BridgeActualGame.startServer();
 					
-					BridgeActualGame.getGame().activateAntennas() ;
+					game.activateAntennas() ;
+					
+					game.resumeGame();
 					
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
@@ -406,7 +408,13 @@ public class GameGUI extends JFrame implements GameListener {
 
 		});
 
+		if(Game.isTestMode()){
+			
+			resumeButton.setEnabled(false);
+		}
+		
 		panel.add(GUIUtilities.packageButton(resumeButton, FlowLayout.LEFT));
+		
 		return panel;
 	}
 

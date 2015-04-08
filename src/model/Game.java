@@ -147,6 +147,16 @@ public class Game {
 			e.printStackTrace();
 		}
 	}
+	
+	/**
+	 * Resumes the game.
+	 * TODO : check if this starts the cycling
+	 */
+	public void resumeGame(){
+		
+		switchHand(turn);
+		
+	}
 
 	private void switchHand(Direction toPlayer) {
 		try {

@@ -25,7 +25,7 @@ public class BridgeActualGame implements BridgeMode {
 	// the space at the end is important
 	private static final String COMMAND = "start ";
 	
-	private static Game game ;
+	//private static Game game ;
 
 
 	public BridgeActualGame() throws IOException, InterruptedException {
@@ -53,7 +53,7 @@ public class BridgeActualGame implements BridgeMode {
 	public void start() {
 
 		try {
-			game = new Game(new AntennaHandler(new CardDatabase()), false);
+			Game game = new Game(new AntennaHandler(new CardDatabase()), false);
 			game.activateAntennas();
 			GameGUI gui = new GameGUI(game);
 			game.addListener(new AudibleGameListener());
@@ -105,9 +105,9 @@ public class BridgeActualGame implements BridgeMode {
 	
 	
 
-	public static Game getGame() {
-		return game;
-	}
+//	public static Game getGame() {
+//		return game;
+//	}
 
 	public static void main(String[] args) throws IOException,
 			InterruptedException {
