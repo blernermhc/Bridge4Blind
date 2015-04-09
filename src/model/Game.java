@@ -137,6 +137,8 @@ public class Game {
 		players[dummyDirection.ordinal()].setDummy(true);
 
 		turn = declarer.getNextDirection();
+		
+		System.out.println("init turn is " + turn);
 		try {
 			handler.switchHand(turn);
 		} catch (IOException e) {
@@ -154,11 +156,26 @@ public class Game {
 	 */
 	public void resumeGame(){
 		
+		System.out.println("Resuming Game");
+		
+		System.out.println("turn is " + turn);
+		
+//		// apparently at dealing phase, turn = null
+//		if(gameState == GameState.DEALING){
+//			
+//			return ;
+//		}
+		
+		handler.setCyclingThread(null);
+		
 		switchHand(turn);
 		
 	}
 
 	private void switchHand(Direction toPlayer) {
+		
+		System.out.println("Switch hand from game ");
+		
 		try {
 			handler.switchHand(toPlayer);
 		} catch (IOException e) {
@@ -254,6 +271,10 @@ public class Game {
 		debugMsg("card found");
 
 		if (gameState == GameState.DEALING) {
+			
+			System.out.println("DEALING blind turn " + turn);
+			
+			
 			debugMsg("dealing phase");
 			if (direction == blindDirection) {
 				System.out.println("dealing card into blind hand: " + card);
@@ -273,7 +294,7 @@ public class Game {
 			assert dummyDirection != null;
 			// System.out.println("State is FIRSTCARD");
 			// System.out.println("direction = " + direction);
-			// System.out.println("turn = " + turn);
+			 System.out.println("turn = " + turn);
 			// System.out.println("blindDirection = " + blindDirection);
 			// System.out.println("dummyDirection = " + dummyDirection);
 
@@ -402,6 +423,7 @@ public class Game {
 			}
 
 			debugMsg("Adding card to trick at " + turn);
+			
 
 			cardsPlayed.add(card);
 			players[position].removeCard(card);
@@ -411,7 +433,6 @@ public class Game {
 				listener.cardPlayed(turn, card);
 			}
 			// System.out.println("Done notifying listeners");
-			turn = turn.getNextDirection();
 			// System.out.println("Switching antenna");
 			switchHand(turn);
 			return true;
@@ -537,6 +558,10 @@ public class Game {
 	 */
 	public void setBlindPosition(Direction blindPosition) {
 		this.blindDirection = blindPosition;
+		
+		// TODO : may cause error
+		turn = blindPosition ;
+		
 		players[blindDirection.ordinal()].setBlind(true);
 		switchHand(blindPosition);
 	}

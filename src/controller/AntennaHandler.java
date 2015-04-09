@@ -380,6 +380,10 @@ public class AntennaHandler extends Handler {
 	 */
 	private void cycleHands() throws IOException, InterruptedException {
 
+		System.out.println("Cycle hands");
+		
+		System.out.println("onPlayerHand " + onPlayerHand);
+		
 		if (onPlayerHand) {
 			//System.out.println("Switching to ID");
 			switchHand("P");
@@ -410,6 +414,12 @@ public class AntennaHandler extends Handler {
 		// TODO Auto-generated method stub
 		
 	}
+
+	public void setCyclingThread(Thread cyclingThread) {
+		this.cyclingThread = cyclingThread;
+	}
+	
+	
 }
 
 

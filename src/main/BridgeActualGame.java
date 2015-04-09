@@ -84,6 +84,8 @@ public class BridgeActualGame implements BridgeMode {
 	 */
 	public static void startServer() throws IOException, InterruptedException {
 
+		System.out.println("Starting Server");
+		
 		// got code from
 		// http://stackoverflow.com/questions/4157303/how-to-execute-cmd-commands-via-java
 

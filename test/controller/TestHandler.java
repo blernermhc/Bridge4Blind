@@ -297,4 +297,10 @@ public class TestHandler extends Handler {
 		return null;
 	}
 
+	@Override
+	public void setCyclingThread(Thread cyclingThread) {
+		// This should remain empty. This method is specific to AntennaHandler
+		
+	}
+
 }
