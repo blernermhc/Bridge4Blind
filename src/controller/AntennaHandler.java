@@ -113,9 +113,9 @@ public class AntennaHandler extends Handler {
 					if (message.startsWith("quit")) {
 						break;
 					}
-					//System.out.println("Calling process");
+					System.out.println("Calling process");
 					process(message);
-					//System.out.println("Returned from process");
+					System.out.println("Returned from process");
 					
 					// Avoid sending card requests too quickly.
 					Thread.sleep(CARD_REQUEST_PAUSE);
@@ -153,18 +153,40 @@ public class AntennaHandler extends Handler {
 
 		String message = "";
 		//accept the message
-		//System.out.println("Waiting for next Message");
+		System.out.println("Waiting for next Message");
 		//set the message to a string
 		//System.out.println("Requesting a card");
 		while (message.startsWith("NOCARD") || message.equals("")){
 			message = requestCard(messageRec);
 			
+			
+			System.out.println("message " + message);
+			
+			System.out.println("message ends with " + message.substring(message.length() - 1));
+			
+			char c = message.charAt(message.length() - 1) ;
+			
+			String unicode = "\\u" + Integer.toHexString(c | 0x10000).substring(1) ;
+			
+			System.out.println("unicode " + unicode);
+			try{
+			if(message.endsWith("C")){
+				
+				System.out.println("This is the ID antenna");
+			}else{
+				
+				System.out.println("This is antenna " + getHandPosition(message));
+			}
+			}catch(NumberFormatException e){
+				
+			}
+			
 			if (message.startsWith("NOCARD")) {
-				//System.out.println("No card");
+				System.out.println("No card.");
 				Thread.sleep(CARD_REQUEST_PAUSE);
 			}
 		}
-		//System.out.println("Received " + message.substring(0, MESSAGE_LENGTH));
+		System.out.println("Received " + message.substring(0, MESSAGE_LENGTH));
 		message = message.substring(0, MESSAGE_LENGTH);
 		return message;
 		
@@ -223,17 +245,23 @@ public class AntennaHandler extends Handler {
 				//if the message ends with C, the card is on the id antenna
 				if (str.endsWith("C")){
 					iDListen.cardFound(thisCard);
-					//System.out.println("message sent to ID listener");
+					System.out.println("message sent to ID listener");
 					
 				//otherwise, the card is on one of the player antennas
 				} else {
-					int position = Integer.parseInt(str.substring(POSITION,MESSAGE_LENGTH)) - 1;
+					int position = getHandPosition(str);
 					hands[position].cardFound(thisCard);
-					//System.out.println("message sent to " + position);
+					System.out.println("message sent to " + position);
 				}
 			}
+
+			
 			
 		}.start();
+	}
+	
+	private int getHandPosition(final String str) {
+		return Integer.parseInt(str.substring(POSITION,MESSAGE_LENGTH)) - 1;
 	}
 
 	/**
@@ -380,17 +408,19 @@ public class AntennaHandler extends Handler {
 	 */
 	private void cycleHands() throws IOException, InterruptedException {
 
-		if (onPlayerHand) {
-			//System.out.println("Switching to ID");
-			switchHand("P");
-		} 
+//		if (onPlayerHand) {
+//			//System.out.println("Switching to ID");
+//			switchHand("P");
+//		} 
+//		
+//		else {
+//			//System.out.println("Switching to player antenna " + turnId);
+//			switchHand(turnId);
+//		}
+//
+//		onPlayerHand = !onPlayerHand;
 		
-		else {
-			//System.out.println("Switching to player antenna " + turnId);
-			switchHand(turnId);
-		}
-
-		onPlayerHand = !onPlayerHand;
+		switchHand("P");
 	}
 
 	@Override
