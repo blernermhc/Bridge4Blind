@@ -66,6 +66,9 @@ public class Game {
 	// All the cards that have been played in the current hand
 	private Set<Card> cardsPlayed = new HashSet<Card>();
 
+	// who won the last hand
+	private Direction lastHandWinner;
+
 	/**
 	 * Create a new game
 	 * 
@@ -320,7 +323,8 @@ public class Game {
 				if (allTricksOver()) {
 					debugMsg("Round over");
 					gameState = GameState.DEALING;
-					resetGame();
+					
+					//resetGame();
 				}
 			}
 
@@ -356,7 +360,7 @@ public class Game {
 	 * @return true if the card was added to the trick.
 	 */
 	private boolean playCard(Card card) {
-		
+
 		// Check if card was already played in this hand.
 		// Avoid accidental scanning as a trick is collected
 		// and passes over the antenna or of a card held
@@ -375,7 +379,6 @@ public class Game {
 			currentTrick = new Trick();
 			currentTrick.setLedSuit(card.getSuit());
 		}
-
 
 		if (currentTrick.getCard(position) == null) {
 			// System.out.println("Adding card to trick");
@@ -438,11 +441,13 @@ public class Game {
 		}
 
 		// for dummy player, the card is not scanned if the dummy player already
-		// has the card or the blind player already has the card or it was the first card in the play
+		// has the card or the blind player already has the card or it was the
+		// first card in the play
 		if (players[pos].isDummy()) {
 
 			if ((players[pos].getHand().containsCard(card))
-					|| (getBlindPlayer().getHand().containsCard(card)) || (cardsPlayed.contains(card))) {
+					|| (getBlindPlayer().getHand().containsCard(card))
+					|| (cardsPlayed.contains(card))) {
 
 				return;
 			}
@@ -677,7 +682,47 @@ public class Game {
 
 		return contract.getBidWinner();
 	}
+
+	/**
+	 * Figures out who won the last hand
+	 */
+	public void determineHandWinner() {
+
+		// get the bid winner and his/her partner
+		Direction bidWinner = getBidWinner();
+
+		Direction bidWinnerPartner = bidWinner.getPartner();
+
+		// calculate the total number of tricks they won together
+		int totalTricksWon = players[bidWinner.ordinal()].getTricksWon()
+				+ players[bidWinnerPartner.ordinal()].getTricksWon();
+
+		// check if they could fulfill their contract. If they did, they win.
+		// Otherwise, the other pair wins.
+		if (totalTricksWon >= 6 + contract.getContractNum()) {
+
+			lastHandWinner = bidWinner;
+
+
+		} else {
+
+			lastHandWinner = bidWinner.getNextDirection();
+			
+		}
+	}
+
+	/**
+	 * Returns the players that won the hand
+	 * 
+	 * @return The array of the directions of the two players that won the hand
+	 */
+	public Direction getLastHandWinner() {
+		return lastHandWinner;
+	}
 	
-	
+	public void resetLastHandWinner(){
+		
+		lastHandWinner = null ;
+	}
 
 }

@@ -116,9 +116,7 @@ public class GameStatusGUI extends JPanel implements GameListener {
 		count++ ;
 
 		System.out.println("GameStatusGui gameReset  " + count);
-
 		
-
 		bidGUI.clear();
 
 		firstCardPlayed = false;
@@ -243,13 +241,13 @@ public class GameStatusGUI extends JPanel implements GameListener {
 
 				for (PlayerStatusGUI playerGUI : playerGUIs) {
 
-					// problems here
 					playerGUI.trickOver();
 
 				}
 
 				//playerGUIs[winner.ordinal()].nextPlayer();
 
+				// decides if the hand has ended or not
 				 if(currentPlayer != 13*4){
 				
 					 System.out.println("currentplayer " + currentPlayer);
@@ -260,7 +258,15 @@ public class GameStatusGUI extends JPanel implements GameListener {
 					 
 					 System.out.println("currentplayer " + currentPlayer);
 					 
+					 
+					 // hand has ended
+					 
+					gameGUI.setSwitchFromGameStatusGUI(GameGUI.SWITCH_TO_NEXT_HAND);
+					 
+					 // TODO : might need to call gameReset() here as well
 					 gameReset();
+					 
+					gameGUI.changeFrame();
 				 }
 				
 
