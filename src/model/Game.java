@@ -356,6 +356,7 @@ public class Game {
 	 * @return true if the card was added to the trick.
 	 */
 	private boolean playCard(Card card) {
+		
 		// Check if card was already played in this hand.
 		// Avoid accidental scanning as a trick is collected
 		// and passes over the antenna or of a card held
@@ -375,8 +376,7 @@ public class Game {
 			currentTrick.setLedSuit(card.getSuit());
 		}
 
-		// TODO LOOK HERE
-		// isLegal
+
 		if (currentTrick.getCard(position) == null) {
 			// System.out.println("Adding card to trick");
 			if (!players[position].isLegal(card, currentTrick.getLedSuit())) {
@@ -427,14 +427,27 @@ public class Game {
 
 		int pos = dir.ordinal();
 
-		// dummy and blind, dont say the card out loud if the player already has
-		// the card
-		if (players[pos].isBlind() || players[pos].isDummy()) {
+		// for blind player, don't say the card out loud if the player already
+		// has the card
+		if (players[pos].isBlind()) {
+
 			if (players[pos].getHand().containsCard(card)) {
 
 				return;
 			}
 		}
+
+		// for dummy player, the card is not scanned if the dummy player already
+		// has the card or the blind player already has the card or it was the first card in the play
+		if (players[pos].isDummy()) {
+
+			if ((players[pos].getHand().containsCard(card))
+					|| (getBlindPlayer().getHand().containsCard(card)) || (cardsPlayed.contains(card))) {
+
+				return;
+			}
+		}
+
 		for (GameListener listener : listeners) {
 			listener.cardScanned(card);
 		}
@@ -664,5 +677,7 @@ public class Game {
 
 		return contract.getBidWinner();
 	}
+	
+	
 
 }

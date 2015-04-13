@@ -31,10 +31,11 @@ public class TestHandler extends Handler {
 	// private static final int PLAYER_INDEX_SIZE = 13 + 52 + 13;
 
 	// total size = hand1 + hand 2
-	// hand1 = blind + all cards + dummy
-	// hand2 = blind + all cards (no dummy)
-	// should be 145
-	private static final int PLAYER_INDEX_SIZE = 13 + 52 + 13 + 13 + 52;
+	// hand1 = blind + all cards + dummy + wrong cards
+	// hand2 = blind + all cards (no dummy) + wrong cards
+	// should be 153
+	private static final int PLAYER_INDEX_SIZE = (13 + 52 + 13 + 8)
+			+ (13 + 52 + 3);
 
 	private CardDatabase cards;
 
@@ -71,12 +72,15 @@ public class TestHandler extends Handler {
 			EAST,
 			EAST,
 			EAST,
+			EAST,
+			EAST,
 
 			// first card
 			WEST,
 
 			// dummy
-			NORTH, NORTH,
+			NORTH, NORTH, NORTH, NORTH, NORTH,
+			NORTH,
 			NORTH,
 			NORTH,
 			NORTH,
@@ -90,10 +94,10 @@ public class TestHandler extends Handler {
 			NORTH,
 
 			// play starts
-			NORTH, EAST, SOUTH, WEST, NORTH, EAST, SOUTH, SOUTH, WEST, NORTH,
-			EAST, SOUTH, WEST, NORTH, EAST, SOUTH, WEST, NORTH, EAST, SOUTH,
-			WEST, NORTH, EAST, SOUTH, WEST, NORTH, EAST, NORTH, EAST, SOUTH,
-			WEST, SOUTH, WEST, NORTH, EAST, NORTH, EAST, SOUTH,
+			NORTH, EAST, SOUTH, WEST, NORTH, EAST, EAST, SOUTH, SOUTH, WEST,
+			NORTH, NORTH, EAST, SOUTH, WEST, NORTH, EAST, SOUTH, WEST, NORTH,
+			EAST, SOUTH, WEST, NORTH, EAST, SOUTH, WEST, NORTH, EAST, NORTH,
+			EAST, SOUTH, WEST, SOUTH, WEST, NORTH, EAST, NORTH, EAST, SOUTH,
 			WEST,
 			NORTH,
 			EAST,
@@ -111,7 +115,7 @@ public class TestHandler extends Handler {
 			// hand 2
 
 			// blind
-			EAST, EAST, EAST, EAST, EAST, EAST, EAST, EAST,
+			EAST, EAST, EAST, EAST, EAST, EAST, EAST, EAST, EAST, EAST,
 			EAST,
 			EAST,
 			EAST,
@@ -119,12 +123,12 @@ public class TestHandler extends Handler {
 			EAST,
 
 			// play starts
-			NORTH, EAST, SOUTH, WEST, WEST, NORTH, EAST, SOUTH, SOUTH, WEST,
-			NORTH, EAST, WEST, NORTH, EAST, SOUTH, EAST, SOUTH, WEST, NORTH,
-			EAST, SOUTH, WEST, NORTH, WEST, NORTH, EAST, SOUTH, WEST, NORTH,
-			EAST, SOUTH, WEST, NORTH, EAST, SOUTH, WEST, NORTH, EAST, SOUTH,
-			EAST, SOUTH, WEST, NORTH, SOUTH, WEST, NORTH, EAST, NORTH, EAST,
-			SOUTH, WEST };
+			NORTH, EAST, SOUTH, WEST, WEST, NORTH, EAST, EAST, SOUTH, SOUTH,
+			WEST, NORTH, EAST, WEST, NORTH, EAST, SOUTH, EAST, SOUTH, WEST,
+			NORTH, EAST, SOUTH, WEST, NORTH, WEST, NORTH, EAST, SOUTH, WEST,
+			NORTH, EAST, SOUTH, WEST, NORTH, EAST, SOUTH, WEST, NORTH, EAST,
+			SOUTH, EAST, SOUTH, WEST, NORTH, SOUTH, WEST, NORTH, EAST, NORTH,
+			EAST, SOUTH, WEST };
 
 	// Id of the current player antenna
 	private String turnId;
@@ -249,7 +253,7 @@ public class TestHandler extends Handler {
 
 			System.out
 					.println("***********************************************************");
-			
+
 			System.out.println("position " + position);
 
 			cardRequestSent = true;
@@ -258,10 +262,7 @@ public class TestHandler extends Handler {
 
 			hands[playerIndex[position]].cardFound(nextCard);
 
-
-				position++;
-
-			
+			position++;
 
 			assert position < PLAYER_INDEX_SIZE;
 
