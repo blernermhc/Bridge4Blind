@@ -99,7 +99,7 @@ public class GameGUI extends JFrame implements GameListener {
 	private TrumpSuitGUI trumpSuitGUI;
 
 	// next hand gui
-	private NextHandGUI nextHandGUI ;
+	private NextHandGUI nextHandGUI;
 
 	private JButton backButton;
 	private JButton resetButton;
@@ -154,7 +154,7 @@ public class GameGUI extends JFrame implements GameListener {
 
 		// trump suit gui
 		trumpSuitGUI = new TrumpSuitGUI(this, game);
-		
+
 		// next hand gui
 		nextHandGUI = new NextHandGUI(this, game);
 
@@ -415,8 +415,9 @@ public class GameGUI extends JFrame implements GameListener {
 	/** Advances to the next GUI in line. */
 	@SuppressWarnings("boxing")
 	protected void changeFrame() {
-		
-		System.out.println("change frame");
+
+		System.out.println("change frame current screen "
+				+ cardNames[currentScreen]);
 
 		// System.out.println("before change frame currentScreen " +
 		// currentScreen);
@@ -450,8 +451,8 @@ public class GameGUI extends JFrame implements GameListener {
 				System.out.println("switching to Next Hand GUI");
 
 				// refresh the display before switching screens
-				
-				//nextHandGUI.refreshDisplay();
+
+				// nextHandGUI.refreshDisplay();
 
 				currentScreen = NEXT_HAND_GUI;
 			}
@@ -466,15 +467,15 @@ public class GameGUI extends JFrame implements GameListener {
 
 			currentScreen++;
 		}
-		
+
 		// update text on refresh display
-		if(currentScreen == NEXT_HAND_GUI){
-			
+		if (currentScreen == NEXT_HAND_GUI) {
+
 			nextHandGUI.refreshDisplay();
 		}
-		
+
 		debugMsg("Switching to screen " + cardNames[currentScreen]);
-		
+
 		System.out.println("Switching to screen " + cardNames[currentScreen]);
 
 		// Note : its position/order is important
@@ -496,7 +497,8 @@ public class GameGUI extends JFrame implements GameListener {
 		if (currentScreen == VI_PLAYER_GUI || currentScreen == HELP_GUI
 				|| currentScreen == TRUMP_SUIT_GUI
 				|| currentScreen == BID_NUMBER_GUI
-				|| currentScreen == BID_POSITION_GUI) {
+				|| currentScreen == BID_POSITION_GUI
+				|| currentScreen == NEXT_HAND_GUI) {
 
 			((TestHandler) game.getHandler()).setRightGUI(false);
 
@@ -557,12 +559,14 @@ public class GameGUI extends JFrame implements GameListener {
 
 		// currentScreen = SCANNING_BLIND_GUI;
 
-		//nextHandGUI.refreshDisplay();
-		
-		//currentScreen = NEXT_HAND_GUI;
+		// nextHandGUI.refreshDisplay();
+
+		// currentScreen = NEXT_HAND_GUI;
 
 		currentScreen = SCANNING_BLIND_GUI;
-		
+
+		System.out.println("current screen is now " + cardNames[currentScreen]);
+
 		screensViewed.clear();
 		screensViewed.push(SCANNING_BLIND_GUI);
 		// switchFromGameStatusGUI = SWITCH_TO_SCANNING_BLIND;
@@ -578,6 +582,12 @@ public class GameGUI extends JFrame implements GameListener {
 		}
 
 		layout.show(cardPanel, cardNames[currentScreen]);
+
+		System.out.println("should show " + cardNames[currentScreen] + " "
+				+ currentScreen);
+
+		this.repaint();
+
 		this.requestFocusInWindow();
 	}
 
@@ -666,9 +676,6 @@ public class GameGUI extends JFrame implements GameListener {
 		System.out
 				.println("switchFromGameStatusGUI " + switchFromGameStatusGUI);
 	}
-	
-	
-	
 
 	/*	*//**
 	 * The main program!!!! Start the server first.

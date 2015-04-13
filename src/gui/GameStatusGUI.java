@@ -264,7 +264,7 @@ public class GameStatusGUI extends JPanel implements GameListener {
 					gameGUI.setSwitchFromGameStatusGUI(GameGUI.SWITCH_TO_NEXT_HAND);
 					 
 					 // TODO : might need to call gameReset() here as well
-					 gameReset();
+					 //gameReset();
 					 
 					gameGUI.changeFrame();
 				 }

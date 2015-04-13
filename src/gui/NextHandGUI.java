@@ -17,6 +17,12 @@ import com.sun.org.glassfish.gmbal.ManagedAttribute;
 import model.Direction;
 import model.Game;
 
+/**
+ * Announces the winner of each hand and allows the players to move on to the next hand.
+ * @author Humaira Orchee
+ * @version April 13, 2015
+ *
+ */
 public class NextHandGUI extends JPanel {
 
 	private GameGUI gameGUI;
@@ -103,9 +109,13 @@ public class NextHandGUI extends JPanel {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				
-				game.resetGame();
-	
+				
 				gameGUI.changeFrame();
+				
+				game.resetGame();
+				
+				System.out.println("resetting game in Next Hand GUI");
+
 				
 			}
 		});
