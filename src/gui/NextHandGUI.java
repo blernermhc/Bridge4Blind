@@ -12,6 +12,8 @@ import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
+import audio.SoundManager;
+
 import com.sun.org.glassfish.gmbal.ManagedAttribute;
 
 import model.Direction;
@@ -71,6 +73,12 @@ public class NextHandGUI extends JPanel {
 		game.determineHandWinner();
 
 		Direction winner = game.getLastHandWinner();
+		
+		// TODO : add sound here
+		
+//		SoundManager soundManager = SoundManager.getInstance() ;
+//		
+//		soundManager.addSound(filename);
 
 		try {
 
