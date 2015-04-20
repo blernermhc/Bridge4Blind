@@ -68,6 +68,9 @@ public class Game {
 
 	// who won the last hand
 	private Direction lastHandWinner;
+	
+	// the last card the blind player scanned
+	private Card lastBlindCard ;
 
 	/**
 	 * Create a new game
@@ -89,6 +92,8 @@ public class Game {
 
 		this.handler = handler;
 
+		handler.setGame(this);
+		
 		// construct the antenna handler
 		// handler = new AntennaHandler(new CardDatabase());
 	}
@@ -103,15 +108,17 @@ public class Game {
 	 *             any other I/O problem when establishing the connection
 	 */
 	public void activateAntennas() throws UnknownHostException, IOException {
+		
 		HandAntenna[] handAntennas = new HandAntenna[NUM_PLAYERS];
+		
+		// construct the card identifier
+		//CardIdentifier id = new CardIdentifier(this);
+		handler.connect();
+		
 		Direction[] directions = Direction.values();
 		for (int i = 0; i < players.length; i++) {
 			handAntennas[i] = new HandAntenna(directions[i], this);
 		}
-
-		// construct the card identifier
-		CardIdentifier id = new CardIdentifier(this);
-		handler.connect();
 
 		// add the listeners for the antenna handler
 		handler.addHandListener(handAntennas[Direction.NORTH.ordinal()],
@@ -122,7 +129,7 @@ public class Game {
 				Direction.SOUTH);
 		handler.addHandListener(handAntennas[Direction.WEST.ordinal()],
 				Direction.WEST);
-		handler.addIdListener(id);
+		//handler.addIdListener(id);
 	}
 
 	/**
@@ -533,6 +540,7 @@ public class Game {
 	public void setBlindPosition(Direction blindPosition) {
 		this.blindDirection = blindPosition;
 		players[blindDirection.ordinal()].setBlind(true);
+		handler.setBlindDirection(blindPosition);
 		switchHand(blindPosition);
 	}
 
@@ -720,9 +728,36 @@ public class Game {
 		return lastHandWinner;
 	}
 	
+	/**
+	 * When a hew hand starts, the game forgets about the winner of the last hand
+	 */
 	public void resetLastHandWinner(){
 		
 		lastHandWinner = null ;
 	}
+	
+	/**
+	 * 
+	 */
+	public void playBlindCard(){
+		
+		System.out.println("Game : play blind card");
+		
+		System.out.println("blind direction " + blindDirection.ordinal());
+		
+		System.out.println("card " + lastBlindCard);
+		
+		handler.getCardListener(blindDirection.ordinal()).cardFound(lastBlindCard);
+		
+	}
+
+	public void setLastBlindCard(Card lastBlindCard) {
+		
+		System.out.println("Game : set last blind card to " + lastBlindCard);
+		
+		this.lastBlindCard = lastBlindCard;
+	}
+	
+	
 
 }

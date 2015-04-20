@@ -4,7 +4,9 @@ import java.awt.event.KeyListener;
 import java.io.IOException;
 import java.net.UnknownHostException;
 
+import model.Card;
 import model.Direction;
+import model.Game;
 
 /**
  * This abstract class can either be an AntennaHandler that actually reads RFID
@@ -17,6 +19,15 @@ import model.Direction;
  *
  */
 public abstract class Handler implements Runnable, KeyListener {
+
+	// direction of the blind player
+	protected Direction blindDirection;
+
+	// the bridge game
+	protected Game game;
+
+	/* CardListeners the hands and the idListener */
+	protected CardListener[] hands = new CardListener[Direction.values().length];
 
 	/**
 	 * Connects to the server
@@ -91,6 +102,34 @@ public abstract class Handler implements Runnable, KeyListener {
 	 */
 	public abstract void switchHand(final Direction turn) throws IOException,
 			InterruptedException;
+
+	/**
+	 * 
+	 * @param blindDirection
+	 */
+	public void setBlindDirection(Direction blindDirection) {
+
+		this.blindDirection = blindDirection;
+
+	}
+
+	/**
+	 * 
+	 * @param position
+	 * @return
+	 */
+	public CardListener getCardListener(int position) {
+
+		return hands[position];
+	}
+
+	/**
+	 * 
+	 * @param game
+	 */
+	public void setGame(Game game) {
+		this.game = game;
+	}
 	
 	
 

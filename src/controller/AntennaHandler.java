@@ -50,9 +50,8 @@ public class AntennaHandler extends Handler {
 	/*Database of Cards*/
 	private CardDatabase cards;
 	
-	/*CardListeners the hands and the idListener*/
-	private CardListener[] hands = new CardListener[Direction.values().length];
-	private CardListener iDListen;
+	
+	//private CardListener iDListen;
 	
 	/** Condition variable to ensure that at least one card request gets sent between each
 	    antenna change. */
@@ -63,9 +62,9 @@ public class AntennaHandler extends Handler {
 	
 	// Id of the current player antenna
 	private String turnId;
-	
+
 	/**
-	 * Creates a new AntennaHandler with the apporiate Card Database
+	 * Creates a new AntennaHandler with the appropriate Card Database
 	 * @param data the database to be used
 	 */
 	public AntennaHandler(CardDatabase data){
@@ -206,17 +205,29 @@ public class AntennaHandler extends Handler {
 				Card thisCard = cards.getCard(cardID);
 				System.out.println("Found : " + thisCard.toString());
 				
-				//if the message ends with C, the card is on the id antenna
-				if (str.endsWith("C")){
-					iDListen.cardFound(thisCard);
-					//System.out.println("message sent to ID listener");
-					
-				//otherwise, the card is on one of the player antennas
-				} else {
+//				//if the message ends with C, the card is on the id antenna
+//				if (str.endsWith("C")){
+//					iDListen.cardFound(thisCard);
+//					//System.out.println("message sent to ID listener");
+//					
+//				//otherwise, the card is on one of the player antennas
+//				} else {
 					int position = Integer.parseInt(str.substring(POSITION,MESSAGE_LENGTH)) - 1;
-					hands[position].cardFound(thisCard);
+
+					// remember the last card the blind person scanned. otherwise lay cards normally
+					if(blindDirection.ordinal() == position){
+						
+						System.out.println("blind player at " +  blindDirection.ordinal() + " scanned card " + thisCard);
+					
+						game.setLastBlindCard(thisCard);
+						
+					}else{
+					
+					
+						hands[position].cardFound(thisCard);
+					}
 					//System.out.println("message sent to " + position);
-				}
+//	}
 			}
 			
 		}.start();
@@ -236,7 +247,7 @@ public class AntennaHandler extends Handler {
 	 * @param listener - lister to be added
 	 */
 	public void addIdListener(CardListener listener){
-		iDListen = listener;
+	//	iDListen = listener;
 	}
 	
 	/**
@@ -366,9 +377,11 @@ public class AntennaHandler extends Handler {
 	 */
 	private void cycleHands() throws IOException, InterruptedException {
 
+		// switching to the blind player's antenna
 		if (onPlayerHand) {
 			//System.out.println("Switching to ID");
-			switchHand("P");
+			//switchHand("P");
+			switchHand(getDirectionCode(blindDirection));
 		} 
 		
 		else {
@@ -396,6 +409,8 @@ public class AntennaHandler extends Handler {
 		// TODO Auto-generated method stub
 		
 	}
+	
+	
 }
 
 

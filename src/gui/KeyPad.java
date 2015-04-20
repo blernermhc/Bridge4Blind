@@ -224,10 +224,14 @@ public class KeyPad extends KeyAdapter {
 				gameGUI.debugMsg("Repeat");
 				soundMgr.playLastSound();
 
-				// if the enter key was pressed
+				// if the enter key is pressed then play the blid player's card
 			} else if (keyCode == ENTER_CODE) {
-				playTutorial();
+				//playTutorial();
+				
+				System.out.println("Enter is pressed");
 
+				game.playBlindCard();
+				
 			} else {
 
 				if (keyCode != SPACE_CODE) {

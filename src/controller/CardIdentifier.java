@@ -49,6 +49,8 @@ public class CardIdentifier implements CardListener {
 	 */
 	@Override
 	public synchronized void cardFound(Card c) {
+		
+		System.out.println("card found " + c);
 
 		if (!c.equals(lastIded)) {
 			tellGameAboutCard(c);
@@ -85,6 +87,9 @@ public class CardIdentifier implements CardListener {
 	 *            the card found
 	 */
 	protected void tellGameAboutCard(Card c) {
+		
+		System.out.println("CardIdentifier : telling game about card");
+		
 		game.cardIded(c);
 	}
 
