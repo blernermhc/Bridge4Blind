@@ -38,6 +38,21 @@ public abstract class Handler implements Runnable, KeyListener {
 	 *             could not complete the connection
 	 */
 	public abstract void connect() throws UnknownHostException, IOException;
+	
+	/**
+	 * Repeatedly sends card requests to the server.
+	 */
+	public abstract void run() ;
+	
+
+	/**
+	 * Adds a listener to the Hand array
+	 * @param listener the listener to be added
+	 * @param direction the antenna to listen to
+	 */
+	protected void addHandListener(CardListener listener,Direction direction){
+		hands[direction.ordinal()] = listener;
+	}
 
 	/**
 	 * Sends a command to the server requesting it to tell what card is on the
@@ -51,24 +66,15 @@ public abstract class Handler implements Runnable, KeyListener {
 	 */
 	public abstract String requestCard(byte[] messageRec) throws IOException;
 
-	/**
-	 * Adds a listener to the Hand array
-	 * 
-	 * @param listener
-	 *            the listener to be added
-	 * @param direction
-	 *            the antenna to listen to
-	 */
-	public abstract void addHandListener(CardListener listener,
-			Direction direction);
+
 
 	/**
 	 * Adds the special IDCard listener
-	 * 
-	 * @param listener
-	 *            - lister to be added
+	 * @param listener - lister to be added
 	 */
-	public abstract void addIdListener(CardListener listener);
+	public void addIdListener(CardListener listener){
+	//	iDListen = listener;
+	}
 
 	/**
 	 * Sends the quit command to the C# server. Closes the socket. Stops the

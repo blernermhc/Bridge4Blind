@@ -142,22 +142,15 @@ public class TestHandler extends Handler {
 		assert playerIndex.length == PLAYER_INDEX_SIZE;
 	}
 
+	@Override
 	public void connect() {
 
 		System.out.println("Dummy Connection has been made");
 
 	}
 
-	public void addHandListener(CardListener listener, Direction direction) {
-
-		hands[direction.ordinal()] = listener;
-
-	}
-
-	public void addIdListener(CardListener listener) {
-		iDListen = listener;
-	}
-
+	
+	@Override
 	public void switchHand(Direction turn) {
 
 		System.out.println("Switching hand to " + turn + " ***");
@@ -212,34 +205,7 @@ public class TestHandler extends Handler {
 
 	}
 
-	private void scanDummyCards() {
-		while (position < 27) {
-
-			Card nextCard = testCards.getNextCard();
-
-			hands[playerIndex[position]].cardFound(nextCard);
-
-			position++;
-
-			assert position < PLAYER_INDEX_SIZE;
-
-		}
-	}
-
-	private void scanBlindCards() {
-		while (position < 13) {
-
-			Card nextCard = testCards.getNextCard();
-
-			hands[playerIndex[position]].cardFound(nextCard);
-
-			position++;
-
-			assert position < PLAYER_INDEX_SIZE;
-
-		}
-	}
-
+	
 	@Override
 	public void keyPressed(KeyEvent e) {
 

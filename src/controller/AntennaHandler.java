@@ -70,12 +70,8 @@ public class AntennaHandler extends Handler {
 	public AntennaHandler(CardDatabase data){
 		this.cards = data;
 	}
-	
-	/**
-	 * Connects to the server
-	 * @throws UnknownHostException host name for the server is unknown
-	 * @throws IOException could not complete the connection
-	 */
+
+	@Override
 	public void connect() throws UnknownHostException, IOException {
 		System.out.println("Connecting...");
 		requestSocket = new Socket(HOST, PORT);
@@ -87,9 +83,7 @@ public class AntennaHandler extends Handler {
 
 	}
 
-	/**
-	 * Repeatedly sends card requests to the server.
-	 */
+	
 	@Override
 	public void run()
 	{
@@ -233,22 +227,7 @@ public class AntennaHandler extends Handler {
 		}.start();
 	}
 
-	/**
-	 * Adds a listener to the Hand array
-	 * @param listener the listener to be added
-	 * @param direction the antenna to listen to
-	 */
-	public void addHandListener(CardListener listener,Direction direction){
-		hands[direction.ordinal()] = listener;
-	}
 
-	/**
-	 * Adds the special IDCard listener
-	 * @param listener - lister to be added
-	 */
-	public void addIdListener(CardListener listener){
-	//	iDListen = listener;
-	}
 	
 	/**
 	 * Sends the quit command to the C# server.  Closes the socket.
