@@ -1,6 +1,7 @@
 package gui;
 
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.event.ActionEvent;
@@ -33,6 +34,11 @@ public class NextHandGUI extends JPanel {
 	
 	private JLabel winnerLabel ;
 
+	/**
+	 * 
+	 * @param gameGUI
+	 * @param game
+	 */
 	public NextHandGUI(GameGUI gameGUI , Game game) {
 
 		this.gameGUI = gameGUI;
@@ -47,6 +53,8 @@ public class NextHandGUI extends JPanel {
 		
 		// add the JLabel that shows who the winners of the last hand are
 		winnerLabel = GUIUtilities.createTitleLabel("Hand won by...");
+		
+		winnerLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 		
 		mainPanel.add(winnerLabel) ;
 		
@@ -108,6 +116,10 @@ public class NextHandGUI extends JPanel {
 
 	}
 	
+	/**
+	 * 
+	 * @return
+	 */
 	private JButton createNextHandButton(){
 		
 		JButton nextHandButton = GUIUtilities.createButton("Next Hand") ;
@@ -127,6 +139,8 @@ public class NextHandGUI extends JPanel {
 				
 			}
 		});
+		
+		nextHandButton.setAlignmentX(Component.CENTER_ALIGNMENT);
 		
 		return nextHandButton ;
 	}
