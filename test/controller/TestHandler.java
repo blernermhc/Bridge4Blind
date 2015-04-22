@@ -37,13 +37,13 @@ public class TestHandler extends Handler {
 	private static final int PLAYER_INDEX_SIZE = (13 + 52 + 13 + 8)
 			+ (13 + 52 + 3);
 
-	private CardDatabase cards;
+//	private CardDatabase cards;
 
-	private CardListener[] hands = new CardListener[Direction.values().length];
+//	private CardListener[] hands = new CardListener[Direction.values().length];
 
-	private CardListener iDListen;
+//	private CardListener iDListen;
 
-	protected boolean cardRequestSent = false;
+//	protected boolean cardRequestSent = false;
 
 	// the GUIs for which the handler is supposed to be reading cards
 	private boolean rightGUI = false;
@@ -137,7 +137,7 @@ public class TestHandler extends Handler {
 
 		super();
 
-		cards = cardDatabase;
+//		cards = cardDatabase;
 
 		assert playerIndex.length == PLAYER_INDEX_SIZE;
 	}
@@ -145,7 +145,7 @@ public class TestHandler extends Handler {
 	@Override
 	public void connect() {
 
-		System.out.println("Dummy Connection has been made");
+		System.out.println("Test Connection has been made");
 
 	}
 
@@ -174,8 +174,10 @@ public class TestHandler extends Handler {
 	 *             command to happen
 	 */
 	public void switchHand(String handID) {
+		
+		System.out.println("Test Handler switching hand");
 
-		cardRequestSent = false;
+//		cardRequestSent = false;
 
 	}
 
@@ -201,7 +203,7 @@ public class TestHandler extends Handler {
 
 	public void quitServer() {
 
-		System.out.println("Dummy Server quit");
+		System.out.println("Test Server quit");
 
 	}
 
@@ -222,7 +224,7 @@ public class TestHandler extends Handler {
 
 			System.out.println("position " + position);
 
-			cardRequestSent = true;
+//			cardRequestSent = true;
 
 			Card nextCard = testCards.getNextCard();
 

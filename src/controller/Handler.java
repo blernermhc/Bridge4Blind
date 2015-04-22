@@ -50,7 +50,7 @@ public abstract class Handler implements Runnable, KeyListener {
 	 * @param listener the listener to be added
 	 * @param direction the antenna to listen to
 	 */
-	protected void addHandListener(CardListener listener,Direction direction){
+	public void addHandListener(CardListener listener,Direction direction){
 		hands[direction.ordinal()] = listener;
 	}
 
@@ -119,15 +119,6 @@ public abstract class Handler implements Runnable, KeyListener {
 
 	}
 
-	/**
-	 * 
-	 * @param position
-	 * @return
-	 */
-	public CardListener getCardListener(int position) {
-
-		return hands[position];
-	}
 
 	/**
 	 * 

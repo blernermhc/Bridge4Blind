@@ -209,17 +209,17 @@ public class AntennaHandler extends Handler {
 					int position = Integer.parseInt(str.substring(POSITION,MESSAGE_LENGTH)) - 1;
 
 					// remember the last card the blind person scanned. otherwise lay cards normally
-					if(blindDirection.ordinal() == position){
+					//if(blindDirection.ordinal() == position){
 						
-						System.out.println("blind player at " +  blindDirection.ordinal() + " scanned card " + thisCard);
+						//System.out.println("blind player at " +  blindDirection.ordinal() + " scanned card " + thisCard);
 					
-						game.setLastBlindCard(thisCard);
+						//game.setLastBlindCard(thisCard);
 						
-					}else{
+					//}else{
 					
 					
 						hands[position].cardFound(thisCard);
-					}
+					//}
 					//System.out.println("message sent to " + position);
 //	}
 			}

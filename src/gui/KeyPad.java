@@ -228,7 +228,7 @@ public class KeyPad extends KeyAdapter {
 			} else if (keyCode == ENTER_CODE) {
 				//playTutorial();
 				
-				System.out.println("Enter is pressed");
+				System.out.println("################ Enter is pressed #########################");
 
 				game.playBlindCard();
 				

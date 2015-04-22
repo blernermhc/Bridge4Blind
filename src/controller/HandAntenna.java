@@ -31,6 +31,9 @@ public class HandAntenna extends CardIdentifier {
 	 */
 	@Override
 	protected void tellGameAboutCard(Card c) {
+		
+		System.out.println("HandAntenna : telling game about card");
+		
 		game.cardFound(direction, c);
 	}
 	
