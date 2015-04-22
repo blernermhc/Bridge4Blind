@@ -28,7 +28,7 @@ public class Game {
 	/** The number of players in the game */
 	public static final int NUM_PLAYERS = 4;
 
-	// true is Bridege is being played in Test mode (i.e. without hardware).
+	// true is Bridge is being played in Test mode (i.e. without hardware).
 	// False if Bridge is actually being played (i.e. with the hardware)
 	private static boolean isTestMode;
 
@@ -68,9 +68,9 @@ public class Game {
 
 	// who won the last hand
 	private Direction lastHandWinner;
-	
+
 	// the last card the blind player scanned
-	private Card lastBlindCard ;
+	private Card lastBlindCard;
 
 	/**
 	 * Create a new game
@@ -93,7 +93,7 @@ public class Game {
 		this.handler = handler;
 
 		handler.setGame(this);
-		
+
 		// construct the antenna handler
 		// handler = new AntennaHandler(new CardDatabase());
 	}
@@ -108,13 +108,13 @@ public class Game {
 	 *             any other I/O problem when establishing the connection
 	 */
 	public void activateAntennas() throws UnknownHostException, IOException {
-		
+
 		HandAntenna[] handAntennas = new HandAntenna[NUM_PLAYERS];
-		
+
 		// construct the card identifier
-		//CardIdentifier id = new CardIdentifier(this);
+		// CardIdentifier id = new CardIdentifier(this);
 		handler.connect();
-		
+
 		Direction[] directions = Direction.values();
 		for (int i = 0; i < players.length; i++) {
 			handAntennas[i] = new HandAntenna(directions[i], this);
@@ -129,7 +129,7 @@ public class Game {
 				Direction.SOUTH);
 		handler.addHandListener(handAntennas[Direction.WEST.ordinal()],
 				Direction.WEST);
-		//handler.addIdListener(id);
+		// handler.addIdListener(id);
 	}
 
 	/**
@@ -254,11 +254,11 @@ public class Game {
 		debugMsg("Game : card found");
 
 		if (gameState == GameState.DEALING) {
-			
+
 			cardFoundInDealingState(direction, card);
 
 		} else if (gameState == GameState.FIRSTCARD) {
-			
+
 			assert dummyDirection != null;
 			// System.out.println("State is FIRSTCARD");
 			// System.out.println("direction = " + direction);
@@ -268,22 +268,22 @@ public class Game {
 
 			// First card is being played before the dummy is revealed.
 			if (direction == turn) {
-				
+
 				assert dummyDirection.follows(direction);
-				
+
 				playCard(card);
 
 				if (dummyDirection == blindDirection) {
-					
+
 					for (GameListener listener : listeners) {
-						
+
 						listener.dummyHandScanned();
 					}
-					
+
 					setGameState(GameState.PLAYING);
-					
+
 				} else {
-					
+
 					setGameState(GameState.SCANNING_DUMMY);
 				}
 				return;
@@ -296,31 +296,46 @@ public class Game {
 
 			// PLAYING
 		} else if (direction == turn) {
-			
+
 			cardFoundInPlayingState(card);
 
 		}
 
 	}
 
+	/**
+	 * 
+	 * @param card
+	 */
 	private void cardFoundInPlayingState(Card card) {
-		
+
 		debugMsg("playing phase");
-		
+
 		if (playCard(card)) {
 
+			// check if trick over after non-blind person was the last person to
+			// play
 			if (currentTrick.isOver()) {
-				
+
 				debugMsg("Trick over");
+
+				System.out
+						.println("trick over after non-blind person was the last person to play");
+
 				endTrick();
 			}
 
+			// check if hand over after non-blind person was the last person to
+			// play
 			if (allTricksOver()) {
-				
+
 				debugMsg("Round over");
+
+				System.out
+						.println("hand over after non-blind person was the last person to play");
 				gameState = GameState.DEALING;
-				
-				//resetGame();
+
+				// resetGame();
 			}
 		}
 	}
@@ -328,26 +343,26 @@ public class Game {
 	private void cardFoundInScanDummyState(Direction direction, Card card) {
 		// First card has been played. Time to expose the dummy hand.
 		if (direction == dummyDirection) {
-			
+
 			debugMsg("Adding card to dummy hand at " + dummyDirection);
-			
+
 			scanCardIntoHand(dummyDirection, card);
-			
+
 			if (players[dummyDirection.ordinal()].hasFullHand()) {
-				
+
 				for (GameListener listener : listeners) {
-					
+
 					listener.dummyHandScanned();
 				}
 
 				// Delay going into the playing state so that the last
 				// card scanned is not immediately played.
 				try {
-					
+
 					Thread.sleep(DELAY_AFTER_SCANNING_DUMMY);
-					
+
 				} catch (InterruptedException e) {
-					
+
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
@@ -358,17 +373,17 @@ public class Game {
 
 	private void cardFoundInDealingState(Direction direction, Card card) {
 		debugMsg("dealing phase");
-		
+
 		if (direction == blindDirection) {
-			
+
 			System.out.println("dealing card into blind hand: " + card);
-			
+
 			debugMsg("Card added to hand " + blindDirection);
-			
+
 			scanCardIntoHand(blindDirection, card);
-			
+
 			if (players[blindDirection.ordinal()].hasFullHand()) {
-				
+
 				setGameState(GameState.FIRSTCARD);
 
 				for (GameListener listener : listeners) {
@@ -443,22 +458,24 @@ public class Game {
 
 			debugMsg("Adding card to trick at " + turn);
 
-			// if it is not the blind player's turn, then proceed with play
-			// if it is the blind players turn, then just remember the last card
-			if(position != getBlindPosition().ordinal()){
-				
+			// if it is not the blind player's turn or blind player is the dummy
+			// player, then proceed with play
+			// else if it is the blind players turn, then just remember the last card
+			if (position != getBlindPosition().ordinal()
+					|| getBlindPosition().equals(getDummyPosition())) {
+
 				playCardIntoGame(card, position);
-				
-				return true ;
-				
-			}else{
-				
-				lastBlindCard = card ;
-				
-				return false ;
+
+				return true;
+
+			} else {
+
+				lastBlindCard = card;
+
+				return false;
 			}
-			
-			//return true;
+
+			// return true;
 		}
 
 		// This should never happen. It would mean that the wrong antenna
@@ -470,27 +487,27 @@ public class Game {
 	}
 
 	private void playCardIntoGame(Card card, int position) {
-		
-		System.out.println("Game : play card into game" );
-		
+
+		System.out.println("Game : play card into game");
+
 		cardsPlayed.add(card);
-		
+
 		players[position].removeCard(card);
-		
+
 		currentTrick.add(card, position);
-		
+
 		// System.out.println("Notifying listeners");
-		
+
 		for (GameListener listener : listeners) {
 			listener.cardPlayed(turn, card);
 		}
-		
+
 		// System.out.println("Done notifying listeners");
-		
+
 		turn = turn.getNextDirection();
-		
+
 		// System.out.println("Switching antenna");
-		
+
 		switchHand(turn);
 	}
 
@@ -780,11 +797,10 @@ public class Game {
 
 			lastHandWinner = bidWinner;
 
-
 		} else {
 
 			lastHandWinner = bidWinner.getNextDirection();
-			
+
 		}
 	}
 
@@ -796,30 +812,51 @@ public class Game {
 	public Direction getLastHandWinner() {
 		return lastHandWinner;
 	}
-	
+
 	/**
-	 * When a hew hand starts, the game forgets about the winner of the last hand
+	 * When a hew hand starts, the game forgets about the winner of the last
+	 * hand
 	 */
-	public void resetLastHandWinner(){
-		
-		lastHandWinner = null ;
+	public void resetLastHandWinner() {
+
+		lastHandWinner = null;
 	}
-	
+
 	/**
 	 * 
 	 */
-	public void playBlindCard(){
-		
+	public void playBlindCard() {
+
 		System.out.println("Game : play blind card");
-		
+
 		System.out.println("blind direction " + blindDirection.ordinal());
-		
+
 		System.out.println("card " + lastBlindCard);
-		
-		//handler.getCardListener(blindDirection.ordinal()).cardFound(lastBlindCard);
-		
+
+		// handler.getCardListener(blindDirection.ordinal()).cardFound(lastBlindCard);
+
 		playCardIntoGame(lastBlindCard, getBlindPosition().ordinal());
-		
+
+		// check if current trick is over
+		if (currentTrick.isOver()) {
+
+			debugMsg("Trick over");
+			System.out.println("trick over after blind person");
+			endTrick();
+		}
+
+		// check if hand is over
+		if (allTricksOver()) {
+
+			debugMsg("Round over");
+
+			System.out.println("round over after blind person");
+
+			gameState = GameState.DEALING;
+
+			// resetGame();
+		}
+
 	}
 
 	/**
@@ -829,11 +866,5 @@ public class Game {
 	public Card getLastBlindCard() {
 		return lastBlindCard;
 	}
-	
-	
-
-
-	
-	
 
 }
