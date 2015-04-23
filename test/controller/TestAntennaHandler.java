@@ -17,7 +17,7 @@ import model.TestCards;
  * @version March 12, 2015
  *
  */
-public class TestHandler extends Handler {
+public class TestAntennaHandler extends Handler {
 
 	private static final int NORTH = 0;
 
@@ -133,7 +133,7 @@ public class TestHandler extends Handler {
 	// Id of the current player antenna
 	private String turnId;
 
-	public TestHandler(CardDatabase cardDatabase) {
+	public TestAntennaHandler(CardDatabase cardDatabase) {
 
 		super();
 

@@ -21,7 +21,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 
-import controller.TestHandler;
+import controller.TestAntennaHandler;
 import model.Card;
 import model.Contract;
 import model.Direction;
@@ -500,11 +500,11 @@ public class GameGUI extends JFrame implements GameListener {
 				|| currentScreen == BID_POSITION_GUI
 				|| currentScreen == NEXT_HAND_GUI) {
 
-			((TestHandler) game.getHandler()).setRightGUI(false);
+			((TestAntennaHandler) game.getHandler()).setRightGUI(false);
 
 		} else {
 
-			((TestHandler) game.getHandler()).setRightGUI(true);
+			((TestAntennaHandler) game.getHandler()).setRightGUI(true);
 		}
 	}
 

@@ -296,6 +296,8 @@ public class Game {
 
 			// PLAYING
 		} else if (direction == turn) {
+			
+			
 
 			cardFoundInPlayingState(card);
 
@@ -423,6 +425,40 @@ public class Game {
 	 */
 	private boolean playCard(Card card) {
 
+		int position = turn.ordinal();
+
+		// if it is the blind player's turn and blind player is not the dummy
+		// player, then remember the last card
+		// else if it is not the blind players turn, then proceed with play
+		if (position == getBlindPosition().ordinal()
+				&& !getBlindPosition().equals(getDummyPosition())) {
+
+			lastBlindCard = card;
+
+			cardIded(lastBlindCard);
+
+			return false;
+
+		} else {
+
+			return canPlayCard(card, position);
+		}
+
+		// This should never happen. It would mean that the wrong antenna
+		// was being listened to.
+		//assert false;
+		//return false;
+
+		// System.out.println("Returning from playCard");
+	}
+
+	/**
+	 * Returns true if the player at the specified position can play the specified card 
+	 * @param card
+	 * @param position
+	 * @return
+	 */
+	private boolean canPlayCard(Card card, int position) {
 		// Check if card was already played in this hand.
 		// Avoid accidental scanning as a trick is collected
 		// and passes over the antenna or of a card held
@@ -433,7 +469,6 @@ public class Game {
 
 		// System.out.println("Staring playCard");
 		// Ignore multiple antenna readings of the same card
-		int position = turn.ordinal();
 
 		// First card in game or first card in a new trick
 		if (currentTrick.isEmpty() || currentTrick.isOver()) {
@@ -442,11 +477,13 @@ public class Game {
 			currentTrick.setLedSuit(card.getSuit());
 		}
 
+		// if the player at position has not played the card yet
 		if (currentTrick.getCard(position) == null) {
 			// System.out.println("Adding card to trick");
 			if (!players[position].isLegal(card, currentTrick.getLedSuit())) {
 
-				System.out.println("*** Not a legal card: " + card.toString());
+				System.out.println("*** Not a legal card: "
+						+ card.toString());
 				SoundManager soundManager = SoundManager.getInstance();
 
 				// Need a better sound here!!!
@@ -457,35 +494,19 @@ public class Game {
 			}
 
 			debugMsg("Adding card to trick at " + turn);
+			
+			playCardIntoGame(card, position);
 
-			// if it is not the blind player's turn or blind player is the dummy
-			// player, then proceed with play
-			// else if it is the blind players turn, then just remember the last card
-			if (position != getBlindPosition().ordinal()
-					|| getBlindPosition().equals(getDummyPosition())) {
-
-				playCardIntoGame(card, position);
-
-				return true;
-
-			} else {
-
-				lastBlindCard = card;
-
-				return false;
-			}
-
-			// return true;
+			return true;
 		}
-
-		// This should never happen. It would mean that the wrong antenna
-		// was being listened to.
-		assert false;
 		return false;
-
-		// System.out.println("Returning from playCard");
 	}
 
+	/**
+	 * Lets the player at the specified position play the specified card
+	 * @param card The card to play
+	 * @param position The position of the player trying to play the card
+	 */
 	private void playCardIntoGame(Card card, int position) {
 
 		System.out.println("Game : play card into game");
@@ -827,35 +848,36 @@ public class Game {
 	 */
 	public void playBlindCard() {
 
-		System.out.println("Game : play blind card");
+		//System.out.println("Game : play blind card");
 
-		System.out.println("blind direction " + blindDirection.ordinal());
+		//System.out.println("blind direction " + blindDirection.ordinal());
 
-		System.out.println("card " + lastBlindCard);
+		//System.out.println("card " + lastBlindCard);
+		
+		if(canPlayCard(lastBlindCard, getBlindPosition().ordinal())){
+			
+			// check if current trick is over
+			if (currentTrick.isOver()) {
 
-		// handler.getCardListener(blindDirection.ordinal()).cardFound(lastBlindCard);
+				debugMsg("Trick over");
+				System.out.println("trick over after blind person");
+				endTrick();
+			}
 
-		playCardIntoGame(lastBlindCard, getBlindPosition().ordinal());
+			// check if hand is over
+			if (allTricksOver()) {
 
-		// check if current trick is over
-		if (currentTrick.isOver()) {
+				debugMsg("Round over");
 
-			debugMsg("Trick over");
-			System.out.println("trick over after blind person");
-			endTrick();
+				System.out.println("round over after blind person");
+
+				gameState = GameState.DEALING;
+
+			}
 		}
 
-		// check if hand is over
-		if (allTricksOver()) {
 
-			debugMsg("Round over");
-
-			System.out.println("round over after blind person");
-
-			gameState = GameState.DEALING;
-
-			// resetGame();
-		}
+		
 
 	}
 

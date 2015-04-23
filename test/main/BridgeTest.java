@@ -2,7 +2,7 @@ package main;
 
 import java.io.IOException;
 
-import controller.TestHandler;
+import controller.TestAntennaHandler;
 import gui.GameGUI;
 import model.CardDatabase;
 import model.Game;
@@ -20,7 +20,7 @@ public class BridgeTest implements BridgeMode {
 		
 		try {
 			
-			Game game = new Game(new TestHandler(new CardDatabase()), true);			
+			Game game = new Game(new TestAntennaHandler(new CardDatabase()), true);			
 			game.activateAntennas();
 			GameGUI gui = new GameGUI(game);
 			game.addListener(new AudibleGameListener());
