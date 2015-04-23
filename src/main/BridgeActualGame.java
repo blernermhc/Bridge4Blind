@@ -41,8 +41,9 @@ public class BridgeActualGame implements BridgeMode {
 
 		};
 
+		// wait 4 seconds after starting the server to start the game
 		Timer timer = new Timer(true);
-		timer.schedule(timerTask, 10000);
+		timer.schedule(timerTask, 4000);
 
 	}
 
