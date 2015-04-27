@@ -143,7 +143,7 @@ public class Game {
 		contract.setBidWinner(declarer);
 
 		dummyDirection = declarer.getPartner();
-
+		
 		players[dummyDirection.ordinal()].setDummy(true);
 
 		turn = declarer.getNextDirection();
@@ -296,8 +296,6 @@ public class Game {
 
 			// PLAYING
 		} else if (direction == turn) {
-			
-			
 
 			cardFoundInPlayingState(card);
 
@@ -646,6 +644,10 @@ public class Game {
 	 */
 	public void setBlindPosition(Direction blindPosition) {
 		this.blindDirection = blindPosition;
+		
+		// TODO : may cause error
+		turn = blindPosition;
+		
 		players[blindDirection.ordinal()].setBlind(true);
 		handler.setBlindDirection(blindPosition);
 		switchHand(blindPosition);
@@ -876,9 +878,6 @@ public class Game {
 			}
 		}
 
-
-		
-
 	}
 
 	/**
@@ -887,6 +886,15 @@ public class Game {
 	 */
 	public Card getLastBlindCard() {
 		return lastBlindCard;
+	}
+	
+	/**
+	 * 
+	 */
+	public void resumeGame(){
+		
+		handler.setCyclingThread(null);
+		switchHand(turn);
 	}
 
 }

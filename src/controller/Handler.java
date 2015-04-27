@@ -128,6 +128,10 @@ public abstract class Handler implements Runnable, KeyListener {
 		this.game = game;
 	}
 	
+	public void setCyclingThread(Thread cyclingThread){
+		
+		
+	}
 	
 
 }

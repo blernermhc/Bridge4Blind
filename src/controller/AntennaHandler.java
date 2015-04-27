@@ -389,6 +389,10 @@ public class AntennaHandler extends Handler {
 		
 	}
 	
+	@Override
+	public void setCyclingThread(Thread cyclingThread) {
+				this.cyclingThread = cyclingThread;
+	}
 	
 }
 

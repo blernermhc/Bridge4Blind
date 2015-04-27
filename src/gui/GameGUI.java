@@ -101,7 +101,7 @@ public class GameGUI extends JFrame implements GameListener {
 	// next hand gui
 	private NextHandGUI nextHandGUI;
 
-	private JButton backButton;
+	private JButton resumeButton;
 	private JButton resetButton;
 	private JButton helpButton;
 	private JButton quitButton;
@@ -186,7 +186,7 @@ public class GameGUI extends JFrame implements GameListener {
 
 	private JPanel createButtonPanel() {
 		JPanel southPanel = new JPanel(new GridLayout(1, 0));
-		southPanel.add(createBackButtonPanel());
+		southPanel.add(createResumeButtonPanel());
 		southPanel.add(createHelpButtonPanel());
 		southPanel.add(createResetButtonPanel());
 		southPanel.add(createQuitPanel());
@@ -382,25 +382,27 @@ public class GameGUI extends JFrame implements GameListener {
 	}
 
 	/**
-	 * Creates the "back" button panel at the bottom of the screen.
+	 * Creates the "resume" button panel at the bottom of the screen.
 	 * 
-	 * @return A JPanel containing a single, left-oriented "back" button.
+	 * @return A JPanel containing a single, left-oriented "Resume" button.
 	 */
-	protected JPanel createBackButtonPanel() {
+	protected JPanel createResumeButtonPanel() {
 
 		// create a new JPanel with a FlowLayout
 		JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 5));
-		backButton = GUIUtilities.createButton("Back");
-		backButton.addActionListener(new ActionListener() {
+		resumeButton = GUIUtilities.createButton("Resume");
+		resumeButton.addActionListener(new ActionListener() {
 
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
-				reverse();
+				//reverse();
+				
+				game.resumeGame();
 			}
 
 		});
 
-		panel.add(GUIUtilities.packageButton(backButton, FlowLayout.LEFT));
+		panel.add(GUIUtilities.packageButton(resumeButton, FlowLayout.LEFT));
 		return panel;
 	}
 
