@@ -24,8 +24,8 @@ public class BridgeActualGame implements BridgeMode {
 	// command to start the .exe file
 	// the space at the end is important
 	private static final String COMMAND = "start ";
-
-	public BridgeActualGame() throws IOException, InterruptedException {
+	
+	public BridgeActualGame() {
 
 		startServer();
 
@@ -80,12 +80,17 @@ public class BridgeActualGame implements BridgeMode {
 	 * @throws IOException
 	 * @throws InterruptedException
 	 */
-	private void startServer() throws IOException, InterruptedException {
+	public static void startServer() {
 
+		System.out.println("Starting Server");
+		
 		// got code from
 		// http://stackoverflow.com/questions/4157303/how-to-execute-cmd-commands-via-java
-
-		Process process = Runtime.getRuntime().exec("cmd");
+		try {
+		Process process;
+		
+			process = Runtime.getRuntime().exec("cmd");
+		
 
 		new Thread(new SyncPipe(process.getErrorStream(), System.err)).start();
 		new Thread(new SyncPipe(process.getInputStream(), System.out)).start();
@@ -99,7 +104,17 @@ public class BridgeActualGame implements BridgeMode {
 		stdin.close();
 
 		System.out.println("return code " + process.waitFor());
+		
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
+	
+
 
 	public static void main(String[] args) throws IOException,
 			InterruptedException {

@@ -266,4 +266,10 @@ public class TestAntennaHandler extends Handler {
 		return null;
 	}
 
+	@Override
+	public void setCyclingThread(Thread cyclingThread) {
+			//Do nothing
+		
+	}
+
 }

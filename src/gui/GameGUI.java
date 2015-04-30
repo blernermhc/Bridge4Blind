@@ -13,6 +13,8 @@ import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.Iterator;
 import java.util.Stack;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -22,6 +24,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 
 import controller.TestAntennaHandler;
+import main.BridgeActualGame;
 import model.Card;
 import model.Contract;
 import model.Direction;
@@ -397,10 +400,54 @@ public class GameGUI extends JFrame implements GameListener {
 			public void actionPerformed(ActionEvent arg0) {
 				//reverse();
 				
-				game.resumeGame();
+				//game.resumeGame();
+				
+			
+					
+					BridgeActualGame.startServer() ;
+					
+					// start the game 15 seconds after starting the C# Server
+					TimerTask timerTask = new TimerTask() {
+
+						@Override
+						public void run() {
+
+							
+							try {
+								
+								game.activateAntennas() ;
+								
+							} catch (UnknownHostException e) {
+								
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+								
+							} catch (IOException e) {
+								
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+							
+							game.resumeGame();
+
+						}
+
+					};
+
+					// wait 4 seconds after starting the server to start the game
+					Timer timer = new Timer(true);
+					timer.schedule(timerTask, 4000);
+				
+					
+				
 			}
 
 		});
+		
+		if(Game.isTestMode()){
+			
+			resumeButton.setEnabled(false);
+		}
 
 		panel.add(GUIUtilities.packageButton(resumeButton, FlowLayout.LEFT));
 		return panel;
