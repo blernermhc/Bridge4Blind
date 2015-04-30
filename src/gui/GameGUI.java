@@ -7,9 +7,9 @@ import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.IOException;
-import java.net.ConnectException;
-import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.Iterator;
 import java.util.Stack;
@@ -19,6 +19,7 @@ import java.util.TimerTask;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
@@ -185,6 +186,37 @@ public class GameGUI extends JFrame implements GameListener {
 
 		// System.out.println("current screen initially " + currentScreen);
 
+		// needed to detect when the this gui is closed
+		detectGUIClosed();
+	}
+
+	/**
+	 * When the user tries to close the game, it displays a pop-up that asks the
+	 * user if the user is sure about closing the window. If the user presses
+	 * yes, it should quit the game and close the SkyeTekReader window.
+	 */
+	private void detectGUIClosed() {
+
+		this.addWindowListener(new WindowAdapter() {
+
+			@Override
+			public void windowClosing(WindowEvent windowEvent) {
+
+				System.out.println("CLOSING WINDOW");
+
+				if (JOptionPane.showConfirmDialog(GameGUI.this,
+						"Are you sre you want to close this window?",
+						"Confirm Exit", JOptionPane.YES_NO_OPTION,
+						JOptionPane.QUESTION_MESSAGE) == JOptionPane.YES_OPTION) {
+
+					BridgeActualGame.closeServerWindow();
+
+					game.quit();
+
+				}
+			}
+
+		});
 	}
 
 	private JPanel createButtonPanel() {
@@ -271,7 +303,14 @@ public class GameGUI extends JFrame implements GameListener {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
+
+				// close the SkyeTex window when playing the actual game
+				if (!Game.isTestMode()) {
+					BridgeActualGame.closeServerWindow();
+				}
+
 				game.quit();
+
 			}
 
 		});
@@ -398,56 +437,49 @@ public class GameGUI extends JFrame implements GameListener {
 
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
-				//reverse();
-				
-				//game.resumeGame();
-				
-			
-					
-					BridgeActualGame.startServer() ;
-					
-					// start the game 15 seconds after starting the C# Server
-					TimerTask timerTask = new TimerTask() {
+				// reverse();
 
-						@Override
-						public void run() {
+				// game.resumeGame();
 
-							
-							try {
-								
-								game.activateAntennas() ;
-								
-								
-							} catch (UnknownHostException e) {
-								
-								// TODO Auto-generated catch block
-								e.printStackTrace();
-								
-							} catch (IOException e) {
-								
-								// TODO Auto-generated catch block
-								e.printStackTrace();
-							}
-							
-							
-							game.resumeGame();
+				BridgeActualGame.startServer();
 
+				// start the game 15 seconds after starting the C# Server
+				TimerTask timerTask = new TimerTask() {
+
+					@Override
+					public void run() {
+
+						try {
+
+							game.activateAntennas();
+
+						} catch (UnknownHostException e) {
+
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+
+						} catch (IOException e) {
+
+							// TODO Auto-generated catch block
+							e.printStackTrace();
 						}
 
-					};
+						game.resumeGame();
 
-					// wait 4 seconds after starting the server to start the game
-					Timer timer = new Timer(true);
-					timer.schedule(timerTask, 4000);
-				
-					
-				
+					}
+
+				};
+
+				// wait 4 seconds after starting the server to start the game
+				Timer timer = new Timer(true);
+				timer.schedule(timerTask, 4000);
+
 			}
 
 		});
-		
-		if(Game.isTestMode()){
-			
+
+		if (Game.isTestMode()) {
+
 			resumeButton.setEnabled(false);
 		}
 

@@ -24,7 +24,7 @@ public class BridgeActualGame implements BridgeMode {
 	// command to start the .exe file
 	// the space at the end is important
 	private static final String COMMAND = "start ";
-	
+
 	public BridgeActualGame() {
 
 		startServer();
@@ -83,28 +83,29 @@ public class BridgeActualGame implements BridgeMode {
 	public static void startServer() {
 
 		System.out.println("Starting Server");
-		
+
 		// got code from
 		// http://stackoverflow.com/questions/4157303/how-to-execute-cmd-commands-via-java
 		try {
-		Process process;
-		
+			Process process;
+
 			process = Runtime.getRuntime().exec("cmd");
-		
 
-		new Thread(new SyncPipe(process.getErrorStream(), System.err)).start();
-		new Thread(new SyncPipe(process.getInputStream(), System.out)).start();
+			new Thread(new SyncPipe(process.getErrorStream(), System.err))
+					.start();
+			new Thread(new SyncPipe(process.getInputStream(), System.out))
+					.start();
 
-		PrintWriter stdin = new PrintWriter(process.getOutputStream());
+			PrintWriter stdin = new PrintWriter(process.getOutputStream());
 
-		// stdin.println("dir");
+			// stdin.println("dir");
 
-		stdin.println(COMMAND + PATH);
+			stdin.println(COMMAND + PATH);
 
-		stdin.close();
+			stdin.close();
 
-		System.out.println("return code " + process.waitFor());
-		
+			System.out.println("return code " + process.waitFor());
+
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -113,8 +114,20 @@ public class BridgeActualGame implements BridgeMode {
 			e.printStackTrace();
 		}
 	}
-	
 
+	/**
+	 * 
+	 */
+	public static void closeServerWindow() {
+		try {
+
+			Runtime.getRuntime().exec("taskkill /f /im " + "SkyeTekReader.exe");
+
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+	}
 
 	public static void main(String[] args) throws IOException,
 			InterruptedException {
