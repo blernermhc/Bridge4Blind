@@ -41,8 +41,8 @@ public class Game {
 	// the position of the dummy hand
 	private Direction dummyDirection;
 
-	/** whose turn it is */
-	protected Direction turn;
+	// whose turn it is. */
+	protected Direction turn ;
 
 	// who won the last trick
 	private Direction lastWinner;
