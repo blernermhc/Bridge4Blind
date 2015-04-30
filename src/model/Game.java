@@ -7,14 +7,13 @@ import java.util.HashSet;
 import java.util.Set;
 
 import audio.SoundManager;
-import controller.CardIdentifier;
 import controller.HandAntenna;
 import controller.Handler;
 
 /**
  * The Game class controls the logic for a game of bridge.
  * 
- * @author Allison DeJordy
+ * @author Allison DeJordy, Humaira Orchee
  * 
  */
 
@@ -109,6 +108,8 @@ public class Game {
 	 */
 	public void activateAntennas() throws UnknownHostException, IOException {
 
+		System.out.println("Game : activate antennas");
+		
 		HandAntenna[] handAntennas = new HandAntenna[NUM_PLAYERS];
 
 		// construct the card identifier
@@ -255,9 +256,13 @@ public class Game {
 
 		if (gameState == GameState.DEALING) {
 
+			System.out.println("Game : Dealing state");
+			
 			cardFoundInDealingState(direction, card);
 
 		} else if (gameState == GameState.FIRSTCARD) {
+			
+			System.out.println("Game : First card state");
 
 			assert dummyDirection != null;
 			// System.out.println("State is FIRSTCARD");
@@ -269,6 +274,8 @@ public class Game {
 			// First card is being played before the dummy is revealed.
 			if (direction == turn) {
 
+				System.out.println("Game : Playing first card");
+				
 				assert dummyDirection.follows(direction);
 
 				playCard(card);
@@ -292,10 +299,14 @@ public class Game {
 		// Scanning dummy card
 		else if (gameState == GameState.SCANNING_DUMMY) {
 
+			System.out.println("Game : scan dummy state");
+			
 			cardFoundInScanDummyState(direction, card);
 
 			// PLAYING
 		} else if (direction == turn) {
+			
+			System.out.println("Game : Playing state");
 
 			cardFoundInPlayingState(card);
 
@@ -310,6 +321,8 @@ public class Game {
 	private void cardFoundInPlayingState(Card card) {
 
 		debugMsg("playing phase");
+		
+		System.out.println("Game : cardFoundInPlayingState()");
 
 		if (playCard(card)) {
 
@@ -422,6 +435,8 @@ public class Game {
 	 * @return true if the card was added to the trick.
 	 */
 	private boolean playCard(Card card) {
+		
+		System.out.println("Game : playCard");
 
 		int position = turn.ordinal();
 
@@ -431,6 +446,8 @@ public class Game {
 		if (position == getBlindPosition().ordinal()
 				&& !getBlindPosition().equals(getDummyPosition())) {
 
+			System.out.println("Remembering blind playeer's last card");
+			
 			lastBlindCard = card;
 
 			cardIded(lastBlindCard);
@@ -457,11 +474,17 @@ public class Game {
 	 * @return
 	 */
 	private boolean canPlayCard(Card card, int position) {
+		
+		System.out.println("Game : canPlayCard ?");
+		
 		// Check if card was already played in this hand.
 		// Avoid accidental scanning as a trick is collected
 		// and passes over the antenna or of a card held
 		// over an antenna for too long.
 		if (cardsPlayed.contains(card)) {
+			
+			System.out.println("cannot play card because card has been played");
+			
 			return false;
 		}
 
@@ -470,6 +493,9 @@ public class Game {
 
 		// First card in game or first card in a new trick
 		if (currentTrick.isEmpty() || currentTrick.isOver()) {
+			
+			System.out.println("First card in game or first card in new trick");
+			
 			// System.out.println("Starting new trick");
 			currentTrick = new Trick();
 			currentTrick.setLedSuit(card.getSuit());
@@ -477,6 +503,9 @@ public class Game {
 
 		// if the player at position has not played the card yet
 		if (currentTrick.getCard(position) == null) {
+			
+			System.out.println("Player yet to play card");
+			
 			// System.out.println("Adding card to trick");
 			if (!players[position].isLegal(card, currentTrick.getLedSuit())) {
 
@@ -894,7 +923,10 @@ public class Game {
 	public void resumeGame(){
 		
 		handler.setCyclingThread(null);
+	
 		switchHand(turn);
 	}
 
+	
+	
 }

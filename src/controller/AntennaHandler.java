@@ -197,7 +197,7 @@ public class AntennaHandler extends Handler {
 				out.notify();
 			} catch (SocketException e) {
 
-				// Do nothing
+				System.err.println("Lostt connection to server. Please press resume button to continue");
 			}
 
 		}
@@ -392,9 +392,6 @@ public class AntennaHandler extends Handler {
 	 */
 	private void cycleHands() throws IOException, InterruptedException {
 
-		System.out.println("Cycle hands");
-		
-		System.out.println("onPlayerHand " + onPlayerHand);
 		
 		// switching to the blind player's antenna
 		if (onPlayerHand) {

@@ -417,6 +417,7 @@ public class GameGUI extends JFrame implements GameListener {
 								
 								game.activateAntennas() ;
 								
+								
 							} catch (UnknownHostException e) {
 								
 								// TODO Auto-generated catch block
@@ -427,6 +428,7 @@ public class GameGUI extends JFrame implements GameListener {
 								// TODO Auto-generated catch block
 								e.printStackTrace();
 							}
+							
 							
 							game.resumeGame();
 
