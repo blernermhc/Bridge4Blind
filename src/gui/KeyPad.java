@@ -81,6 +81,8 @@ public class KeyPad extends KeyAdapter {
 	 */
 	@Override
 	public void keyPressed(KeyEvent e) {
+		
+		System.out.println("-----------------------KEY PRESSED---------------------");
 
 		// System.out.println("key pressed");
 		if (!ignoringKeys) {
@@ -154,6 +156,9 @@ public class KeyPad extends KeyAdapter {
 
 					// read the dummy's clubs
 					gameGUI.debugMsg("Dummy clubs:");
+					
+					System.out.println("Dummy Clubs");
+					
 					// printCards(Suit.CLUBS, dummyPlayer);
 					readDummySuit(Suit.CLUBS, dummyPlayer);
 
@@ -162,6 +167,9 @@ public class KeyPad extends KeyAdapter {
 
 					// read the dummy's diamonds
 					gameGUI.debugMsg("Dummy diamonds:");
+					
+					System.out.println("Dummy diamonds");
+					
 					// printCards(Suit.DIAMONDS, dummyPlayer);
 					readDummySuit(Suit.DIAMONDS, dummyPlayer);
 
@@ -170,6 +178,8 @@ public class KeyPad extends KeyAdapter {
 
 					// read the dummy's hearts
 					gameGUI.debugMsg("Dummy hearts:");
+					
+					System.out.println("Dummy hearts");
 					// printCards(Suit.HEARTS, dummyPlayer);
 					readDummySuit(Suit.HEARTS, dummyPlayer);
 
@@ -178,6 +188,8 @@ public class KeyPad extends KeyAdapter {
 
 					// read the dummy's spades
 					gameGUI.debugMsg("Dummy spades:");
+					
+					System.out.println("Dummy spades");
 					// printCards(Suit.SPADES, dummyPlayer);
 					readDummySuit(Suit.SPADES, dummyPlayer);
 
@@ -186,6 +198,9 @@ public class KeyPad extends KeyAdapter {
 
 					// read the dummy's entire hand
 					gameGUI.debugMsg("Dummy hand:");
+					
+					System.out.println("Dummy Hand");
+					
 					readDummyHand(dummyPlayer);
 				}
 			}
