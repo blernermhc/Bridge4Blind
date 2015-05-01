@@ -41,7 +41,7 @@ public class Game {
 	private Direction dummyDirection;
 
 	// whose turn it is. */
-	protected Direction turn ;
+	protected Direction turn;
 
 	// who won the last trick
 	private Direction lastWinner;
@@ -109,7 +109,7 @@ public class Game {
 	public void activateAntennas() throws UnknownHostException, IOException {
 
 		System.out.println("Game : activate antennas");
-		
+
 		HandAntenna[] handAntennas = new HandAntenna[NUM_PLAYERS];
 
 		// construct the card identifier
@@ -144,7 +144,7 @@ public class Game {
 		contract.setBidWinner(declarer);
 
 		dummyDirection = declarer.getPartner();
-		
+
 		players[dummyDirection.ordinal()].setDummy(true);
 
 		turn = declarer.getNextDirection();
@@ -257,11 +257,11 @@ public class Game {
 		if (gameState == GameState.DEALING) {
 
 			System.out.println("Game : Dealing state");
-			
+
 			cardFoundInDealingState(direction, card);
 
 		} else if (gameState == GameState.FIRSTCARD) {
-			
+
 			System.out.println("Game : First card state");
 
 			assert dummyDirection != null;
@@ -275,7 +275,7 @@ public class Game {
 			if (direction == turn) {
 
 				System.out.println("Game : Playing first card");
-				
+
 				assert dummyDirection.follows(direction);
 
 				playCard(card);
@@ -300,12 +300,12 @@ public class Game {
 		else if (gameState == GameState.SCANNING_DUMMY) {
 
 			System.out.println("Game : scan dummy state");
-			
+
 			cardFoundInScanDummyState(direction, card);
 
 			// PLAYING
 		} else if (direction == turn) {
-			
+
 			System.out.println("Game : Playing state");
 
 			cardFoundInPlayingState(card);
@@ -321,7 +321,7 @@ public class Game {
 	private void cardFoundInPlayingState(Card card) {
 
 		debugMsg("playing phase");
-		
+
 		System.out.println("Game : cardFoundInPlayingState()");
 
 		if (playCard(card)) {
@@ -435,7 +435,7 @@ public class Game {
 	 * @return true if the card was added to the trick.
 	 */
 	private boolean playCard(Card card) {
-		
+
 		System.out.println("Game : playCard");
 
 		int position = turn.ordinal();
@@ -447,7 +447,7 @@ public class Game {
 				&& !getBlindPosition().equals(getDummyPosition())) {
 
 			System.out.println("Remembering blind playeer's last card");
-			
+
 			lastBlindCard = card;
 
 			cardIded(lastBlindCard);
@@ -461,30 +461,32 @@ public class Game {
 
 		// This should never happen. It would mean that the wrong antenna
 		// was being listened to.
-		//assert false;
-		//return false;
+		// assert false;
+		// return false;
 
 		// System.out.println("Returning from playCard");
 	}
 
 	/**
-	 * Returns true if the player at the specified position can play the specified card 
+	 * Returns true if the player at the specified position can play the
+	 * specified card
+	 * 
 	 * @param card
 	 * @param position
 	 * @return
 	 */
 	private boolean canPlayCard(Card card, int position) {
-		
+
 		System.out.println("Game : canPlayCard ?");
-		
+
 		// Check if card was already played in this hand.
 		// Avoid accidental scanning as a trick is collected
 		// and passes over the antenna or of a card held
 		// over an antenna for too long.
 		if (cardsPlayed.contains(card)) {
-			
+
 			System.out.println("cannot play card because card has been played");
-			
+
 			return false;
 		}
 
@@ -493,9 +495,9 @@ public class Game {
 
 		// First card in game or first card in a new trick
 		if (currentTrick.isEmpty() || currentTrick.isOver()) {
-			
+
 			System.out.println("First card in game or first card in new trick");
-			
+
 			// System.out.println("Starting new trick");
 			currentTrick = new Trick();
 			currentTrick.setLedSuit(card.getSuit());
@@ -503,14 +505,13 @@ public class Game {
 
 		// if the player at position has not played the card yet
 		if (currentTrick.getCard(position) == null) {
-			
+
 			System.out.println("Player yet to play card");
-			
+
 			// System.out.println("Adding card to trick");
 			if (!players[position].isLegal(card, currentTrick.getLedSuit())) {
 
-				System.out.println("*** Not a legal card: "
-						+ card.toString());
+				System.out.println("*** Not a legal card: " + card.toString());
 				SoundManager soundManager = SoundManager.getInstance();
 
 				// Need a better sound here!!!
@@ -521,7 +522,7 @@ public class Game {
 			}
 
 			debugMsg("Adding card to trick at " + turn);
-			
+
 			playCardIntoGame(card, position);
 
 			return true;
@@ -531,8 +532,11 @@ public class Game {
 
 	/**
 	 * Lets the player at the specified position play the specified card
-	 * @param card The card to play
-	 * @param position The position of the player trying to play the card
+	 * 
+	 * @param card
+	 *            The card to play
+	 * @param position
+	 *            The position of the player trying to play the card
 	 */
 	private void playCardIntoGame(Card card, int position) {
 
@@ -673,10 +677,10 @@ public class Game {
 	 */
 	public void setBlindPosition(Direction blindPosition) {
 		this.blindDirection = blindPosition;
-		
+
 		// TODO : may cause error
 		turn = blindPosition;
-		
+
 		players[blindDirection.ordinal()].setBlind(true);
 		handler.setBlindDirection(blindPosition);
 		switchHand(blindPosition);
@@ -831,8 +835,10 @@ public class Game {
 
 	/**
 	 * Figures out who won the last hand
+	 * 
+	 * @return TODO
 	 */
-	public void determineHandWinner() {
+	public int determineHandWinner() {
 
 		// get the bid winner and his/her partner
 		Direction bidWinner = getBidWinner();
@@ -851,9 +857,20 @@ public class Game {
 
 		} else {
 
+			// if the bid winner and their partner did not make the bid, then
+			// the other pair wins. So calculate the total tricks the winning
+			// pair won.
+
 			lastHandWinner = bidWinner.getNextDirection();
 
+			Direction lastHandWinnerPartner = lastHandWinner.getPartner();
+
+			totalTricksWon = players[lastHandWinner.ordinal()].getTricksWon()
+					+ players[lastHandWinnerPartner.ordinal()].getTricksWon();
+
 		}
+
+		return totalTricksWon;
 	}
 
 	/**
@@ -879,14 +896,14 @@ public class Game {
 	 */
 	public void playBlindCard() {
 
-		//System.out.println("Game : play blind card");
+		// System.out.println("Game : play blind card");
 
-		//System.out.println("blind direction " + blindDirection.ordinal());
+		// System.out.println("blind direction " + blindDirection.ordinal());
 
-		//System.out.println("card " + lastBlindCard);
-		
-		if(canPlayCard(lastBlindCard, getBlindPosition().ordinal())){
-			
+		// System.out.println("card " + lastBlindCard);
+
+		if (canPlayCard(lastBlindCard, getBlindPosition().ordinal())) {
+
 			// check if current trick is over
 			if (currentTrick.isOver()) {
 
@@ -916,17 +933,15 @@ public class Game {
 	public Card getLastBlindCard() {
 		return lastBlindCard;
 	}
-	
+
 	/**
 	 * 
 	 */
-	public void resumeGame(){
-		
+	public void resumeGame() {
+
 		handler.setCyclingThread(null);
-	
+
 		switchHand(turn);
 	}
 
-	
-	
 }
