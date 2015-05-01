@@ -48,6 +48,8 @@ public class KeyPad extends KeyAdapter {
 	private boolean ignoringKeys = false;
 
 	private int lastCode = 0;
+	
+	private char lastKeyChar ;
 
 	private SoundManager soundMgr = SoundManager.getInstance();
 
@@ -75,21 +77,45 @@ public class KeyPad extends KeyAdapter {
 		tutorialPlayer = new AudioPlayer();
 		tutorialPlayer.init("/sounds/orientation/tutorial.WAV");
 	}
-
-	/**
-	 * Called when a key is pressed
-	 */
+//	KEY PRESSED WAS NOT WORKING PROPERLY BECAUSE DEPENDING ON HOW LONG A KEY IS PRESSED OR IF IT IS PRESSED OR TYPED, THE VALUE OF THE KEY CHANGED
+//	/**
+//	 * Called when a key is pressed
+//	 */
+//	@Override
+//	public void keyPressed(KeyEvent e) {
+//		
+//		System.out.println("-----------------------KEY PRESSED---------------------");
+//
+//		// System.out.println("key pressed");
+//		if (!ignoringKeys) {
+//			gameGUI.debugMsg("key pressed");
+//			//interpretKeyCode(e.getKeyCode());			
+//			
+//		}
+//		
+//		
+//
+//	}
+	
+	// KEY TYPED WORKS PROPERLY
+	
 	@Override
-	public void keyPressed(KeyEvent e) {
+	public void keyTyped(KeyEvent e){
 		
-		System.out.println("-----------------------KEY PRESSED---------------------");
-
-		// System.out.println("key pressed");
-		if (!ignoringKeys) {
-			gameGUI.debugMsg("key pressed");
-			interpretKeyCode(e.getKeyCode());
-		}
-
+		System.out.println("-----------------------KEY TYPED---------------------");
+		
+//		System.out.println(e.getKeyCode());
+//		System.out.println(e.getKeyChar());
+//		System.out.println(e.getKeyLocation());
+//		System.out.println(e.getExtendedKeyCode());
+//		System.out.println(e.getSource());
+		
+		//System.out.println("tab ? " + (e.getKeyChar() == KeyEvent.VK_TAB));
+		//System.out.println("back? " + (e.getKeyChar() == KeyEvent.VK_BACK_SPACE));
+		//System.out.println("enter? " + (e.getKeyChar() == KeyEvent.VK_ENTER));
+		
+		// multiple keys had the same keycode (144) so the interpretKeyCode method did not work properly/
+		interpretKeyChar(e.getKeyChar()) ;
 	}
 
 	/**
@@ -149,8 +175,22 @@ public class KeyPad extends KeyAdapter {
 				}
 			}
 
+			System.out.println("Dummy Position " + game.getDummyPosition());
+			
 			if (game.getDummyPosition() != null) {
 				Player dummyPlayer = game.getDummyPlayer();
+				
+				System.out.println("Dummy Player " + game.getDummyPlayer());
+				
+				System.out.println("keyCode " + keyCode);
+				
+				System.out.println("DASH " + DASH_CODE);
+				
+				System.out.println("NINE " + NINE_CODE);
+				
+				System.out.println("EIGHT " + EIGHT_CODE);
+				
+				System.out.println("SEVEN " + SEVEN_CODE);
 
 				if (keyCode == DASH_CODE) {
 
@@ -244,8 +284,13 @@ public class KeyPad extends KeyAdapter {
 				//playTutorial();
 				
 				System.out.println("################ Enter is pressed #########################");
-
+				
+				try{
 				game.playBlindCard();
+				}catch(NullPointerException e){
+					
+					System.err.println("Blind person pressed the Enter button by mistake");
+				}
 				
 			} else {
 
@@ -590,6 +635,191 @@ public class KeyPad extends KeyAdapter {
 			e.printStackTrace();
 		}
 
+	}
+	
+	protected void interpretKeyChar(char keyCharacter) {
+
+		if (keyCharacter != KeyEvent.VK_0 || !ignoringKeys) {
+
+			if (game.getBlindPosition() != null) {
+
+				Player blindPlayer = game.getBlindPlayer();
+
+				// if the backspace key was pressed
+				if (blindPlayer != null) {
+					readBlindPlayerHand(keyCharacter, blindPlayer);
+				}
+			}
+			
+			if (game.getDummyPosition() != null) {
+				readDummyHand(keyCharacter);
+			}
+
+			if (keyCharacter == KeyEvent.VK_PLUS) {
+
+				// read the cards in the current trick
+				gameGUI.debugMsg("Current trick");
+				readTrick();
+
+				// if the 1 was pressed
+			} else if (keyCharacter == KeyEvent.VK_1) {
+
+				// read the contract
+				gameGUI.debugMsg("Contract");
+				playContract(game.getContract());
+
+				// if the 2 was pressed
+			} else if (keyCharacter == KeyEvent.VK_2) {
+
+				// read N/S's current tricks won
+				gameGUI.debugMsg("N/S tricks won");
+				playTricksWonNS();
+
+				// if the 3 was pressed
+			} else if (keyCharacter == KeyEvent.VK_3) {
+
+				// read E/W's current tricks won
+				gameGUI.debugMsg("E/W tricks won");
+				playTricksWonEW();
+
+				// if the 0 was pressed
+			} else if (keyCharacter == KeyEvent.VK_0) {
+
+				// repeat the last thing said
+				gameGUI.debugMsg("Repeat");
+				soundMgr.playLastSound();
+
+				// if the enter key is pressed then play the blid player's card
+			} else if (keyCharacter == KeyEvent.VK_ENTER) {
+				//playTutorial();
+				
+				System.out.println("################ Enter is pressed #########################");
+				
+				try{
+				game.playBlindCard();
+				}catch(NullPointerException e){
+					
+					System.err.println("Blind person pressed the Enter button by mistake");
+				}
+				
+			} 
+
+			//lastCode = keyCode;
+			
+			lastKeyChar = keyCharacter ;
+			// start ignoring key presses
+			ignoringKeys = true;
+
+			// create a timer to stop ignoring after 1 second
+			Timer t = new Timer(true);
+			t.schedule(new TimerTask() {
+				@Override
+				public void run() {
+					ignoringKeys = false;
+				}
+
+			}, 1000);
+
+		}
+
+	}
+
+	private void readDummyHand(char keyCharacter) {
+		Player dummyPlayer = game.getDummyPlayer();
+		
+		if (keyCharacter == KeyEvent.VK_MINUS) {
+
+			// read the dummy's clubs
+			gameGUI.debugMsg("Dummy clubs:");
+			
+			
+			// printCards(Suit.CLUBS, dummyPlayer);
+			readDummySuit(Suit.CLUBS, dummyPlayer);
+
+			// if the 9 was pressed
+		} else if (keyCharacter == KeyEvent.VK_9) {
+
+			// read the dummy's diamonds
+			gameGUI.debugMsg("Dummy diamonds:");
+			
+			// printCards(Suit.DIAMONDS, dummyPlayer);
+			readDummySuit(Suit.DIAMONDS, dummyPlayer);
+
+			// if the 8 was pressed
+		} else if (keyCharacter == KeyEvent.VK_8) {
+
+			// read the dummy's hearts
+			gameGUI.debugMsg("Dummy hearts:");
+			
+			// printCards(Suit.HEARTS, dummyPlayer);
+			readDummySuit(Suit.HEARTS, dummyPlayer);
+
+			// if the 7 was pressed
+		} else if (keyCharacter == KeyEvent.VK_7) {
+
+			// read the dummy's spades
+			gameGUI.debugMsg("Dummy spades:");
+			
+			
+			// printCards(Suit.SPADES, dummyPlayer);
+			readDummySuit(Suit.SPADES, dummyPlayer);
+
+			// if the five key was pressed
+		} else if (keyCharacter == KeyEvent.VK_5) {
+
+			// read the dummy's entire hand
+			gameGUI.debugMsg("Dummy hand:");
+			
+			readDummyHand(dummyPlayer);
+		}
+	}
+
+	private void readBlindPlayerHand(char keyCharacter, Player blindPlayer) {
+		
+		System.out.println("multiply is " + KeyEvent.VK_MULTIPLY);
+		System.out.println("asterick is " + KeyEvent.VK_ASTERISK);
+		
+		System.out.println("key char " + keyCharacter);
+		
+		if (keyCharacter == KeyEvent.VK_BACK_SPACE) {
+
+			// read the visually impaired player's clubs
+			gameGUI.debugMsg("Own clubs:");
+			// printCards(Suit.CLUBS, blindPlayer);
+			readBlindSuit(Suit.CLUBS, blindPlayer);
+
+			// if the asterisk was pressed
+		} else if (keyCharacter == '*') {
+			
+			// VK_MULTILPLY and VK_ASTERICK did dot work for this else if statement so I hard coded the '*'
+			// read the visually impaired player's diamonds
+			// gameGUI.debugMsg("Own diamonds:");
+			// printCards(Suit.DIAMONDS, blindPlayer);
+			readBlindSuit(Suit.DIAMONDS, blindPlayer);
+
+			// if the backslash was pressed
+		} else if (keyCharacter == KeyEvent.VK_SLASH) {
+
+			// read the visually impaired player's hearts
+			gameGUI.debugMsg("Own hearts:");
+			// printCards(Suit.HEARTS, blindPlayer);
+			readBlindSuit(Suit.HEARTS, blindPlayer);
+
+			// if the tab key was pressed
+		} else if (keyCharacter == KeyEvent.VK_TAB) {
+
+			// read the visually impaired player's spades
+			gameGUI.debugMsg("Own spades:");
+			// printCards(Suit.SPADES, blindPlayer);
+			readBlindSuit(Suit.SPADES, blindPlayer);
+
+			// if the four key was pressed
+		} else if (keyCharacter == KeyEvent.VK_4) {
+
+			// read the VI player's entire hand
+			gameGUI.debugMsg("Own hand:");
+			readBlindHand(blindPlayer);
+		}
 	}
 
 }
