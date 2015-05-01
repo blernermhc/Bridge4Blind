@@ -696,7 +696,7 @@ public class KeyPad extends KeyAdapter {
 				System.out.println("################ Enter is pressed #########################");
 				
 				try{
-				game.playBlindCard();
+					game.playBlindCard();
 				}catch(NullPointerException e){
 					
 					System.err.println("Blind person pressed the Enter button by mistake");

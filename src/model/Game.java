@@ -1,5 +1,7 @@
 package model;
 
+import gui.GameGUI;
+
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -261,8 +263,16 @@ public class Game {
 			cardFoundInDealingState(direction, card);
 
 		} else if (gameState == GameState.FIRSTCARD) {
+			
+			System.out.println("FIRST CARD");
 
-			System.out.println("Game : First card state");
+//			System.out.println("Game : First card state");
+//			
+//			boolean blindPlayerContainsCard = players[blindDirection.ordinal()].getHand().containsCard(card);
+//			if(direction == blindDirection && blindPlayerContainsCard){
+//				
+//				cardIded(card);
+//			}
 
 			assert dummyDirection != null;
 			// System.out.println("State is FIRSTCARD");
@@ -895,7 +905,13 @@ public class Game {
 	 * 
 	 */
 	public void playBlindCard() {
+		
+		boolean startedPlaying = (gameState == GameState.FIRSTCARD) || (gameState == GameState.PLAYING);
 
+		if(!startedPlaying){
+			
+			return ;
+		}
 		// System.out.println("Game : play blind card");
 
 		// System.out.println("blind direction " + blindDirection.ordinal());

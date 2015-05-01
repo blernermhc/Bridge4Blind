@@ -85,7 +85,7 @@ public class GameGUI extends JFrame implements GameListener {
 	private Game game;
 
 	// the currently visible GUI
-	private int currentScreen;
+	private static int currentScreen;
 
 	// The history of screens viewed, used for the back button
 	private Stack<Integer> screensViewed = new Stack<Integer>();
@@ -769,6 +769,11 @@ public class GameGUI extends JFrame implements GameListener {
 
 		System.out
 				.println("switchFromGameStatusGUI " + switchFromGameStatusGUI);
+	}
+	
+	public static boolean isScanBlindGUI(){
+		
+		return currentScreen == SCANNING_BLIND_GUI ;
 	}
 
 	/*	*//**
