@@ -20,7 +20,7 @@ import model.Game;
  * next hand.
  * 
  * @author Humaira Orchee
- * @version April 13, 2015
+ * @version April 30, 2015
  *
  */
 public class NextHandGUI extends JPanel {
