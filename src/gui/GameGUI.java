@@ -188,6 +188,10 @@ public class GameGUI extends JFrame implements GameListener {
 
 		// needed to detect when the this gui is closed
 		detectGUIClosed();
+
+		// disable the close operation on this gui because we do not want to
+		// mistakenly close this application
+		this.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 	}
 
 	/**
@@ -197,23 +201,14 @@ public class GameGUI extends JFrame implements GameListener {
 	 */
 	private void detectGUIClosed() {
 
+		// code from : http://stackoverflow.com/questions/9093448/do-something-when-the-close-button-is-clicked-on-a-jframe
 		this.addWindowListener(new WindowAdapter() {
 
 			@Override
 			public void windowClosing(WindowEvent windowEvent) {
 
-				System.out.println("CLOSING WINDOW");
-
-				if (JOptionPane.showConfirmDialog(GameGUI.this,
-						"Are you sre you want to close this window?",
-						"Confirm Exit", JOptionPane.YES_NO_OPTION,
-						JOptionPane.QUESTION_MESSAGE) == JOptionPane.YES_OPTION) {
-
-					BridgeActualGame.closeServerWindow();
-
-					game.quit();
-
-				}
+				JOptionPane.showMessageDialog(GameGUI.this,
+						"Press on the Quit button to close this application");
 			}
 
 		});
@@ -304,12 +299,26 @@ public class GameGUI extends JFrame implements GameListener {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 
-				// close the SkyeTex window when playing the actual game
-				if (!Game.isTestMode()) {
-					BridgeActualGame.closeServerWindow();
-				}
+				// a pop-up that asks the user if the user is sure about closing
+				// the window. If the user presses yes, it should quit the game
+				// and close the SkyeTekReader window.
+				
+				// code from : http://stackoverflow.com/questions/9093448/do-something-when-the-close-button-is-clicked-on-a-jframe
+				
+				if (JOptionPane.showConfirmDialog(GameGUI.this,
+						"Are you sure you want to close this window?",
+						"Confirm Exit", JOptionPane.YES_NO_OPTION,
+						JOptionPane.QUESTION_MESSAGE) == JOptionPane.YES_OPTION) {
 
-				game.quit();
+					// close the SkyeTex window when playing the actual game
+					if (!Game.isTestMode()) {
+
+						BridgeActualGame.closeServerWindow();
+					}
+
+					game.quit();
+
+				}
 
 			}
 
@@ -388,7 +397,9 @@ public class GameGUI extends JFrame implements GameListener {
 
 			@Override
 			public void actionPerformed(ActionEvent evt) {
-				showResetGUI();
+				//showResetGUI();
+				
+				reverse();
 			}
 
 		});
