@@ -174,7 +174,7 @@ public class GameGUI extends JFrame implements GameListener {
 		add(mainPanel, BorderLayout.CENTER);
 
 		// add the area for debugging messages
-		add(new JScrollPane(debugArea), BorderLayout.SOUTH);
+		//add(new JScrollPane(debugArea), BorderLayout.SOUTH);
 
 		// turn off focus traversal keys so that the tab key can be used as game
 		// input
