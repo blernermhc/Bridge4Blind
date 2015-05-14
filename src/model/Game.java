@@ -6,7 +6,9 @@ import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
+import java.util.Stack;
 
 import audio.SoundManager;
 import controller.HandAntenna;
@@ -72,6 +74,12 @@ public class Game {
 
 	// the last card the blind player scanned
 	private Card lastBlindCard;
+	
+	// keeps track of whose turn it is
+	//private Stack<Direction> turnStack ;
+	
+	// keeps track of all the tricks
+	private Stack<Trick> trickStack = new Stack<Trick>() ;
 
 	/**
 	 * Create a new game
@@ -94,6 +102,8 @@ public class Game {
 		this.handler = handler;
 
 		handler.setGame(this);
+		
+		trickStack.push(currentTrick) ;
 
 		// construct the antenna handler
 		// handler = new AntennaHandler(new CardDatabase());
@@ -150,6 +160,7 @@ public class Game {
 		players[dummyDirection.ordinal()].setDummy(true);
 
 		turn = declarer.getNextDirection();
+		//turnStack.push(turn) ;
 		try {
 			handler.switchHand(turn);
 		} catch (IOException e) {
@@ -212,6 +223,8 @@ public class Game {
 
 		resetHands();
 		currentTrick = new Trick();
+		trickStack = new Stack<Trick>() ;
+		trickStack.push(currentTrick) ;
 		contract = new Contract();
 		cardsPlayed.clear();
 		lastWinner = null;
@@ -430,6 +443,7 @@ public class Game {
 		int winner = determineWinner();
 		players[winner].wonTrick();
 		turn = Direction.values()[winner];
+		//turnStack.push(turn) ;
 		switchHand(turn);
 		for (GameListener listener : listeners) {
 			listener.trickWon(turn);
@@ -510,6 +524,7 @@ public class Game {
 
 			// System.out.println("Starting new trick");
 			currentTrick = new Trick();
+			trickStack.push(currentTrick) ;
 			currentTrick.setLedSuit(card.getSuit());
 		}
 
@@ -567,6 +582,7 @@ public class Game {
 		// System.out.println("Done notifying listeners");
 
 		turn = turn.getNextDirection();
+		//turnStack.push(turn) ;
 
 		// System.out.println("Switching antenna");
 
@@ -690,6 +706,7 @@ public class Game {
 
 		// TODO : may cause error
 		turn = blindPosition;
+		//turnStack.push(turn) ;
 
 		players[blindDirection.ordinal()].setBlind(true);
 		handler.setBlindDirection(blindPosition);
@@ -724,8 +741,9 @@ public class Game {
 	/**
 	 * Undoes the playing of the last card into the trick. Does nothing if the
 	 * trick is empty.
+	 * @return TODO
 	 */
-	public void undo() {
+	public Direction undo() {
 
 		System.out.println("undo card");
 
@@ -736,7 +754,10 @@ public class Game {
 			currentTrick.clearCard(predecessorPos);
 			turn = turn.getPreviousDirection();
 			switchHand(turn);
+			return turn ;
 		}
+		
+		return null ;
 	}
 
 	/**
@@ -981,5 +1002,54 @@ public class Game {
 		
 		return players[blindDirection.ordinal()].getHand().isEmpty() ;
 	}
+	
+	/**
+	 * Lets the user remove the most recent card added to the blind player's hand
+	 */
+	public void undoBlindPlayerCard(){
+		
+		Card toRemove = players[blindDirection.ordinal()].getHand().removeRecentCard() ;
+		
+		players[blindDirection.ordinal()].getHand().removeCard(toRemove);
+	}
+	
+	/**
+	 * Lets the user remove the most recent card added to the dummy player's hand
+	 */
+	public Card undoDummyPlayerCard(){
+		
+		Card toRemove = players[dummyDirection.ordinal()].getHand().removeRecentCard() ;
+		
+		players[dummyDirection.ordinal()].getHand().removeCard(toRemove);
+		
+		return toRemove ;
+	}
+	
+	public void removeCurrentPlayerCardPlayed(){
+		
+		players[turn.ordinal()].getHand().removeRecentCard() ;
+	}
+	
+	public void undoFirstCardPlayed(){
+		
+		assert (cardsPlayed.size() == 1) ;
+		
+		Iterator<Card> iter = cardsPlayed.iterator() ;
+		
+		while(iter.hasNext()){
+			
+			Card toRemove = iter.next() ;
+			cardsPlayed.remove(toRemove) ;
+						
+		}
+		
+		
+	}
+
+	public Direction getTurn() {
+		return turn;
+	}
+
+	
 
 }

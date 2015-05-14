@@ -106,16 +106,20 @@ public class GameGUI extends JFrame implements GameListener {
 	private NextHandGUI nextHandGUI;
 	
 	// VIPlayerGUI
-	VIPlayerGUI viPlayerGUI ;
+	private VIPlayerGUI viPlayerGUI ;
+	
+	// Scan blind cards gui
+	private ScanningBlindGUI scanningBlindGUI ;
+	
+	// Scan dummy cards gui
+	private ScanDummyGUI scanDummyGUI ;
 
+	// buttons
 	private JButton resumeButton;
-	private JButton resetButton;
+	private JButton undoButton;
 	private JButton helpButton;
 	private JButton quitButton;
-
-	// private JLabel bidLabel;
-	// private JLabel antennaLabel;
-	// private JLabel trickLabel;
+	private JButton backButton;
 
 	/** Font used to display messages on the main screen */
 	public static final Font INFO_FONT = new Font("Verdana", Font.BOLD, 30);
@@ -167,6 +171,12 @@ public class GameGUI extends JFrame implements GameListener {
 		
 		// VIPlayerGUI
 		viPlayerGUI = new VIPlayerGUI(this, game);
+		
+		// Scan blind cards gui
+		scanningBlindGUI = new ScanningBlindGUI(this, game);
+		
+		// Scan dummy cards gui
+		scanDummyGUI = new ScanDummyGUI(this, game);
 
 		createCards();
 
@@ -254,7 +264,8 @@ public class GameGUI extends JFrame implements GameListener {
 		// add all the GUIs to the card panel
 
 		cardPanel.add(viPlayerGUI, cardNames[VI_PLAYER_GUI]);
-		cardPanel.add(new ScanningBlindGUI(this, game),
+
+		cardPanel.add(scanningBlindGUI,
 				cardNames[SCANNING_BLIND_GUI]);
 
 		cardPanel.add(bidPositionGUI, cardNames[BID_POSITION_GUI]);
@@ -266,7 +277,8 @@ public class GameGUI extends JFrame implements GameListener {
 
 		cardPanel.add(gameStatusGUI, cardNames[GAME_STATUS_GUI]);
 
-		cardPanel.add(new ScanDummyGUI(this, game), cardNames[SCAN_DUMMY_GUI]);
+
+		cardPanel.add(scanDummyGUI, cardNames[SCAN_DUMMY_GUI]);
 
 		// cardPanel.add(new ResetGUI(game), cardNames[7]);
 		// cardPanel.add(new GameStatusGUI(game), cardNames[GAME_STATUS_GUI]);
@@ -400,19 +412,18 @@ public class GameGUI extends JFrame implements GameListener {
 	protected JPanel createUndoButtonPanel() {
 
 		// create a new JPanel with a FlowLayout
-		resetButton = GUIUtilities.createButton("Undo");
-		resetButton.addActionListener(new ActionListener() {
+		undoButton = GUIUtilities.createButton("Undo");
+		undoButton.addActionListener(new ActionListener() {
 
 			@Override
 			public void actionPerformed(ActionEvent evt) {
-				//showResetGUI();
-				
-				//reverse();
+
+				undo() ;
 			}
 
 		});
 
-		return GUIUtilities.packageButton(resetButton, FlowLayout.RIGHT);
+		return GUIUtilities.packageButton(undoButton, FlowLayout.RIGHT);
 		// panel.add(GUIUtilities.packageButton(resetButton, FlowLayout.RIGHT));
 		// return panel;
 
@@ -426,8 +437,8 @@ public class GameGUI extends JFrame implements GameListener {
 	protected JPanel createBackButtonPanel() {
 
 		// create a new JPanel with a FlowLayout
-		resetButton = GUIUtilities.createButton("Back");
-		resetButton.addActionListener(new ActionListener() {
+		backButton = GUIUtilities.createButton("Back");
+		backButton.addActionListener(new ActionListener() {
 
 			@Override
 			public void actionPerformed(ActionEvent evt) {
@@ -438,7 +449,7 @@ public class GameGUI extends JFrame implements GameListener {
 
 		});
 
-		return GUIUtilities.packageButton(resetButton, FlowLayout.RIGHT);
+		return GUIUtilities.packageButton(backButton, FlowLayout.RIGHT);
 		// panel.add(GUIUtilities.packageButton(resetButton, FlowLayout.RIGHT));
 		// return panel;
 
@@ -733,10 +744,22 @@ public class GameGUI extends JFrame implements GameListener {
 		if(currentScreen == SCANNING_BLIND_GUI){
 			
 			/**
-			 * IMPORTANT : When "Back" is pressed and screen changes from SCANNING_BLIND_GUI to VI_PLAYER_GUI, the handler is still active. So do not scan cards until the position of the blind player has been chosen.
+			 * IMPORTANT : When "Back" is pressed and screen changes from SCANNING_BLIND_GUI to VI_PLAYER_GUI, the handler is still active. So do not scan cards until the position of the blind player has been chosen. Not sure what happens if you do.
 			 */
 			game.resetVIPlayer();
 		}
+		
+		// not sure if this is needed
+//		else if(currentScreen == SCAN_DUMMY_GUI){
+//			
+//			// if the user wants to go back to game status gui to undo the first card played
+//			if(screensViewed.peek() == GAME_STATUS_GUI){
+//				
+//				game.undoFirstCardPlayed();
+//				gameStatusGUI.undoCardPlayed(game.getTurn().ordinal(), true);
+//			}
+//			
+//		}
 		
 		if (!screensViewed.isEmpty()) {
 			currentScreen = screensViewed.pop();
@@ -750,9 +773,48 @@ public class GameGUI extends JFrame implements GameListener {
 	 */
 	public void undo(){
 		
+		// if the user wants to change position of blind player
+		if(currentScreen == SCANNING_BLIND_GUI && game.blindPayerHasNoCard()){
+			
+				reverse() ;		
+				
+		}else if(currentScreen == SCANNING_BLIND_GUI){
+			
+			// This is when user wants to remove the most recent cards blind player' cards during dealing stage
+			
+			game.undoBlindPlayerCard();
+			
+		}else if(currentScreen == SCAN_DUMMY_GUI){
+			
+			Card toRemove = game.undoDummyPlayerCard();
+			
+			if(toRemove == null){
+				
+				// allow the user to change gui
+				reverse() ;
+			
+			}else{
+				
+				// remove the most recent card scanned for the dummy player
+				scanDummyGUI.undo(toRemove) ;
+			}
+			
+			
+		}else if(currentScreen == GAME_STATUS_GUI){
+			
+			if(game.getCurrentTrick().getTrickSize() == 1){
+				
+				//game.undoTrick();
+				//gameStatusGUI.undoTrick() ;
+				
+			}else{
+				
+				Direction currentTurn = game.undo(); 
+				gameStatusGUI.undoCardPlayed(currentTurn.ordinal());
+			}
+		}
 		
 	}
-	
 	
 
 	/**

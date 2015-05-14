@@ -16,6 +16,8 @@ public class Trick {
 	
 	// the cards in the current trick
 	private Card[] cards = new Card[Game.NUM_PLAYERS];
+	
+	private int numCards = 0 ;
 
 	/**
 	 * Checks if the trick is over.
@@ -58,6 +60,9 @@ public class Trick {
 	public void add(Card c, int position) {
 		assert (cards[position] == null) || (cards[position].equals(c));
 		cards[position] = c;
+		numCards++ ;
+		
+		assert numCards <= Game.NUM_PLAYERS ;
 	}
 
 	/**
@@ -167,5 +172,10 @@ public class Trick {
 			}
 		}
 		return s;
+	}
+	
+	public int getTrickSize(){
+		
+		return numCards ;
 	}
 }

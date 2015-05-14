@@ -3,6 +3,7 @@ package model;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import java.util.Stack;
 
 /**The Hand class represents a hand in the bridge game.
 *
@@ -20,6 +21,9 @@ public class Hand {
 	//the number of cards currently in this hand
 	private int numCards = 0;
 	
+	// the stack of cards in the hand to preserve the order in which they were dealt
+	private Stack<Card> cardStack = new Stack<Card>() ;
+	
 	/**
 	 * Adds a card to this hand.  Does nothing if the card is already in the hand.
 	 * The hand should not be full.
@@ -35,6 +39,8 @@ public class Hand {
 			cards[numCards] = c;
 			numCards++;
 			Arrays.sort(cards, 0, numCards, Card.getReverseRankComparator());
+			cardStack.push(c) ;
+			
 		}
 		
 	}
@@ -59,6 +65,11 @@ public class Hand {
 	 * @param c The card to be removed.  Does nothing if the card is not in the hand.
 	 */
 	public void removeCard(Card c){
+		
+		if(c == null){
+			
+			return ;
+		}
 		
 		for (int i = 0; i < numCards; i++){
 			
@@ -199,6 +210,22 @@ public class Hand {
 	public boolean isEmpty(){
 		
 		return (numCards == 0) ;
+	}
+	
+	
+	/**
+	 * Removes and returns the card most recently added to the hand
+	 * @return The card most recently added to the hand
+	 */
+	public Card removeRecentCard(){
+		
+		if(cardStack.isEmpty()){
+			
+			return null ;
+			
+		}
+		
+		return cardStack.pop() ;
 	}
 	
 }

@@ -21,7 +21,7 @@ public class ScanningBlindGUI extends JPanel implements GameListener {
 		
 		setLayout (new BoxLayout(this, BoxLayout.Y_AXIS));
 		addInstructions("Please scan in the blind player's cards.");
-		addInstructions("Use UNDO button to change position of blind player.");
+		addInstructions("Use BACK button to change position of blind player.");
 	}
 
 	private void addInstructions(String text) {

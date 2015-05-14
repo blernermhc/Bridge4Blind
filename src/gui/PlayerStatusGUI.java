@@ -308,4 +308,9 @@ public class PlayerStatusGUI extends JComponent {
 		f.setVisible(true);
 	}
 
+	public void undoTrick() {
+		// TODO Auto-generated method stub
+		
+	}
+
 }

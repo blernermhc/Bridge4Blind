@@ -343,5 +343,25 @@ public class GameStatusGUI extends JPanel implements GameListener {
 
 		add(new JLabel(dir.toString()), dirLabelConstraint);
 	}
+	
+	public void undoCardPlayed(int currentPlayerIndex){
+		
+		
+			currentPlayerIndex-- ;
+		
+		assert currentPlayerIndex >= 0 ;
+		
+		
+		playerGUIs[currentPlayerIndex].clear();
+	}
+
+	public void undoTrick() {
+
+		for(int i = 0 ; i < playerGUIs.length ; i++){
+			
+			playerGUIs[i].undoTrick() ;
+		}
+		
+	}
 
 }
