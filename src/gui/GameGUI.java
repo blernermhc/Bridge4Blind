@@ -217,8 +217,9 @@ public class GameGUI extends JFrame implements GameListener {
 	private JPanel createButtonPanel() {
 		JPanel southPanel = new JPanel(new GridLayout(1, 0));
 		southPanel.add(createResumeButtonPanel());
+		southPanel.add(createBackButtonPanel());
+		southPanel.add(createUndoButtonPanel());
 		southPanel.add(createHelpButtonPanel());
-		southPanel.add(createResetButtonPanel());
 		southPanel.add(createQuitPanel());
 		return southPanel;
 	}
@@ -385,14 +386,40 @@ public class GameGUI extends JFrame implements GameListener {
 	}
 
 	/**
-	 * Creates the "reset" button panel at the bottom of the screen.
+	 * Creates the "Undo" button panel at the bottom of the screen.
 	 * 
-	 * @return A JPanel containing a single, right-oriented "reset" button.
+	 * @return A JPanel containing a single, right-oriented "Undo" button.
 	 */
-	protected JPanel createResetButtonPanel() {
+	protected JPanel createUndoButtonPanel() {
 
 		// create a new JPanel with a FlowLayout
 		resetButton = GUIUtilities.createButton("Undo");
+		resetButton.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent evt) {
+				//showResetGUI();
+				
+				//reverse();
+			}
+
+		});
+
+		return GUIUtilities.packageButton(resetButton, FlowLayout.RIGHT);
+		// panel.add(GUIUtilities.packageButton(resetButton, FlowLayout.RIGHT));
+		// return panel;
+
+	}
+
+	/**
+	 * Creates the "Back" button panel at the bottom of the screen.
+	 * 
+	 * @return A JPanel containing a single, right-oriented "Back" button.
+	 */
+	protected JPanel createBackButtonPanel() {
+
+		// create a new JPanel with a FlowLayout
+		resetButton = GUIUtilities.createButton("Back");
 		resetButton.addActionListener(new ActionListener() {
 
 			@Override
@@ -410,6 +437,7 @@ public class GameGUI extends JFrame implements GameListener {
 
 	}
 
+	
 	/**
 	 * Creates the "help" button panel at the bottom of the screen.
 	 * 
@@ -688,12 +716,34 @@ public class GameGUI extends JFrame implements GameListener {
 	/** Returns to the last card viewed. */
 	@SuppressWarnings("boxing")
 	public void reverse() {
+		
+		System.out.println("GameGUI undo");
+		
+		// if user wants to change position of blind player
+		//if(game.blindPayerHasNoCard()){
+		
+		// if the user wants to change position of blind player
+		if(currentScreen == SCANNING_BLIND_GUI){
+			
+			game.undoVIPlayer();
+		}
+		
 		if (!screensViewed.isEmpty()) {
 			currentScreen = screensViewed.pop();
 			layout.show(cardPanel, cardNames[currentScreen]);
 			requestFocusInWindow();
 		}
 	}
+	
+	/**
+	 * Resets the last move
+	 */
+	public void undo(){
+		
+		
+	}
+	
+	
 
 	/**
 	 * Updates the GUI to show whose turn it is and adds the card to the current

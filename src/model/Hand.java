@@ -192,5 +192,13 @@ public class Hand {
 		};
 	}
 	
+	/**
+	 * Returns true if this hand has no cards. Otherwise returns false.
+	 * @return True if this hand has no cards. Otherwise returns false.
+	 */
+	public boolean isEmpty(){
+		
+		return (numCards == 0) ;
+	}
 	
 }

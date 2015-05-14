@@ -959,5 +959,21 @@ public class Game {
 
 		switchHand(turn);
 	}
+	
+	public void undoVIPlayer(){
+		
+		System.out.println("Game : undoVIPlayer");
+		
+		players[blindDirection.ordinal()].setBlind(false);
+	}
+	
+	/**
+	 * Returns true if the blind player has no cards. Otherwise returns false.
+	 * @return True if the blind player has no cards. Otherwise returns false.
+	 */
+	public boolean blindPayerHasNoCard(){
+		
+		return players[blindDirection.ordinal()].getHand().isEmpty() ;
+	}
 
 }

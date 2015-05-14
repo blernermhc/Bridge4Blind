@@ -29,18 +29,18 @@ public class VIPlayerGUI extends DirectionGUI{
 		this.game = game;
 		this.gameGUI = gameGUI;
 		
-		if(Game.isTestMode()){
-			
-			// the blind player can only be east in the test case
-			northButton.setEnabled(false);
-			southButton.setEnabled(false);
-			westButton.setEnabled(false);
-			
-			eastButton.setEnabled(true);
-			
-
-			((TestAntennaHandler) game.getHandler()).setRightGUI(false);
-		}
+//		if(Game.isTestMode()){
+//			
+//			// the blind player can only be east in the test case
+//			northButton.setEnabled(false);
+//			southButton.setEnabled(false);
+//			westButton.setEnabled(false);
+//			
+//			eastButton.setEnabled(true);
+//			
+//
+//			((TestAntennaHandler) game.getHandler()).setRightGUI(false);
+//		}
 	}
 
 	/**
