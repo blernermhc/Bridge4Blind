@@ -5,6 +5,7 @@ import java.awt.event.ActionEvent;
 
 import model.Direction;
 import model.Game;
+import model.GameState;
 
 /**
  * The BidGUI allows the sighted players to specify which player made the
@@ -105,6 +106,9 @@ public class BidPositionGUI extends DirectionGUI {
 		
 		super.paintComponent(g);
 		
-		gameGUI.undoButtonSetEnabled(false);
+		gameGUI.undoButtonSetEnabled(true);
+		gameGUI.backButtonSetEnabled(true);
+		
+		gameGUI.getGame().setGameState(GameState.FIRSTCARD);
 	}
 }

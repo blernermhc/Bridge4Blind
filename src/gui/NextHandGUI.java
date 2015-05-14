@@ -170,7 +170,8 @@ public class NextHandGUI extends JPanel {
 		
 		super.paintComponent(g);
 		
-		gameGUI.undoButtonSetEnabled(true);
+		gameGUI.undoButtonSetEnabled(false);
+		gameGUI.backButtonSetEnabled(false);
 	}
 
 }

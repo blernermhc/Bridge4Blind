@@ -31,6 +31,7 @@ import model.Contract;
 import model.Direction;
 import model.Game;
 import model.GameListener;
+import model.GameState;
 import model.Player;
 import model.Suit;
 import audio.AudibleGameListener;
@@ -82,7 +83,7 @@ public class GameGUI extends JFrame implements GameListener {
 	private CardLayout layout;
 
 	// the Game object associated with this GUI
-	private Game game;
+	private final Game game;
 
 	// the currently visible GUI
 	private static int currentScreen;
@@ -752,6 +753,7 @@ public class GameGUI extends JFrame implements GameListener {
 			 * been chosen. Not sure what happens if you do.
 			 */
 			game.resetVIPlayer();
+			
 		}
 
 		// not sure if this is needed
@@ -769,7 +771,7 @@ public class GameGUI extends JFrame implements GameListener {
 
 		if (!screensViewed.isEmpty()) {
 			currentScreen = screensViewed.pop();
-			layout.show(cardPanel, cardNames[currentScreen]);
+			layout.show(cardPanel, cardNames[currentScreen]);	
 			requestFocusInWindow();
 		}
 	}
@@ -921,5 +923,21 @@ public class GameGUI extends JFrame implements GameListener {
 		undoButton.setEnabled(enabled);
 		repaint();
 	}
+	
+	public void backButtonSetEnabled(boolean enabled) {
 
+		backButton.setEnabled(enabled);
+		repaint();
+	}
+
+	public void reverseToScanBlind(){
+		
+		game.setGameState(GameState.DEALING);
+		
+	}
+	
+	public Game getGame(){
+		
+		return game ;
+	}
 }

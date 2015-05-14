@@ -92,6 +92,7 @@ public class VIPlayerGUI extends DirectionGUI{
 		super.paintComponent(g);
 		
 		gameGUI.undoButtonSetEnabled(false);
+		gameGUI.backButtonSetEnabled(false);
 	}
 
 	

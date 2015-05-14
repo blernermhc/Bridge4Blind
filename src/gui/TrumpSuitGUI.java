@@ -197,7 +197,7 @@ public class TrumpSuitGUI extends JPanel {
 		
 		super.paintComponent(g);
 		
-		gameGUI.undoButtonSetEnabled(false);
+		gameGUI.undoButtonSetEnabled(true);
 	}
 
 }

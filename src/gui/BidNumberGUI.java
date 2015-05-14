@@ -143,7 +143,8 @@ public class BidNumberGUI extends JPanel implements ActionListener {
 		
 		super.paintComponent(g);
 		
-		gameGUI.undoButtonSetEnabled(false);
+		gameGUI.undoButtonSetEnabled(true);
+		gameGUI.backButtonSetEnabled(true);
 	}
 
 }
