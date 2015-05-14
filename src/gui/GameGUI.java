@@ -743,7 +743,7 @@ public class GameGUI extends JFrame implements GameListener {
 		// if user wants to change position of blind player
 		// if(game.blindPayerHasNoCard()){
 
-		// if the user wants to change position of blind player
+		// if the user wants to change position of blind player by goinf from scanning blind cards gui to choose VI position gui
 		if (currentScreen == SCANNING_BLIND_GUI) {
 
 			/**
@@ -754,10 +754,6 @@ public class GameGUI extends JFrame implements GameListener {
 			 */
 			game.resetVIPlayer();
 
-			// if(Game.isTestMode()){
-			//
-			// TestAntennaHandler.undo();
-			// }
 
 		}
 
@@ -770,13 +766,18 @@ public class GameGUI extends JFrame implements GameListener {
 
 				game.undoFirstCardPlayed();
 				gameStatusGUI.undoCardPlayed(game.getTurn().ordinal());
-				
-				 if(Game.isTestMode()){
-				
-				 TestAntennaHandler.undo();
-				 }
+
+				if (Game.isTestMode()) {
+
+					TestAntennaHandler.undo();
+				}
 			}
 
+		} else if (currentScreen == BID_POSITION_GUI) {
+
+			game.reverseBidPosition();
+			
+			
 		}
 
 		if (!screensViewed.isEmpty()) {

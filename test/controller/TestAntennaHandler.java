@@ -283,4 +283,12 @@ public class TestAntennaHandler extends Handler {
 		testCards.undo() ;
 	}
 
+	public static void reverseScanBlind(){
+		
+		position = 0 ;
+		
+		testCards.reverseScanBlind();
+	}
+	
+	
 }

@@ -235,7 +235,7 @@ public class ScanDummyGUI extends JPanel implements GameListener {
 		
 		super.paintComponent(g);	
 		gameGUI.undoButtonSetEnabled(true);
-		gameGUI.backButtonSetEnabled(true);
+		gameGUI.backButtonSetEnabled(false);
 		//gameGUI.reverseToScanDummy(); 
 	}
 }

@@ -396,4 +396,9 @@ public class TestCards {
 		
 		assert index >= -1 ;
 	}
+	
+	public void reverseScanBlind(){
+		
+		index = -1 ;
+	}
 }

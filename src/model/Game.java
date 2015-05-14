@@ -10,6 +10,7 @@ import java.util.Set;
 import audio.SoundManager;
 import controller.HandAntenna;
 import controller.Handler;
+import controller.TestAntennaHandler;
 
 /**
  * The Game class controls the logic for a game of bridge.
@@ -989,6 +990,11 @@ public class Game {
 		// the direction of the blind player has changed. So the player at the previous position has no cards.
 		players[blindDirection.ordinal()].newHand();
 		players[blindDirection.ordinal()].setBlind(false);
+		
+		if(Game.isTestMode()){
+		
+		 TestAntennaHandler.reverseScanBlind();
+		}
 	
 	}
 	
@@ -1048,6 +1054,19 @@ public class Game {
 		return turn;
 	}
 
-	
+	public void reverseBidPosition(){
+		
+		gameState = GameState.DEALING ;
+		turn = blindDirection ;
+		
+		players[blindDirection.ordinal()].newHand();
+		switchHand(blindDirection);
+		
+		if(isTestMode()){
+			
+			TestAntennaHandler.reverseScanBlind();
+		}
+		
+	}
 
 }
