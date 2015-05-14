@@ -1,6 +1,7 @@
 package gui;
 
 import java.awt.Font;
+import java.awt.Graphics;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.util.Timer;
@@ -27,9 +28,10 @@ public class GameStatusGUI extends JPanel implements GameListener {
 	private PlayerStatusGUI[] playerGUIs = new PlayerStatusGUI[4];
 	private BidStatusGUI bidGUI = new BidStatusGUI();
 
-	// keeps track of the current player
-	private int count = 0 ;
 	
+	//private int count = 0 ;
+	
+	// keeps track of the current player
 	private int currentPlayer = 0;
 
 	// true if first card has been played already. Otherwise false. It starts
@@ -113,15 +115,16 @@ public class GameStatusGUI extends JPanel implements GameListener {
 	@Override
 	public void gameReset() {
 		
-		count++ ;
-
-		System.out.println("GameStatusGui gameReset  " + count);
-		
-		bidGUI.clear();
-
-		firstCardPlayed = false;
-		trickOverHandled = true;
-		currentPlayer = 0;
+//		
+//		//count++ ;
+//
+//		//System.out.println("GameStatusGui gameReset  " + count);
+//		
+//		bidGUI.clear();
+//
+//		firstCardPlayed = false;
+//		trickOverHandled = true;
+//		currentPlayer = 0;
 
 		
 	}
@@ -362,6 +365,14 @@ public class GameStatusGUI extends JPanel implements GameListener {
 			playerGUIs[i].undoTrick() ;
 		}
 		
+	}
+	
+	@Override
+	public void paintComponent(Graphics g){
+		
+		super.paintComponent(g);
+		
+		gameGUI.undoButtonSetEnabled(false);
 	}
 
 }
