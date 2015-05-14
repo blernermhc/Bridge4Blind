@@ -771,6 +771,15 @@ public class GameGUI extends JFrame implements GameListener {
 
 		if (!screensViewed.isEmpty()) {
 			currentScreen = screensViewed.pop();
+			
+			// something extra is needed to revert to SCAN_DUMMY_GUI
+			if(currentScreen == SCAN_DUMMY_GUI){
+				
+				reverseToScanDummy();
+				
+			}
+			
+			
 			layout.show(cardPanel, cardNames[currentScreen]);	
 			requestFocusInWindow();
 		}
@@ -933,6 +942,12 @@ public class GameGUI extends JFrame implements GameListener {
 	public void reverseToScanBlind(){
 		
 		game.setGameState(GameState.DEALING);
+		
+	}
+	
+	public void reverseToScanDummy(){
+		
+		game.setGameState(GameState.SCANNING_DUMMY);
 		
 	}
 	

@@ -164,23 +164,28 @@ public class ScanDummyGUI extends JPanel implements GameListener {
 		Rank rank = toRemove.getRank();
 
 		String ranks = "";
+		JLabel label = null ;
 
 		switch (suit) {
 
 		case CLUBS:
 			ranks = clubsScanned.getText();
+			label = clubsScanned ;
 			break;
 
 		case DIAMONDS:
 			ranks = diamondsScanned.getText();
+			label = diamondsScanned ;
 			break;
 
 		case HEARTS:
 			ranks = heartsScanned.getText();
+			label = heartsScanned ;
 			break;
 
 		case SPADES:
 			ranks = spadesScanned.getText();
+			label = spadesScanned ;
 			break;
 
 		default:
@@ -189,6 +194,7 @@ public class ScanDummyGUI extends JPanel implements GameListener {
 		}
 
 		ranks.replaceFirst(rank.toString(), "");
+		label.setText(ranks);
 		repaint();
 
 	}
@@ -198,7 +204,9 @@ public class ScanDummyGUI extends JPanel implements GameListener {
 		
 		super.paintComponent(g);
 		
+		
 		gameGUI.undoButtonSetEnabled(true);
 		gameGUI.backButtonSetEnabled(true);
+		gameGUI.reverseToScanDummy(); 
 	}
 }

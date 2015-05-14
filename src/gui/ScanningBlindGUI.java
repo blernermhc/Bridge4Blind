@@ -83,7 +83,7 @@ public class ScanningBlindGUI extends JPanel implements GameListener {
 		
 		gameGUI.undoButtonSetEnabled(true);
 		gameGUI.backButtonSetEnabled(true);
-		gameGUI.reverseToScanBlind();
+		
 	}
 
 }
