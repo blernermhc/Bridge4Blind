@@ -1,6 +1,7 @@
 package gui;
 
 import java.awt.Component;
+import java.awt.Graphics;
 
 import javax.swing.BoxLayout;
 import javax.swing.JLabel;
@@ -73,6 +74,14 @@ public class ScanningBlindGUI extends JPanel implements GameListener {
 	public void dummyHandScanned() {
 		// TODO Auto-generated method stub
 		
+	}
+	
+	@Override
+	public void paintComponent(Graphics g){
+		
+		super.paintComponent(g);
+		
+		gameGUI.undoButtonSetEnabled(true);
 	}
 
 }

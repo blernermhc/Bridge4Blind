@@ -2,6 +2,7 @@ package gui;
 
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.Graphics;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -192,4 +193,11 @@ public class ScanDummyGUI extends JPanel implements GameListener {
 
 	}
 
+	@Override
+	public void paintComponent(Graphics g){
+		
+		super.paintComponent(g);
+		
+		gameGUI.undoButtonSetEnabled(true);
+	}
 }

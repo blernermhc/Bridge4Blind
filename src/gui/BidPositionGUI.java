@@ -1,5 +1,6 @@
 package gui;
 
+import java.awt.Graphics;
 import java.awt.event.ActionEvent;
 
 import model.Direction;
@@ -99,4 +100,11 @@ public class BidPositionGUI extends DirectionGUI {
 		enableAndDisableButtons();
 	}
 
+	@Override
+	public void paintComponent(Graphics g){
+		
+		super.paintComponent(g);
+		
+		gameGUI.undoButtonSetEnabled(false);
+	}
 }

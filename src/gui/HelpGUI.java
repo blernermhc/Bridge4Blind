@@ -2,6 +2,7 @@ package gui;
 
 import java.awt.BorderLayout;
 import java.awt.Font;
+import java.awt.Graphics;
 import java.awt.GridLayout;
 
 import javax.swing.BoxLayout;
@@ -52,5 +53,5 @@ public class HelpGUI extends JPanel {
 		return helpPanel;
 	}
 
-	
+
 }

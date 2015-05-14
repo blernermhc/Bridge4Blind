@@ -1,14 +1,11 @@
 package model;
 
-import gui.GameGUI;
-
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
-import java.util.Stack;
 
 import audio.SoundManager;
 import controller.HandAntenna;
@@ -79,7 +76,7 @@ public class Game {
 	//private Stack<Direction> turnStack ;
 	
 	// keeps track of all the tricks
-	private Stack<Trick> trickStack = new Stack<Trick>() ;
+	//private Stack<Trick> trickStack = new Stack<Trick>() ;
 
 	/**
 	 * Create a new game
@@ -103,7 +100,7 @@ public class Game {
 
 		handler.setGame(this);
 		
-		trickStack.push(currentTrick) ;
+		//trickStack.push(currentTrick) ;
 
 		// construct the antenna handler
 		// handler = new AntennaHandler(new CardDatabase());
@@ -223,8 +220,8 @@ public class Game {
 
 		resetHands();
 		currentTrick = new Trick();
-		trickStack = new Stack<Trick>() ;
-		trickStack.push(currentTrick) ;
+		//trickStack = new Stack<Trick>() ;
+		//trickStack.push(currentTrick) ;
 		contract = new Contract();
 		cardsPlayed.clear();
 		lastWinner = null;
@@ -524,7 +521,7 @@ public class Game {
 
 			// System.out.println("Starting new trick");
 			currentTrick = new Trick();
-			trickStack.push(currentTrick) ;
+			//trickStack.push(currentTrick) ;
 			currentTrick.setLedSuit(card.getSuit());
 		}
 

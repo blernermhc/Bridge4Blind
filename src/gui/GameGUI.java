@@ -104,15 +104,15 @@ public class GameGUI extends JFrame implements GameListener {
 
 	// next hand gui
 	private NextHandGUI nextHandGUI;
-	
+
 	// VIPlayerGUI
-	private VIPlayerGUI viPlayerGUI ;
-	
+	private VIPlayerGUI viPlayerGUI;
+
 	// Scan blind cards gui
-	private ScanningBlindGUI scanningBlindGUI ;
-	
+	private ScanningBlindGUI scanningBlindGUI;
+
 	// Scan dummy cards gui
-	private ScanDummyGUI scanDummyGUI ;
+	private ScanDummyGUI scanDummyGUI;
 
 	// buttons
 	private JButton resumeButton;
@@ -168,13 +168,13 @@ public class GameGUI extends JFrame implements GameListener {
 
 		// next hand gui
 		nextHandGUI = new NextHandGUI(this, game);
-		
+
 		// VIPlayerGUI
 		viPlayerGUI = new VIPlayerGUI(this, game);
-		
+
 		// Scan blind cards gui
 		scanningBlindGUI = new ScanningBlindGUI(this, game);
-		
+
 		// Scan dummy cards gui
 		scanDummyGUI = new ScanDummyGUI(this, game);
 
@@ -190,7 +190,7 @@ public class GameGUI extends JFrame implements GameListener {
 		add(mainPanel, BorderLayout.CENTER);
 
 		// add the area for debugging messages
-		//add(new JScrollPane(debugArea), BorderLayout.SOUTH);
+		// add(new JScrollPane(debugArea), BorderLayout.SOUTH);
 
 		// turn off focus traversal keys so that the tab key can be used as game
 		// input
@@ -217,7 +217,8 @@ public class GameGUI extends JFrame implements GameListener {
 	 */
 	private void detectGUIClosed() {
 
-		// code from : http://stackoverflow.com/questions/9093448/do-something-when-the-close-button-is-clicked-on-a-jframe
+		// code from :
+		// http://stackoverflow.com/questions/9093448/do-something-when-the-close-button-is-clicked-on-a-jframe
 		this.addWindowListener(new WindowAdapter() {
 
 			@Override
@@ -265,8 +266,7 @@ public class GameGUI extends JFrame implements GameListener {
 
 		cardPanel.add(viPlayerGUI, cardNames[VI_PLAYER_GUI]);
 
-		cardPanel.add(scanningBlindGUI,
-				cardNames[SCANNING_BLIND_GUI]);
+		cardPanel.add(scanningBlindGUI, cardNames[SCANNING_BLIND_GUI]);
 
 		cardPanel.add(bidPositionGUI, cardNames[BID_POSITION_GUI]);
 		cardPanel.add(bidNumberGUI, cardNames[BID_NUMBER_GUI]);
@@ -276,7 +276,6 @@ public class GameGUI extends JFrame implements GameListener {
 		// cardNames[FIRST_CARD_GUI]);
 
 		cardPanel.add(gameStatusGUI, cardNames[GAME_STATUS_GUI]);
-
 
 		cardPanel.add(scanDummyGUI, cardNames[SCAN_DUMMY_GUI]);
 
@@ -322,9 +321,10 @@ public class GameGUI extends JFrame implements GameListener {
 				// a pop-up that asks the user if the user is sure about closing
 				// the window. If the user presses yes, it should quit the game
 				// and close the SkyeTekReader window.
-				
-				// code from : http://stackoverflow.com/questions/9093448/do-something-when-the-close-button-is-clicked-on-a-jframe
-				
+
+				// code from :
+				// http://stackoverflow.com/questions/9093448/do-something-when-the-close-button-is-clicked-on-a-jframe
+
 				if (JOptionPane.showConfirmDialog(GameGUI.this,
 						"Are you sure you want to close this window?",
 						"Confirm Exit", JOptionPane.YES_NO_OPTION,
@@ -418,7 +418,7 @@ public class GameGUI extends JFrame implements GameListener {
 			@Override
 			public void actionPerformed(ActionEvent evt) {
 
-				undo() ;
+				undo();
 			}
 
 		});
@@ -442,8 +442,8 @@ public class GameGUI extends JFrame implements GameListener {
 
 			@Override
 			public void actionPerformed(ActionEvent evt) {
-				//showResetGUI();
-				
+				// showResetGUI();
+
 				reverse();
 			}
 
@@ -455,7 +455,6 @@ public class GameGUI extends JFrame implements GameListener {
 
 	}
 
-	
 	/**
 	 * Creates the "help" button panel at the bottom of the screen.
 	 * 
@@ -595,6 +594,7 @@ public class GameGUI extends JFrame implements GameListener {
 				// nextHandGUI.refreshDisplay();
 
 				currentScreen = NEXT_HAND_GUI;
+
 			}
 
 			// else, do nothing
@@ -729,93 +729,111 @@ public class GameGUI extends JFrame implements GameListener {
 		this.repaint();
 
 		this.requestFocusInWindow();
+		
+		gameStatusGUI = new GameStatusGUI(this, game) ;
 	}
 
 	/** Returns to the last card viewed. */
 	@SuppressWarnings("boxing")
 	public void reverse() {
-		
+
 		System.out.println("GameGUI undo");
-		
+
 		// if user wants to change position of blind player
-		//if(game.blindPayerHasNoCard()){
-		
+		// if(game.blindPayerHasNoCard()){
+
 		// if the user wants to change position of blind player
-		if(currentScreen == SCANNING_BLIND_GUI){
-			
+		if (currentScreen == SCANNING_BLIND_GUI) {
+
 			/**
-			 * IMPORTANT : When "Back" is pressed and screen changes from SCANNING_BLIND_GUI to VI_PLAYER_GUI, the handler is still active. So do not scan cards until the position of the blind player has been chosen. Not sure what happens if you do.
+			 * IMPORTANT : When "Back" is pressed and screen changes from
+			 * SCANNING_BLIND_GUI to VI_PLAYER_GUI, the handler is still active.
+			 * So do not scan cards until the position of the blind player has
+			 * been chosen. Not sure what happens if you do.
 			 */
 			game.resetVIPlayer();
 		}
-		
+
 		// not sure if this is needed
-//		else if(currentScreen == SCAN_DUMMY_GUI){
-//			
-//			// if the user wants to go back to game status gui to undo the first card played
-//			if(screensViewed.peek() == GAME_STATUS_GUI){
-//				
-//				game.undoFirstCardPlayed();
-//				gameStatusGUI.undoCardPlayed(game.getTurn().ordinal(), true);
-//			}
-//			
-//		}
-		
+		// else if(currentScreen == SCAN_DUMMY_GUI){
+		//
+		// // if the user wants to go back to game status gui to undo the first
+		// card played
+		// if(screensViewed.peek() == GAME_STATUS_GUI){
+		//
+		// game.undoFirstCardPlayed();
+		// gameStatusGUI.undoCardPlayed(game.getTurn().ordinal(), true);
+		// }
+		//
+		// }
+
 		if (!screensViewed.isEmpty()) {
 			currentScreen = screensViewed.pop();
 			layout.show(cardPanel, cardNames[currentScreen]);
 			requestFocusInWindow();
 		}
 	}
-	
+
 	/**
 	 * Resets the last move
 	 */
-	public void undo(){
-		
+	public void undo() {
+
 		// if the user wants to change position of blind player
-		if(currentScreen == SCANNING_BLIND_GUI && game.blindPayerHasNoCard()){
-			
-				reverse() ;		
-				
-		}else if(currentScreen == SCANNING_BLIND_GUI){
-			
-			// This is when user wants to remove the most recent cards blind player' cards during dealing stage
-			
+		if (currentScreen == SCANNING_BLIND_GUI && game.blindPayerHasNoCard()) {
+
+			reverse();
+
+		} else if (currentScreen == SCANNING_BLIND_GUI) {
+
+			// This is when user wants to remove the most recent cards blind
+			// player' cards during dealing stage
+
 			game.undoBlindPlayerCard();
-			
-		}else if(currentScreen == SCAN_DUMMY_GUI){
-			
+
+		} else if (currentScreen == SCAN_DUMMY_GUI) {
+
 			Card toRemove = game.undoDummyPlayerCard();
-			
-			if(toRemove == null){
-				
+
+			if (toRemove == null) {
+
 				// allow the user to change gui
-				reverse() ;
-			
-			}else{
-				
+				reverse();
+
+			} else {
+
 				// remove the most recent card scanned for the dummy player
-				scanDummyGUI.undo(toRemove) ;
+				scanDummyGUI.undo(toRemove);
 			}
-			
-			
-		}else if(currentScreen == GAME_STATUS_GUI){
-			
-			if(game.getCurrentTrick().getTrickSize() == 1){
+
+		} else if (currentScreen == GAME_STATUS_GUI) {
+
+			Direction currentTurn = game.undo();
+
+			if (currentTurn != null) {
 				
-				//game.undoTrick();
-				//gameStatusGUI.undoTrick() ;
+				gameStatusGUI.undoCardPlayed(currentTurn.ordinal());
+
+				if(game.getCurrentTrick().getTrickSize() == 0){
+					
+					undoButtonSetEnabled(false);
+					
+				}else{
+					
+					undoButtonSetEnabled(true);
+				}
 				
 			}else{
 				
-				Direction currentTurn = game.undo(); 
-				gameStatusGUI.undoCardPlayed(currentTurn.ordinal());
+				undoButtonSetEnabled(false);
 			}
+
+		} else {
+
+			reverse();
 		}
-		
+
 	}
-	
 
 	/**
 	 * Updates the GUI to show whose turn it is and adds the card to the current
@@ -892,11 +910,16 @@ public class GameGUI extends JFrame implements GameListener {
 		System.out
 				.println("switchFromGameStatusGUI " + switchFromGameStatusGUI);
 	}
-	
-	public static boolean isScanBlindGUI(){
-		
-		return currentScreen == SCANNING_BLIND_GUI ;
+
+	public static boolean isScanBlindGUI() {
+
+		return currentScreen == SCANNING_BLIND_GUI;
 	}
 
+	public void undoButtonSetEnabled(boolean enabled) {
+
+		undoButton.setEnabled(enabled);
+		repaint();
+	}
 
 }

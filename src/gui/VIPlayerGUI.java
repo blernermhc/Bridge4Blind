@@ -1,5 +1,6 @@
 package gui;
 
+import java.awt.Graphics;
 import java.awt.event.ActionEvent;
 
 import controller.Handler;
@@ -83,6 +84,14 @@ public class VIPlayerGUI extends DirectionGUI{
 		
 		
 		gameGUI.changeFrame();
+	}
+	
+	@Override
+	public void paintComponent(Graphics g){
+		
+		super.paintComponent(g);
+		
+		gameGUI.undoButtonSetEnabled(false);
 	}
 
 	
