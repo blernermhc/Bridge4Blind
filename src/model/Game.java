@@ -967,7 +967,10 @@ public class Game {
 		
 		System.out.println("Game : undoVIPlayer");
 		
+		// the direction of the blind player has changed. So the player at the previous position has no cards.
+		players[blindDirection.ordinal()].newHand();
 		players[blindDirection.ordinal()].setBlind(false);
+		blindDirection = null ;
 	}
 	
 	/**

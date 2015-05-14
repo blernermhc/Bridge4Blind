@@ -18,7 +18,7 @@ import model.Game;
 public class VIPlayerGUI extends DirectionGUI{
 	private Game game;
 	private GameGUI gameGUI;
-	private Thread handlerThread ;
+
 	
 	/**Constructor; constructs a new VIPlayerGUI.
 	 * @param gameGUI the frame the gui is inside of
@@ -56,8 +56,8 @@ public class VIPlayerGUI extends DirectionGUI{
 		if (handler != null) {
 			// Yikes!  This used to just be handler.start.  Was that causing
 			// our timing problems???
-			handlerThread = new Thread(handler, "Antenna handler");
-			handlerThread.start();
+			new Thread(handler, "Antenna handler").start() ;
+			
 		}
 		else {
 			System.out.println("Server is not running!");
@@ -85,10 +85,6 @@ public class VIPlayerGUI extends DirectionGUI{
 		gameGUI.changeFrame();
 	}
 
-	public void stopHandlerThread(){
-		
-		handlerThread = null ;
-	}
 	
 	
 }

@@ -732,8 +732,9 @@ public class GameGUI extends JFrame implements GameListener {
 		// if the user wants to change position of blind player
 		if(currentScreen == SCANNING_BLIND_GUI){
 			
-			viPlayerGUI.stopHandlerThread();
-			
+			/**
+			 * IMPORTANT : When "Back" is pressed and screen changes from SCANNING_BLIND_GUI to VI_PLAYER_GUI, the handler is still active. So do not scan cards until the position of the blind player has been chosen.
+			 */
 			game.resetVIPlayer();
 		}
 		
