@@ -31,10 +31,10 @@ public class HelpGUI extends JPanel {
 		
 		Font f = new Font("helpFont", Font.PLAIN, 18);
 		
-		JLabel helpLabel1 = new JLabel("<html>Backspace: own clubs<br>" +
-				"Asterisk: own diamonds<br>Backslash: own hearts<br>" +
-				"Tab: own spades<br><br>Dash: dummy clubs<br>Nine: dummy diamonds<br>" +
-				"Eight: dummy hearts<br>Seven: dummy spades</html>");
+		JLabel helpLabel1 = new JLabel("<html>Backspace: own spades<br>" +
+				"Asterisk: own hearts<br>Backslash: own diamonds<br>" +
+				"Tab: own clubs<br><br>Dash: dummy spades<br>Nine: dummy hearts<br>" +
+				"Eight: dummy diamonds<br>Seven: dummy clubs</html>");
 		
 		helpLabel1.setFont(f);
 		
