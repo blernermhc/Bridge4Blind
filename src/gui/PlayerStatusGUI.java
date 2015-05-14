@@ -214,6 +214,9 @@ public class PlayerStatusGUI extends JComponent {
 				e.printStackTrace();
 			}
 			
+			System.out.println("Player status gui card found. trick is over so repainting");
+			
+			
 			paintImmediately(0, 0, getWidth(), getHeight());
 			trickOver = false ; 
 		}
@@ -229,27 +232,20 @@ public class PlayerStatusGUI extends JComponent {
 		rankPlayed = "";
 		suitPlayed = "";
 		setBorder(PLAYER_BORDER);
-	//	repaint();
 		
 		synchronized (this) {
 		
 			trickOver = true ;
-			
-			
-			
+	
 			System.out.println("notified trick over");
 			
 			paintImmediately(0, 0, getWidth(), getHeight());
 			
 			notify();
-			
-			//repaint() ;
+
 			
 		}
-		
-		//repaint();
 
-		// paintImmediately(0, 0, getWidth(), getHeight());
 	}
 
 	public void nextPlayer() {
@@ -269,43 +265,6 @@ public class PlayerStatusGUI extends JComponent {
 		setBorder(PLAYER_BORDER);
 		repaint();
 		
-	}
-
-	public static void main(String[] args) {
-		JFrame f = new JFrame();
-		Container contentPane = f.getContentPane();
-		contentPane.setLayout(new GridBagLayout());
-		GridBagConstraints northConstraints = new GridBagConstraints();
-		northConstraints.gridx = 1;
-		northConstraints.gridy = 0;
-		northConstraints.anchor = GridBagConstraints.PAGE_START;
-		// northConstraints.weightx = 1;
-		northConstraints.weighty = 1;
-		contentPane.add(new PlayerStatusGUI(Direction.NORTH), northConstraints);
-
-		GridBagConstraints eastConstraints = new GridBagConstraints();
-		eastConstraints.gridx = 2;
-		eastConstraints.gridy = 1;
-		eastConstraints.anchor = GridBagConstraints.LINE_START;
-		eastConstraints.weightx = 1;
-		contentPane.add(new PlayerStatusGUI(Direction.EAST), eastConstraints);
-
-		GridBagConstraints southConstraints = new GridBagConstraints();
-		southConstraints.gridx = 1;
-		southConstraints.gridy = 2;
-		southConstraints.anchor = GridBagConstraints.PAGE_END;
-		// southConstraints.weightx = 1;
-		southConstraints.weighty = 1;
-		contentPane.add(new PlayerStatusGUI(Direction.SOUTH), southConstraints);
-
-		GridBagConstraints westConstraints = new GridBagConstraints();
-		westConstraints.gridx = 0;
-		westConstraints.gridy = 1;
-		westConstraints.anchor = GridBagConstraints.LINE_END;
-		westConstraints.weightx = 1;
-		contentPane.add(new PlayerStatusGUI(Direction.WEST), westConstraints);
-		f.setMinimumSize(new Dimension(CARD_HEIGHT * 3, CARD_HEIGHT * 3));
-		f.setVisible(true);
 	}
 
 	public void undoTrick() {

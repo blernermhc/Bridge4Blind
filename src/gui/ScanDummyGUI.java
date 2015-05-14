@@ -34,10 +34,10 @@ public class ScanDummyGUI extends JPanel implements GameListener {
 	private Game game;
 	private Player dummy;
 
-	private JLabel clubsScanned = new JLabel("Clubs:  ");
-	private JLabel diamondsScanned = new JLabel("Diamonds:  ");
-	private JLabel heartsScanned = new JLabel("Hearts:  ");
-	private JLabel spadesScanned = new JLabel("Spades:  ");
+	private JLabel clubsScanned = new JLabel("Clubs: ");
+	private JLabel diamondsScanned = new JLabel("Diamonds: ");
+	private JLabel heartsScanned = new JLabel("Hearts: ");
+	private JLabel spadesScanned = new JLabel("Spades: ");
 
 	/**
 	 * Creates the GUI
@@ -83,10 +83,10 @@ public class ScanDummyGUI extends JPanel implements GameListener {
 	@Override
 	public void gameReset() {
 
-		clubsScanned.setText("Clubs:  ");
-		diamondsScanned.setText("Diamonds:  ");
-		heartsScanned.setText("Hearts:  ");
-		spadesScanned.setText("Spades:  ");
+		clubsScanned.setText("Clubs: ");
+		diamondsScanned.setText("Diamonds: ");
+		heartsScanned.setText("Hearts: ");
+		spadesScanned.setText("Spades: ");
 		repaint();
 	}
 
@@ -160,8 +160,13 @@ public class ScanDummyGUI extends JPanel implements GameListener {
 
 	public void undo(Card toRemove) {
 
+		System.out.println("Scan Dummy GUI umdo ");
+		
 		Suit suit = toRemove.getSuit();
+		
 		Rank rank = toRemove.getRank();
+		
+		System.out.println("rank is -"+ rank + "-");
 
 		String ranks = "";
 		JLabel label = null ;
@@ -193,8 +198,34 @@ public class ScanDummyGUI extends JPanel implements GameListener {
 			break;
 		}
 
-		ranks.replaceFirst(rank.toString(), "");
-		label.setText(ranks);
+		// getting rid of that rank
+		
+		// separate text before and after the ":"
+		int colonIndex = ranks.indexOf(":") ;
+
+		String beforeColon = ranks.substring(0,colonIndex + 1 ) ;
+		
+		String afterColon = ranks.substring(colonIndex + 1) ;
+		
+		// split into array to find the appropriate rank
+		String[] rankArray = afterColon.split(" ") ;
+		
+		String newAfterColon = "" ;
+		
+		for(int i = 0 ; i < rankArray.length ; i++){
+			
+			// dont want to add the rank to be removed
+			if(!rankArray[i].equals(rank.toString())){
+				
+				newAfterColon += " " + rankArray[i]  ;
+			}
+		}
+		
+		
+		label.setText(beforeColon + newAfterColon);
+		
+		System.out.println("should say " + beforeColon + newAfterColon);
+		
 		repaint();
 
 	}
@@ -202,11 +233,9 @@ public class ScanDummyGUI extends JPanel implements GameListener {
 	@Override
 	public void paintComponent(Graphics g){
 		
-		super.paintComponent(g);
-		
-		
+		super.paintComponent(g);	
 		gameGUI.undoButtonSetEnabled(true);
 		gameGUI.backButtonSetEnabled(true);
-		gameGUI.reverseToScanDummy(); 
+		//gameGUI.reverseToScanDummy(); 
 	}
 }

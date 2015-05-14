@@ -730,8 +730,8 @@ public class GameGUI extends JFrame implements GameListener {
 		this.repaint();
 
 		this.requestFocusInWindow();
-		
-		gameStatusGUI = new GameStatusGUI(this, game) ;
+
+		gameStatusGUI = new GameStatusGUI(this, game);
 	}
 
 	/** Returns to the last card viewed. */
@@ -753,34 +753,48 @@ public class GameGUI extends JFrame implements GameListener {
 			 * been chosen. Not sure what happens if you do.
 			 */
 			game.resetVIPlayer();
-			
+
+			// if(Game.isTestMode()){
+			//
+			// TestAntennaHandler.undo();
+			// }
+
 		}
 
 		// not sure if this is needed
-		// else if(currentScreen == SCAN_DUMMY_GUI){
-		//
-		// // if the user wants to go back to game status gui to undo the first
-		// card played
-		// if(screensViewed.peek() == GAME_STATUS_GUI){
-		//
-		// game.undoFirstCardPlayed();
-		// gameStatusGUI.undoCardPlayed(game.getTurn().ordinal(), true);
-		// }
-		//
-		// }
+		else if (currentScreen == SCAN_DUMMY_GUI) {
+
+			// if the user wants to go back to game status gui to undo the first
+			// card played
+			if (screensViewed.peek() == GAME_STATUS_GUI) {
+
+				game.undoFirstCardPlayed();
+				gameStatusGUI.undoCardPlayed(game.getTurn().ordinal());
+				
+				 if(Game.isTestMode()){
+				
+				 TestAntennaHandler.undo();
+				 }
+			}
+
+		}
 
 		if (!screensViewed.isEmpty()) {
 			currentScreen = screensViewed.pop();
-			
+
 			// something extra is needed to revert to SCAN_DUMMY_GUI
-			if(currentScreen == SCAN_DUMMY_GUI){
-				
+			if (currentScreen == SCAN_DUMMY_GUI) {
+
 				reverseToScanDummy();
-				
+
+				// if(Game.isTestMode()){
+				//
+				// TestAntennaHandler.undo();
+				// }
+
 			}
-			
-			
-			layout.show(cardPanel, cardNames[currentScreen]);	
+
+			layout.show(cardPanel, cardNames[currentScreen]);
 			requestFocusInWindow();
 		}
 	}
@@ -802,6 +816,11 @@ public class GameGUI extends JFrame implements GameListener {
 
 			game.undoBlindPlayerCard();
 
+			if (Game.isTestMode()) {
+
+				TestAntennaHandler.undo();
+			}
+
 		} else if (currentScreen == SCAN_DUMMY_GUI) {
 
 			Card toRemove = game.undoDummyPlayerCard();
@@ -815,6 +834,11 @@ public class GameGUI extends JFrame implements GameListener {
 
 				// remove the most recent card scanned for the dummy player
 				scanDummyGUI.undo(toRemove);
+
+				if (Game.isTestMode()) {
+
+					TestAntennaHandler.undo();
+				}
 			}
 
 		} else if (currentScreen == GAME_STATUS_GUI) {
@@ -822,20 +846,25 @@ public class GameGUI extends JFrame implements GameListener {
 			Direction currentTurn = game.undo();
 
 			if (currentTurn != null) {
-				
+
 				gameStatusGUI.undoCardPlayed(currentTurn.ordinal());
 
-				if(game.getCurrentTrick().getTrickSize() == 0){
-					
+				if (Game.isTestMode()) {
+
+					TestAntennaHandler.undo();
+				}
+
+				if (game.getCurrentTrick().getTrickSize() == 0) {
+
 					undoButtonSetEnabled(false);
-					
-				}else{
-					
+
+				} else {
+
 					undoButtonSetEnabled(true);
 				}
-				
-			}else{
-				
+
+			} else {
+
 				undoButtonSetEnabled(false);
 			}
 
@@ -932,27 +961,27 @@ public class GameGUI extends JFrame implements GameListener {
 		undoButton.setEnabled(enabled);
 		repaint();
 	}
-	
+
 	public void backButtonSetEnabled(boolean enabled) {
 
 		backButton.setEnabled(enabled);
 		repaint();
 	}
 
-	public void reverseToScanBlind(){
-		
+	public void reverseToScanBlind() {
+
 		game.setGameState(GameState.DEALING);
-		
+
 	}
-	
-	public void reverseToScanDummy(){
-		
+
+	public void reverseToScanDummy() {
+
 		game.setGameState(GameState.SCANNING_DUMMY);
-		
+
 	}
-	
-	public Game getGame(){
-		
-		return game ;
+
+	public Game getGame() {
+
+		return game;
 	}
 }

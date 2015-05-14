@@ -387,4 +387,13 @@ public class TestCards {
 		return cards[index] ;
 
 	}
+	
+	public void undo(){
+		
+		index-- ;
+		
+		System.out.println("TestCards undo(). index is " + index);
+		
+		assert index >= -1 ;
+	}
 }

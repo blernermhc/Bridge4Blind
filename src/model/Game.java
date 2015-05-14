@@ -659,6 +659,7 @@ public class Game {
 		int totalTricks = 0;
 
 		for (int i = 0; i < players.length; i++) {
+			
 			totalTricks += players[i].getTricksWon();
 		}
 
@@ -812,7 +813,7 @@ public class Game {
 	@SuppressWarnings("javadoc")
 	public void setGameState(GameState gameState) {
 		this.gameState = gameState;
-		System.out.println("State set to " + gameState);
+		//System.out.println("State set to " + gameState);
 	}
 
 	public boolean isScanningDummy() {

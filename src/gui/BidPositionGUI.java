@@ -109,6 +109,6 @@ public class BidPositionGUI extends DirectionGUI {
 		gameGUI.undoButtonSetEnabled(true);
 		gameGUI.backButtonSetEnabled(true);
 		
-		gameGUI.getGame().setGameState(GameState.FIRSTCARD);
+		//gameGUI.getGame().setGameState(GameState.FIRSTCARD);
 	}
 }

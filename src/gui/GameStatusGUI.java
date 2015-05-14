@@ -252,20 +252,23 @@ public class GameStatusGUI extends JPanel implements GameListener {
 					playerGUI.trickOver();
 
 				}
-
-				//playerGUIs[winner.ordinal()].nextPlayer();
+				
+				System.out.println("back to game status gui trichWon run");
 
 				// decides if the hand has ended or not
 				 if(currentPlayer != 13*4){
 				
+					 System.out.println("hand has not ended");
+					 
 					 System.out.println("currentplayer " + currentPlayer);
 				
 					 playerGUIs[winner.ordinal()].nextPlayer();
 					 
 				 }else{
 					 
-					 System.out.println("currentplayer " + currentPlayer);
+					 System.out.println("hand has ended");
 					 
+					 System.out.println("currentplayer " + currentPlayer);					 
 					 
 					 // hand has ended
 					 
@@ -371,13 +374,6 @@ public class GameStatusGUI extends JPanel implements GameListener {
 		}
 		
 	}
-	
-	@Override
-	public void paintComponent(Graphics g){
-		
-		super.paintComponent(g);
-		
-		gameGUI.undoButtonSetEnabled(false);
-	}
+
 
 }

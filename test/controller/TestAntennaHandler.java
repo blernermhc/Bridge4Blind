@@ -48,10 +48,10 @@ public class TestAntennaHandler extends Handler {
 	// the GUIs for which the handler is supposed to be reading cards
 	private boolean rightGUI = false;
 
-	private final TestCards testCards = new TestCards();
+	private final static TestCards testCards = new TestCards();
 
 	// east gets the first card
-	private int position = 0;
+	private static int position = 0;
 
 	// the order in which player hand is scanned
 	private int[] playerIndex = {
@@ -270,6 +270,17 @@ public class TestAntennaHandler extends Handler {
 	public void setCyclingThread(Thread cyclingThread) {
 			//Do nothing
 		
+	}
+	
+	public static void undo(){
+		
+		position-- ;
+		
+		System.out.println("TestAntennaHandler undo(). Position is " + position);
+		
+		assert position >= 0 ;
+		
+		testCards.undo() ;
 	}
 
 }
