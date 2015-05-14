@@ -178,11 +178,11 @@ public class GameStatusGUI extends JPanel implements GameListener {
 
 			playerGUIs[(turn.ordinal() + 1) % 4].nextPlayer();
 			
-			gameGUI.undoButtonSetEnabled(false);
+			gameGUI.undoButtonSetEnabled(true);
 
 		}else{
 			
-			gameGUI.undoButtonSetEnabled(true);
+			gameGUI.undoButtonSetEnabled(false);
 		}
 
 		// the frame should be changed to ScanDummyGUI only after the first card
