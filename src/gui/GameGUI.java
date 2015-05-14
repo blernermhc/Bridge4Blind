@@ -104,6 +104,9 @@ public class GameGUI extends JFrame implements GameListener {
 
 	// next hand gui
 	private NextHandGUI nextHandGUI;
+	
+	// VIPlayerGUI
+	VIPlayerGUI viPlayerGUI ;
 
 	private JButton resumeButton;
 	private JButton resetButton;
@@ -161,6 +164,9 @@ public class GameGUI extends JFrame implements GameListener {
 
 		// next hand gui
 		nextHandGUI = new NextHandGUI(this, game);
+		
+		// VIPlayerGUI
+		viPlayerGUI = new VIPlayerGUI(this, game);
 
 		createCards();
 
@@ -246,7 +252,8 @@ public class GameGUI extends JFrame implements GameListener {
 		cardNames[HELP_GUI] = "help";
 
 		// add all the GUIs to the card panel
-		cardPanel.add(new VIPlayerGUI(this, game), cardNames[VI_PLAYER_GUI]);
+
+		cardPanel.add(viPlayerGUI, cardNames[VI_PLAYER_GUI]);
 		cardPanel.add(new ScanningBlindGUI(this, game),
 				cardNames[SCANNING_BLIND_GUI]);
 
@@ -725,7 +732,9 @@ public class GameGUI extends JFrame implements GameListener {
 		// if the user wants to change position of blind player
 		if(currentScreen == SCANNING_BLIND_GUI){
 			
-			game.undoVIPlayer();
+			viPlayerGUI.stopHandlerThread();
+			
+			game.resetVIPlayer();
 		}
 		
 		if (!screensViewed.isEmpty()) {
@@ -826,27 +835,5 @@ public class GameGUI extends JFrame implements GameListener {
 		return currentScreen == SCANNING_BLIND_GUI ;
 	}
 
-	/*	*//**
-	 * The main program!!!! Start the server first.
-	 * 
-	 * @param args
-	 */
-	/*
-	 * public static void main(String[] args) { try { Game game = new Game();
-	 * game.activateAntennas(); GameGUI gui = new GameGUI(game);
-	 * game.addListener(new AudibleGameListener()); game.addListener(gui);
-	 * 
-	 * gui.debugMsg("main run"); } catch (UnknownHostException e) {
-	 * System.err.println("Could not connect to server.  Host unknown."); }
-	 * catch (ConnectException connectExc) {
-	 * System.err.println("The server is not running!"); } catch
-	 * (SocketException socketEsc) { System.err.println(
-	 * "Check that there is no virus scanner blocking IRC connections.");
-	 * socketEsc.printStackTrace(); } catch (IOException e) {
-	 * System.err.println("Could not connect to server."); e.printStackTrace();
-	 * }
-	 * 
-	 * }
-	 */
 
 }

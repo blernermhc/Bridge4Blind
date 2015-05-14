@@ -960,7 +960,10 @@ public class Game {
 		switchHand(turn);
 	}
 	
-	public void undoVIPlayer(){
+	/**
+	 * Allows the user to reselect the position of the visually impaired player
+	 */
+	public void resetVIPlayer(){
 		
 		System.out.println("Game : undoVIPlayer");
 		
