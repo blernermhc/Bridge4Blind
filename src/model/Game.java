@@ -293,6 +293,11 @@ public class Game {
 			// System.out.println("dummyDirection = " + dummyDirection);
 
 			// First card is being played before the dummy is revealed.
+			
+			System.out.println("direction " + direction);
+			
+			System.out.println("turn " + turn);
+			
 			if (direction == turn) {
 
 				System.out.println("Game : Playing first card");
@@ -763,6 +768,8 @@ public class Game {
 			
 			switchHand(turn);
 			
+			System.out.println("turn is " + turn);
+			
 			return turn ;
 		}
 		
@@ -1088,15 +1095,6 @@ public class Game {
 		return this.gameState == state ;
 	}
 	
-	public void reverseScanDummy(){
-		
-		undo() ;		
-		resetHands();
-		contract.setTrump(null);
-		currentTrick = new Trick();
-		cardsPlayed.clear();
-		lastWinner = null;
-
-	}
+	
 
 }

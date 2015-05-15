@@ -234,8 +234,24 @@ public class ScanDummyGUI extends JPanel implements GameListener {
 	public void paintComponent(Graphics g){
 		
 		super.paintComponent(g);	
-		gameGUI.undoButtonSetEnabled(true);
+		
 		gameGUI.backButtonSetEnabled(false);
-		//gameGUI.reverseToScanDummy(); 
+		
+		boolean noClubs = clubsScanned.getText().trim().charAt(clubsScanned.getText().trim().length()-1) == ':' ;
+		boolean noDiamonds = diamondsScanned.getText().trim().charAt(diamondsScanned.getText().trim().length()-1) == ':' ;
+		boolean noHearts = heartsScanned.getText().trim().charAt(heartsScanned.getText().trim().length()-1) == ':' ;
+		boolean noSpades = spadesScanned.getText().trim().charAt(spadesScanned.getText().trim().length()-1) == ':' ;
+		
+		if(noClubs && noDiamonds && noHearts && noSpades){
+			
+			gameGUI.undoButtonSetEnabled(false);
+			
+		}else{
+			
+			gameGUI.undoButtonSetEnabled(true);
+			
+		}
+		
+		gameGUI.repaint();
 	}
 }

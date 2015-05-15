@@ -14,11 +14,17 @@ import javax.swing.JPanel;
  *
  */
 public class HelpGUI extends JPanel {
+	
+	private GameGUI gameGUI ;
 
 	/**
 	 * Create the gui
+	 * @param gameGUI TODO
 	 */
-	public HelpGUI() {
+	public HelpGUI(GameGUI gameGUI) {
+		
+		this.gameGUI = gameGUI ;
+		
 		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 		add(GUIUtilities.createTitleLabel("Help"));
 		add(createHelpPanel(), BorderLayout.CENTER);
@@ -51,14 +57,19 @@ public class HelpGUI extends JPanel {
 
 		helpPanel.add(helpLabel2);
 
-		JLabel helpLabel3 = new JLabel(
-				"If yu have pressed the BACk or UNDO button by mistake and are now stuck in the 'Scan Visually Impaired Player' GUI or the 'Scan Dummy Player' GUI then press the UNDO button to cancel the last card scanned to the visually impaired player or dummy player, scan the last card again and you should be able to move on to the new GUI");
-		helpLabel3.setFont(f);
-		helpPanel.add(helpLabel3);
 
 		helpPanel.add(new JLabel(""));
 
 		return helpPanel;
+	}
+
+	@Override
+	public void paintComponent(Graphics g){
+		
+		super.paintComponent(g);
+		
+		gameGUI.backButtonSetEnabled(true);
+		gameGUI.undoButtonSetEnabled(true);
 	}
 
 }

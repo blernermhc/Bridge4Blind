@@ -286,7 +286,7 @@ public class GameGUI extends JFrame implements GameListener {
 
 		cardPanel.add(nextHandGUI, cardNames[NEXT_HAND_GUI]);
 
-		cardPanel.add(new HelpGUI(), cardNames[HELP_GUI]);
+		cardPanel.add(new HelpGUI(this), cardNames[HELP_GUI]);
 
 		// show the first card
 		layout.show(cardPanel, cardNames[VI_PLAYER_GUI]);
@@ -756,22 +756,7 @@ public class GameGUI extends JFrame implements GameListener {
 			 */
 			game.resetVIPlayer();
 
-		}
-
-		// not sure if this is needed
-		else if (currentScreen == SCAN_DUMMY_GUI) {
-
-			// go back to trump suit gui. To accomplish this, do the following.
-
-			// get rid of game status gui
-			screensViewed.pop();
-
-			game.reverseScanDummy();
-
-
-			gameStatusGUI = new GameStatusGUI(this, game);
-
-		} else if (currentScreen == BID_POSITION_GUI) {
+		}else if (currentScreen == BID_POSITION_GUI) {
 
 			game.reverseBidPosition();
 
