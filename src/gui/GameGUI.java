@@ -34,6 +34,7 @@ import model.GameListener;
 import model.GameState;
 import model.Player;
 import model.Suit;
+import model.Trick;
 import audio.AudibleGameListener;
 
 /**
@@ -743,7 +744,8 @@ public class GameGUI extends JFrame implements GameListener {
 		// if user wants to change position of blind player
 		// if(game.blindPayerHasNoCard()){
 
-		// if the user wants to change position of blind player by goinf from scanning blind cards gui to choose VI position gui
+		// if the user wants to change position of blind player by goinf from
+		// scanning blind cards gui to choose VI position gui
 		if (currentScreen == SCANNING_BLIND_GUI) {
 
 			/**
@@ -754,37 +756,32 @@ public class GameGUI extends JFrame implements GameListener {
 			 */
 			game.resetVIPlayer();
 
-
 		}
 
 		// not sure if this is needed
 		else if (currentScreen == SCAN_DUMMY_GUI) {
 
-			// if the user wants to go back to game status gui to undo the first
-			// card played
-			if (screensViewed.peek() == GAME_STATUS_GUI) {
+			// go back to trump suit gui. To accomplish this, do the following.
 
-				game.undoFirstCardPlayed();
-				gameStatusGUI.undoCardPlayed(game.getTurn().ordinal(), -1);
+			// get rid of game status gui
+			screensViewed.pop();
 
-				if (Game.isTestMode()) {
+			game.reverseScanDummy();
 
-					TestAntennaHandler.undo();
-				}
-			}
+
+			gameStatusGUI = new GameStatusGUI(this, game);
 
 		} else if (currentScreen == BID_POSITION_GUI) {
 
 			game.reverseBidPosition();
-			
-			
+
 		}
 
 		if (!screensViewed.isEmpty()) {
 			currentScreen = screensViewed.pop();
 
 			System.out.println("current screen is " + currentScreen);
-			
+
 			// something extra is needed to revert to SCAN_DUMMY_GUI
 			if (currentScreen == SCAN_DUMMY_GUI) {
 
@@ -798,9 +795,9 @@ public class GameGUI extends JFrame implements GameListener {
 			}
 
 			layout.show(cardPanel, cardNames[currentScreen]);
-			
+
 			determineIfRightGUI();
-			
+
 			requestFocusInWindow();
 		}
 	}
@@ -848,14 +845,15 @@ public class GameGUI extends JFrame implements GameListener {
 			}
 
 		} else if (currentScreen == GAME_STATUS_GUI) {
-			
-			Direction undoTurn = game.getTurn() ;
+
+			Direction undoTurn = game.getTurn();
 
 			Direction currentTurn = game.undo();
 
 			if (currentTurn != null) {
 
-				gameStatusGUI.undoCardPlayed(currentTurn.ordinal(), undoTurn.ordinal());
+				gameStatusGUI.undoCardPlayed(currentTurn.ordinal(),
+						undoTurn.ordinal());
 
 				if (Game.isTestMode()) {
 

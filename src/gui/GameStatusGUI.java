@@ -10,11 +10,13 @@ import java.util.TimerTask;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
+import controller.TestAntennaHandler;
 import model.Card;
 import model.Contract;
 import model.Direction;
 import model.Game;
 import model.GameListener;
+import model.GameState;
 
 /**
  * This class visually represents what the visually impaired person hears.
@@ -135,6 +137,8 @@ public class GameStatusGUI extends JPanel implements GameListener {
 
 		System.out.println("game status gui card played: " + turn);
 
+		System.out.println("current player " + currentPlayer);
+
 		// playerGUIs[turn.ordinal()].cardPlayed(card);
 
 		// the first player of the next hand
@@ -144,14 +148,13 @@ public class GameStatusGUI extends JPanel implements GameListener {
 
 				try {
 
-					System.out.println("trickOverHandled " + trickOverHandled);
-
 					while (!trickOverHandled) {
 
 						System.out.println("waiting for trickOverHandled");
 
 						GameStatusGUI.this.wait();
 					}
+					
 
 				} catch (InterruptedException e) {
 					// TODO Auto-generated catch block
@@ -159,8 +162,8 @@ public class GameStatusGUI extends JPanel implements GameListener {
 				}
 
 				trickOverHandled = false;
-
 			}
+			
 
 		}
 
@@ -353,38 +356,68 @@ public class GameStatusGUI extends JPanel implements GameListener {
 		add(new JLabel(dir.toString()), dirLabelConstraint);
 	}
 
-	public void undoCardPlayed(int currentPlayerIndex, int undoPlayerIndex) {
+	/**
+	 * 
+	 * @param currentPlayerIndex The index of the player whose GUI will be cleared
+	 * @param nextPlayerIndex The index of the next player before undo was pressed
+	 */
+	public void undoCardPlayed(int currentPlayerIndex, int nextPlayerIndex) {
 
 		System.out.println("Game status gui undo");
+
+		currentPlayer--;
+
+		assert currentPlayer >= 0;
+
+		System.out.println("current player " + currentPlayer);
+
+		// the first player of the next hand has not played the card yet
+		if ((currentPlayer % 4) == 0) {
+
+			System.out.println("first player of trick yet to play card");
+
+			trickOverHandled = true;
+
+		}
 		
-		currentPlayer-- ;
+
+		System.out.println("now trickOverhandled " + trickOverHandled);
 		
-		assert currentPlayer >= 0 ;
+		for(int i = 0 ; i < playerGUIs.length ; i++){
+			
+			playerGUIs[i].setTrickOver(true);
+		}
 		
-		// if the first player's hand was undone
-		if ((currentPlayer % 4) == 1) {
-		
-			trickOverHandled = true ;
+		if(Game.isTestMode()){
+			
+			if( nextPlayerIndex != -1 && game.getBlindPosition().ordinal() == nextPlayerIndex){
+				
+				TestAntennaHandler.undo();
+			}
 		}
 
 		playerGUIs[currentPlayerIndex].undo();
 
 		// -1 means there was no previous player
-		if (undoPlayerIndex != -1) {
-			playerGUIs[undoPlayerIndex].setBorder(PlayerStatusGUI
+		if (nextPlayerIndex != -1) {
+			playerGUIs[nextPlayerIndex].setBorder(PlayerStatusGUI
 					.getPlayerBorder());
 		}
 
 		repaint();
 	}
 
-	public void undoTrick() {
-
-		for (int i = 0; i < playerGUIs.length; i++) {
-
-			playerGUIs[i].undoTrick();
+	@Override
+	public void paintComponent(Graphics g){
+		
+		super.paintComponent(g);
+		
+		if(game.isGameState(GameState.FIRSTCARD)){
+			
+			gameGUI.undoButtonSetEnabled(false);
+			gameGUI.backButtonSetEnabled(false);
+			
 		}
-
 	}
 
 }

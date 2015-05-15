@@ -241,7 +241,7 @@ public class PlayerStatusGUI extends JComponent {
 			
 			paintImmediately(0, 0, getWidth(), getHeight());
 			
-			notify();
+			notifyAll();
 
 			
 		}
@@ -267,10 +267,6 @@ public class PlayerStatusGUI extends JComponent {
 		
 	}
 
-	public void undoTrick() {
-		// TODO Auto-generated method stub
-		
-	}
 	
 	public void undo(){
 		
@@ -286,6 +282,11 @@ public class PlayerStatusGUI extends JComponent {
 
 	public static Border getPlayerBorder() {
 		return PLAYER_BORDER;
+	}
+	
+	public void setTrickOver(boolean trickOver){
+		
+		this.trickOver = trickOver ;
 	}
 
 	

@@ -770,6 +770,9 @@ public class Game {
 	}
 
 	/**
+	 * 
+	 * Not sure if this is needed
+	 * 
 	 * Undo an entire trick. Does nothing if the trick is empty or over.
 	 */
 	public void undoTrick() {
@@ -1078,6 +1081,22 @@ public class Game {
 			TestAntennaHandler.reverseScanBlind();
 		}
 		
+	}
+	
+	public boolean isGameState(GameState state){
+		
+		return this.gameState == state ;
+	}
+	
+	public void reverseScanDummy(){
+		
+		undo() ;		
+		resetHands();
+		contract.setTrump(null);
+		currentTrick = new Trick();
+		cardsPlayed.clear();
+		lastWinner = null;
+
 	}
 
 }
