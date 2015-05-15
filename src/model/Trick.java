@@ -16,6 +16,8 @@ public class Trick {
 	
 	// the cards in the current trick
 	private Card[] cards = new Card[Game.NUM_PLAYERS];
+	
+	private int numCards = 0 ;
 
 	/**
 	 * Checks if the trick is over.
@@ -56,8 +58,16 @@ public class Trick {
 	 * @param position the position of the player
 	 */
 	public void add(Card c, int position) {
+		
+		System.out.println("Trick add()");
+		
 		assert (cards[position] == null) || (cards[position].equals(c));
 		cards[position] = c;
+		numCards++ ;
+		
+		System.out.println("numCards " + numCards);
+		
+		assert numCards <= Game.NUM_PLAYERS ;
 	}
 
 	/**
@@ -147,7 +157,16 @@ public class Trick {
 	 * @param pos the position of the player whose card is removed.
 	 */
 	public void clearCard(int pos) {
+		
+		System.out.println("Trick clearCard()");
+		
 		cards[pos] = null;
+		
+		numCards-- ;
+		
+		System.out.println("numCards " + numCards);
+		
+		assert numCards >= 0 ;
 	}
 
 	/**
@@ -167,5 +186,10 @@ public class Trick {
 			}
 		}
 		return s;
+	}
+	
+	public int getTrickSize(){
+		
+		return numCards ;
 	}
 }

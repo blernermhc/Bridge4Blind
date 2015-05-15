@@ -102,7 +102,7 @@ public class KeyPad extends KeyAdapter {
 	@Override
 	public void keyTyped(KeyEvent e){
 		
-		System.out.println("-----------------------KEY TYPED---------------------");
+//		System.out.println("-----------------------KEY TYPED---------------------");
 		
 //		System.out.println(e.getKeyCode());
 //		System.out.println(e.getKeyChar());
@@ -134,7 +134,7 @@ public class KeyPad extends KeyAdapter {
 
 				// if the backspace key was pressed
 				if (blindPlayer != null) {
-					if (keyCode == BACKSPACE_CODE) {
+					if (keyCode == TAB_CODE) {
 
 						// read the visually impaired player's clubs
 						gameGUI.debugMsg("Own clubs:");
@@ -142,7 +142,7 @@ public class KeyPad extends KeyAdapter {
 						readBlindSuit(Suit.CLUBS, blindPlayer);
 
 						// if the asterisk was pressed
-					} else if (keyCode == ASTERISK_CODE) {
+					} else if (keyCode == BACKSLASH_CODE) {
 
 						// read the visually impaired player's diamonds
 						// gameGUI.debugMsg("Own diamonds:");
@@ -150,7 +150,7 @@ public class KeyPad extends KeyAdapter {
 						readBlindSuit(Suit.DIAMONDS, blindPlayer);
 
 						// if the backslash was pressed
-					} else if (keyCode == BACKSLASH_CODE) {
+					} else if (keyCode == ASTERISK_CODE) {
 
 						// read the visually impaired player's hearts
 						gameGUI.debugMsg("Own hearts:");
@@ -158,7 +158,7 @@ public class KeyPad extends KeyAdapter {
 						readBlindSuit(Suit.HEARTS, blindPlayer);
 
 						// if the tab key was pressed
-					} else if (keyCode == TAB_CODE) {
+					} else if (keyCode == BACKSPACE_CODE) {
 
 						// read the visually impaired player's spades
 						gameGUI.debugMsg("Own spades:");
@@ -179,20 +179,20 @@ public class KeyPad extends KeyAdapter {
 			
 			if (game.getDummyPosition() != null) {
 				Player dummyPlayer = game.getDummyPlayer();
-				
-				System.out.println("Dummy Player " + game.getDummyPlayer());
-				
-				System.out.println("keyCode " + keyCode);
-				
-				System.out.println("DASH " + DASH_CODE);
-				
-				System.out.println("NINE " + NINE_CODE);
-				
-				System.out.println("EIGHT " + EIGHT_CODE);
-				
-				System.out.println("SEVEN " + SEVEN_CODE);
+//				
+//				System.out.println("Dummy Player " + game.getDummyPlayer());
+//				
+//				System.out.println("keyCode " + keyCode);
+//				
+//				System.out.println("DASH " + DASH_CODE);
+//				
+//				System.out.println("NINE " + NINE_CODE);
+//				
+//				System.out.println("EIGHT " + EIGHT_CODE);
+//				
+//				System.out.println("SEVEN " + SEVEN_CODE);
 
-				if (keyCode == DASH_CODE) {
+				if (keyCode == SEVEN_CODE) {
 
 					// read the dummy's clubs
 					gameGUI.debugMsg("Dummy clubs:");
@@ -203,7 +203,7 @@ public class KeyPad extends KeyAdapter {
 					readDummySuit(Suit.CLUBS, dummyPlayer);
 
 					// if the 9 was pressed
-				} else if (keyCode == NINE_CODE) {
+				} else if (keyCode == EIGHT_CODE) {
 
 					// read the dummy's diamonds
 					gameGUI.debugMsg("Dummy diamonds:");
@@ -214,7 +214,7 @@ public class KeyPad extends KeyAdapter {
 					readDummySuit(Suit.DIAMONDS, dummyPlayer);
 
 					// if the 8 was pressed
-				} else if (keyCode == EIGHT_CODE) {
+				} else if (keyCode == NINE_CODE) {
 
 					// read the dummy's hearts
 					gameGUI.debugMsg("Dummy hearts:");
@@ -224,7 +224,7 @@ public class KeyPad extends KeyAdapter {
 					readDummySuit(Suit.HEARTS, dummyPlayer);
 
 					// if the 7 was pressed
-				} else if (keyCode == SEVEN_CODE) {
+				} else if (keyCode == DASH_CODE) {
 
 					// read the dummy's spades
 					gameGUI.debugMsg("Dummy spades:");
@@ -540,102 +540,102 @@ public class KeyPad extends KeyAdapter {
 		soundMgr.playSounds();
 	}
 
-	/**
-	 * Tests the keypad
-	 * 
-	 * @param args
-	 *            none
-	 */
-	public static void main(String[] args) {
-		Game game = new Game(new AntennaHandler(new CardDatabase()), false);
-		game.setBlindPosition(Direction.EAST);
-		KeyPad keypad = new KeyPad(null, game);
-		Player blindPlayer = game.getPlayers()[game.getBlindPosition()
-				.ordinal()];
-		Player dummyPlayer = game.getPlayers()[1];
-
-		System.out.println("Should say \"Contract is 3 No Trump NORTH\"");
-		Contract contract = new Contract();
-		contract.setBidWinner(Direction.NORTH);
-		contract.setContractNum(3);
-		contract.setTrump(Suit.NOTRUMP);
-		keypad.playContract(contract);
-		keypad.soundMgr.pauseSounds();
-
-		System.out.println("Should say \"East West team has one no tricks\"");
-		keypad.playTricksWonEW();
-		keypad.soundMgr.pauseSounds();
-
-		System.out.println("Should say \"North South team has one no tricks\"");
-		keypad.playTricksWonNS();
-		keypad.soundMgr.pauseSounds();
-
-		System.out.println("Should say \"You have no clubs\"");
-		keypad.readBlindSuit(Suit.CLUBS, blindPlayer);
-		keypad.soundMgr.pauseSounds();
-
-		System.out.println("Should say \"You have no diamonds\"");
-		keypad.readBlindSuit(Suit.DIAMONDS, blindPlayer);
-		keypad.soundMgr.pauseSounds();
-
-		System.out.println("Should say \"You have no hearts\"");
-		keypad.readBlindSuit(Suit.HEARTS, blindPlayer);
-		keypad.soundMgr.pauseSounds();
-
-		System.out.println("Should say \"You have no spades\"");
-		keypad.readBlindSuit(Suit.SPADES, blindPlayer);
-		keypad.soundMgr.pauseSounds();
-
-		System.out.println("Should say \"Dummy has no clubs\"");
-		keypad.readDummySuit(Suit.CLUBS, dummyPlayer);
-		keypad.soundMgr.pauseSounds();
-
-		System.out.println("Should say \"Dummy has no diamonds\"");
-		keypad.readDummySuit(Suit.DIAMONDS, dummyPlayer);
-		keypad.soundMgr.pauseSounds();
-
-		System.out.println("Should say \"Dummy has no hearts\"");
-		keypad.readDummySuit(Suit.HEARTS, dummyPlayer);
-		keypad.soundMgr.pauseSounds();
-
-		System.out.println("Should say \"Dummy has no spades\"");
-		keypad.readDummySuit(Suit.SPADES, dummyPlayer);
-		keypad.soundMgr.pauseSounds();
-
-		// Not tested because it's not easy to add a card to a trick.
-		// keypad.readTrick();
-		// keypad.soundMgr.pauseSounds();
-
-		keypad.readBlindHand(blindPlayer);
-		keypad.soundMgr.pauseSounds();
-
-		keypad.readDummyHand(dummyPlayer);
-		keypad.soundMgr.pauseSounds();
-
-		keypad.interpretKeyCode(ASTERISK_CODE);
-
-		// This one should not play -- it should be like a repeated key.
-		keypad.interpretKeyCode(ASTERISK_CODE);
-		try {
-			Thread.sleep(1100);
-			// This one should play because it is after a long pause.
-			keypad.interpretKeyCode(ASTERISK_CODE);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		keypad.playTutorial();
-		try {
-			Thread.sleep(2000);
-			// This should stop the tutorial
-			keypad.playTutorial();
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-	}
+//	/**
+//	 * Tests the keypad
+//	 * 
+//	 * @param args
+//	 *            none
+//	 */
+//	public static void main(String[] args) {
+//		Game game = new Game(new AntennaHandler(new CardDatabase()), false);
+//		game.setBlindPosition(Direction.EAST);
+//		KeyPad keypad = new KeyPad(null, game);
+//		Player blindPlayer = game.getPlayers()[game.getBlindPosition()
+//				.ordinal()];
+//		Player dummyPlayer = game.getPlayers()[1];
+//
+//		System.out.println("Should say \"Contract is 3 No Trump NORTH\"");
+//		Contract contract = new Contract();
+//		contract.setBidWinner(Direction.NORTH);
+//		contract.setContractNum(3);
+//		contract.setTrump(Suit.NOTRUMP);
+//		keypad.playContract(contract);
+//		keypad.soundMgr.pauseSounds();
+//
+//		System.out.println("Should say \"East West team has one no tricks\"");
+//		keypad.playTricksWonEW();
+//		keypad.soundMgr.pauseSounds();
+//
+//		System.out.println("Should say \"North South team has one no tricks\"");
+//		keypad.playTricksWonNS();
+//		keypad.soundMgr.pauseSounds();
+//
+//		System.out.println("Should say \"You have no clubs\"");
+//		keypad.readBlindSuit(Suit.CLUBS, blindPlayer);
+//		keypad.soundMgr.pauseSounds();
+//
+//		System.out.println("Should say \"You have no diamonds\"");
+//		keypad.readBlindSuit(Suit.DIAMONDS, blindPlayer);
+//		keypad.soundMgr.pauseSounds();
+//
+//		System.out.println("Should say \"You have no hearts\"");
+//		keypad.readBlindSuit(Suit.HEARTS, blindPlayer);
+//		keypad.soundMgr.pauseSounds();
+//
+//		System.out.println("Should say \"You have no spades\"");
+//		keypad.readBlindSuit(Suit.SPADES, blindPlayer);
+//		keypad.soundMgr.pauseSounds();
+//
+//		System.out.println("Should say \"Dummy has no clubs\"");
+//		keypad.readDummySuit(Suit.CLUBS, dummyPlayer);
+//		keypad.soundMgr.pauseSounds();
+//
+//		System.out.println("Should say \"Dummy has no diamonds\"");
+//		keypad.readDummySuit(Suit.DIAMONDS, dummyPlayer);
+//		keypad.soundMgr.pauseSounds();
+//
+//		System.out.println("Should say \"Dummy has no hearts\"");
+//		keypad.readDummySuit(Suit.HEARTS, dummyPlayer);
+//		keypad.soundMgr.pauseSounds();
+//
+//		System.out.println("Should say \"Dummy has no spades\"");
+//		keypad.readDummySuit(Suit.SPADES, dummyPlayer);
+//		keypad.soundMgr.pauseSounds();
+//
+//		// Not tested because it's not easy to add a card to a trick.
+//		// keypad.readTrick();
+//		// keypad.soundMgr.pauseSounds();
+//
+//		keypad.readBlindHand(blindPlayer);
+//		keypad.soundMgr.pauseSounds();
+//
+//		keypad.readDummyHand(dummyPlayer);
+//		keypad.soundMgr.pauseSounds();
+//
+//		keypad.interpretKeyCode(ASTERISK_CODE);
+//
+//		// This one should not play -- it should be like a repeated key.
+//		keypad.interpretKeyCode(ASTERISK_CODE);
+//		try {
+//			Thread.sleep(1100);
+//			// This one should play because it is after a long pause.
+//			keypad.interpretKeyCode(ASTERISK_CODE);
+//		} catch (InterruptedException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+//
+//		keypad.playTutorial();
+//		try {
+//			Thread.sleep(2000);
+//			// This should stop the tutorial
+//			keypad.playTutorial();
+//		} catch (InterruptedException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+//
+//	}
 	
 	protected void interpretKeyChar(char keyCharacter) {
 
@@ -730,39 +730,39 @@ public class KeyPad extends KeyAdapter {
 		if (keyCharacter == KeyEvent.VK_MINUS) {
 
 			// read the dummy's clubs
-			gameGUI.debugMsg("Dummy clubs:");
+			gameGUI.debugMsg("Dummy spades:");
 			
 			
 			// printCards(Suit.CLUBS, dummyPlayer);
-			readDummySuit(Suit.CLUBS, dummyPlayer);
+			readDummySuit(Suit.SPADES, dummyPlayer);
 
 			// if the 9 was pressed
 		} else if (keyCharacter == KeyEvent.VK_9) {
 
 			// read the dummy's diamonds
-			gameGUI.debugMsg("Dummy diamonds:");
+			gameGUI.debugMsg("Dummy hearts:");
 			
 			// printCards(Suit.DIAMONDS, dummyPlayer);
-			readDummySuit(Suit.DIAMONDS, dummyPlayer);
+			readDummySuit(Suit.HEARTS, dummyPlayer);
 
 			// if the 8 was pressed
 		} else if (keyCharacter == KeyEvent.VK_8) {
 
 			// read the dummy's hearts
-			gameGUI.debugMsg("Dummy hearts:");
+			gameGUI.debugMsg("Dummy diamonds:");
 			
 			// printCards(Suit.HEARTS, dummyPlayer);
-			readDummySuit(Suit.HEARTS, dummyPlayer);
+			readDummySuit(Suit.DIAMONDS, dummyPlayer);
 
 			// if the 7 was pressed
 		} else if (keyCharacter == KeyEvent.VK_7) {
 
 			// read the dummy's spades
-			gameGUI.debugMsg("Dummy spades:");
+			gameGUI.debugMsg("Dummy clubs:");
 			
 			
 			// printCards(Suit.SPADES, dummyPlayer);
-			readDummySuit(Suit.SPADES, dummyPlayer);
+			readDummySuit(Suit.CLUBS, dummyPlayer);
 
 			// if the five key was pressed
 		} else if (keyCharacter == KeyEvent.VK_5) {
@@ -776,17 +776,17 @@ public class KeyPad extends KeyAdapter {
 
 	private void readBlindPlayerHand(char keyCharacter, Player blindPlayer) {
 		
-		System.out.println("multiply is " + KeyEvent.VK_MULTIPLY);
-		System.out.println("asterick is " + KeyEvent.VK_ASTERISK);
-		
-		System.out.println("key char " + keyCharacter);
+//		System.out.println("multiply is " + KeyEvent.VK_MULTIPLY);
+//		System.out.println("asterick is " + KeyEvent.VK_ASTERISK);
+//		
+//		System.out.println("key char " + keyCharacter);
 		
 		if (keyCharacter == KeyEvent.VK_BACK_SPACE) {
 
 			// read the visually impaired player's clubs
-			gameGUI.debugMsg("Own clubs:");
+			gameGUI.debugMsg("Own spades:");
 			// printCards(Suit.CLUBS, blindPlayer);
-			readBlindSuit(Suit.CLUBS, blindPlayer);
+			readBlindSuit(Suit.SPADES, blindPlayer);
 
 			// if the asterisk was pressed
 		} else if (keyCharacter == '*') {
@@ -795,7 +795,7 @@ public class KeyPad extends KeyAdapter {
 			// read the visually impaired player's diamonds
 			// gameGUI.debugMsg("Own diamonds:");
 			// printCards(Suit.DIAMONDS, blindPlayer);
-			readBlindSuit(Suit.DIAMONDS, blindPlayer);
+			readBlindSuit(Suit.HEARTS, blindPlayer);
 
 			// if the backslash was pressed
 		} else if (keyCharacter == KeyEvent.VK_SLASH) {
@@ -803,7 +803,7 @@ public class KeyPad extends KeyAdapter {
 			// read the visually impaired player's hearts
 			gameGUI.debugMsg("Own hearts:");
 			// printCards(Suit.HEARTS, blindPlayer);
-			readBlindSuit(Suit.HEARTS, blindPlayer);
+			readBlindSuit(Suit.DIAMONDS, blindPlayer);
 
 			// if the tab key was pressed
 		} else if (keyCharacter == KeyEvent.VK_TAB) {
@@ -811,7 +811,7 @@ public class KeyPad extends KeyAdapter {
 			// read the visually impaired player's spades
 			gameGUI.debugMsg("Own spades:");
 			// printCards(Suit.SPADES, blindPlayer);
-			readBlindSuit(Suit.SPADES, blindPlayer);
+			readBlindSuit(Suit.CLUBS, blindPlayer);
 
 			// if the four key was pressed
 		} else if (keyCharacter == KeyEvent.VK_4) {

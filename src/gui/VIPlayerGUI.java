@@ -1,5 +1,6 @@
 package gui;
 
+import java.awt.Graphics;
 import java.awt.event.ActionEvent;
 
 import controller.Handler;
@@ -18,6 +19,7 @@ import model.Game;
 public class VIPlayerGUI extends DirectionGUI{
 	private Game game;
 	private GameGUI gameGUI;
+
 	
 	/**Constructor; constructs a new VIPlayerGUI.
 	 * @param gameGUI the frame the gui is inside of
@@ -55,7 +57,8 @@ public class VIPlayerGUI extends DirectionGUI{
 		if (handler != null) {
 			// Yikes!  This used to just be handler.start.  Was that causing
 			// our timing problems???
-			new Thread(handler, "Antenna handler").start();
+			new Thread(handler, "Antenna handler").start() ;
+			
 		}
 		else {
 			System.out.println("Server is not running!");
@@ -82,4 +85,16 @@ public class VIPlayerGUI extends DirectionGUI{
 		
 		gameGUI.changeFrame();
 	}
+	
+	@Override
+	public void paintComponent(Graphics g){
+		
+		super.paintComponent(g);
+		
+		gameGUI.undoButtonSetEnabled(false);
+		gameGUI.backButtonSetEnabled(false);
+	}
+
+	
+	
 }

@@ -104,5 +104,7 @@ public class Player {
 		// this card is not legal.
 		return false;
 	}
+	
+	
 
 }

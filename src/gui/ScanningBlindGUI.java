@@ -1,6 +1,7 @@
 package gui;
 
 import java.awt.Component;
+import java.awt.Graphics;
 
 import javax.swing.BoxLayout;
 import javax.swing.JLabel;
@@ -21,7 +22,7 @@ public class ScanningBlindGUI extends JPanel implements GameListener {
 		
 		setLayout (new BoxLayout(this, BoxLayout.Y_AXIS));
 		addInstructions("Please scan in the blind player's cards.");
-		addInstructions("Use UNDO button to change position of blind player.");
+		addInstructions("Use BACK button to change position of blind player.");
 	}
 
 	private void addInstructions(String text) {
@@ -72,6 +73,16 @@ public class ScanningBlindGUI extends JPanel implements GameListener {
 	@Override
 	public void dummyHandScanned() {
 		// TODO Auto-generated method stub
+		
+	}
+	
+	@Override
+	public void paintComponent(Graphics g){
+		
+		super.paintComponent(g);
+		
+		gameGUI.undoButtonSetEnabled(true);
+		gameGUI.backButtonSetEnabled(true);
 		
 	}
 

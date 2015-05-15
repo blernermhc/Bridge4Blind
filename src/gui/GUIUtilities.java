@@ -39,7 +39,7 @@ public class GUIUtilities {
 		//set the button's font
 		button.setFont(font);
 		//set the button's size
-		button.setPreferredSize(new Dimension(300, 75));
+		button.setPreferredSize(new Dimension(250, 75));
 		button.setFocusable(false);
 		return button;
 		

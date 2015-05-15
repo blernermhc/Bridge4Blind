@@ -1,6 +1,7 @@
 package gui;
 
 import java.awt.Font;
+import java.awt.Graphics;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.util.Timer;
@@ -9,11 +10,13 @@ import java.util.TimerTask;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
+import controller.TestAntennaHandler;
 import model.Card;
 import model.Contract;
 import model.Direction;
 import model.Game;
 import model.GameListener;
+import model.GameState;
 
 /**
  * This class visually represents what the visually impaired person hears.
@@ -27,9 +30,9 @@ public class GameStatusGUI extends JPanel implements GameListener {
 	private PlayerStatusGUI[] playerGUIs = new PlayerStatusGUI[4];
 	private BidStatusGUI bidGUI = new BidStatusGUI();
 
+	// private int count = 0 ;
+
 	// keeps track of the current player
-	private int count = 0 ;
-	
 	private int currentPlayer = 0;
 
 	// true if first card has been played already. Otherwise false. It starts
@@ -112,18 +115,18 @@ public class GameStatusGUI extends JPanel implements GameListener {
 
 	@Override
 	public void gameReset() {
-		
-		count++ ;
 
-		System.out.println("GameStatusGui gameReset  " + count);
-		
-		bidGUI.clear();
+		//
+		// //count++ ;
+		//
+		// //System.out.println("GameStatusGui gameReset  " + count);
+		//
+		// bidGUI.clear();
+		//
+		// firstCardPlayed = false;
+		// trickOverHandled = true;
+		// currentPlayer = 0;
 
-		firstCardPlayed = false;
-		trickOverHandled = true;
-		currentPlayer = 0;
-
-		
 	}
 
 	@Override
@@ -134,6 +137,8 @@ public class GameStatusGUI extends JPanel implements GameListener {
 
 		System.out.println("game status gui card played: " + turn);
 
+		System.out.println("current player " + currentPlayer);
+
 		// playerGUIs[turn.ordinal()].cardPlayed(card);
 
 		// the first player of the next hand
@@ -143,14 +148,13 @@ public class GameStatusGUI extends JPanel implements GameListener {
 
 				try {
 
-					System.out.println("trickOverHandled " + trickOverHandled);
-
 					while (!trickOverHandled) {
 
 						System.out.println("waiting for trickOverHandled");
 
 						GameStatusGUI.this.wait();
 					}
+					
 
 				} catch (InterruptedException e) {
 					// TODO Auto-generated catch block
@@ -158,8 +162,8 @@ public class GameStatusGUI extends JPanel implements GameListener {
 				}
 
 				trickOverHandled = false;
-
 			}
+			
 
 		}
 
@@ -175,6 +179,11 @@ public class GameStatusGUI extends JPanel implements GameListener {
 
 			playerGUIs[(turn.ordinal() + 1) % 4].nextPlayer();
 
+			gameGUI.undoButtonSetEnabled(true);
+
+		} else {
+
+			gameGUI.undoButtonSetEnabled(false);
 		}
 
 		// the frame should be changed to ScanDummyGUI only after the first card
@@ -245,30 +254,32 @@ public class GameStatusGUI extends JPanel implements GameListener {
 
 				}
 
-				//playerGUIs[winner.ordinal()].nextPlayer();
+				System.out.println("back to game status gui trichWon run");
 
 				// decides if the hand has ended or not
-				 if(currentPlayer != 13*4){
-				
-					 System.out.println("currentplayer " + currentPlayer);
-				
-					 playerGUIs[winner.ordinal()].nextPlayer();
-					 
-				 }else{
-					 
-					 System.out.println("currentplayer " + currentPlayer);
-					 
-					 
-					 // hand has ended
-					 
+				if (currentPlayer != 13 * 4) {
+
+					System.out.println("hand has not ended");
+
+					System.out.println("currentplayer " + currentPlayer);
+
+					playerGUIs[winner.ordinal()].nextPlayer();
+
+				} else {
+
+					System.out.println("hand has ended");
+
+					System.out.println("currentplayer " + currentPlayer);
+
+					// hand has ended
+
 					gameGUI.setSwitchFromGameStatusGUI(GameGUI.SWITCH_TO_NEXT_HAND);
-					 
-					 // TODO : might need to call gameReset() here as well
-					 //gameReset();
-					 
+
+					// TODO : might need to call gameReset() here as well
+					// gameReset();
+
 					gameGUI.changeFrame();
-				 }
-				
+				}
 
 				synchronized (GameStatusGUI.this) {
 
@@ -296,14 +307,15 @@ public class GameStatusGUI extends JPanel implements GameListener {
 	@Override
 	public void contractSet(Contract contract) {
 		bidGUI.setBid(contract);
-		
+
 		for (int i = 0; i < playerGUIs.length; i++) {
 
 			playerGUIs[i].clear();
 		}
-		
+
 		// highlight the first player of each hand
-		playerGUIs[contract.getBidWinner().getNextDirection().ordinal()].nextPlayer();
+		playerGUIs[contract.getBidWinner().getNextDirection().ordinal()]
+				.nextPlayer();
 	}
 
 	@Override
@@ -342,6 +354,70 @@ public class GameStatusGUI extends JPanel implements GameListener {
 		dirLabelConstraint.anchor = anchor;
 
 		add(new JLabel(dir.toString()), dirLabelConstraint);
+	}
+
+	/**
+	 * 
+	 * @param currentPlayerIndex The index of the player whose GUI will be cleared
+	 * @param nextPlayerIndex The index of the next player before undo was pressed
+	 */
+	public void undoCardPlayed(int currentPlayerIndex, int nextPlayerIndex) {
+
+		System.out.println("Game status gui undo");
+
+		currentPlayer--;
+
+		assert currentPlayer >= 0;
+
+		System.out.println("current player " + currentPlayer);
+
+		// the first player of the next hand has not played the card yet
+		if ((currentPlayer % 4) == 0) {
+
+			System.out.println("first player of trick yet to play card");
+
+			trickOverHandled = true;
+
+		}
+		
+
+		System.out.println("now trickOverhandled " + trickOverHandled);
+		
+		for(int i = 0 ; i < playerGUIs.length ; i++){
+			
+			playerGUIs[i].setTrickOver(true);
+		}
+		
+		if(Game.isTestMode()){
+			
+			if( nextPlayerIndex != -1 && game.getBlindPosition().ordinal() == nextPlayerIndex){
+				
+				TestAntennaHandler.undo();
+			}
+		}
+
+		playerGUIs[currentPlayerIndex].undo();
+
+		// -1 means there was no previous player
+		if (nextPlayerIndex != -1) {
+			playerGUIs[nextPlayerIndex].setBorder(PlayerStatusGUI
+					.getPlayerBorder());
+		}
+
+		repaint();
+	}
+
+	@Override
+	public void paintComponent(Graphics g){
+		
+		super.paintComponent(g);
+		
+		if(game.isGameState(GameState.FIRSTCARD)){
+			
+			gameGUI.undoButtonSetEnabled(false);
+			gameGUI.backButtonSetEnabled(false);
+			
+		}
 	}
 
 }

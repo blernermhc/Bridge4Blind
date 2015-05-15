@@ -1,9 +1,11 @@
 package gui;
 
+import java.awt.Graphics;
 import java.awt.event.ActionEvent;
 
 import model.Direction;
 import model.Game;
+import model.GameState;
 
 /**
  * The BidGUI allows the sighted players to specify which player made the
@@ -99,4 +101,14 @@ public class BidPositionGUI extends DirectionGUI {
 		enableAndDisableButtons();
 	}
 
+	@Override
+	public void paintComponent(Graphics g){
+		
+		super.paintComponent(g);
+		
+		gameGUI.undoButtonSetEnabled(true);
+		gameGUI.backButtonSetEnabled(true);
+		
+		//gameGUI.getGame().setGameState(GameState.FIRSTCARD);
+	}
 }

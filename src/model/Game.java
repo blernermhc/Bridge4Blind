@@ -1,16 +1,16 @@
 package model;
 
-import gui.GameGUI;
-
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 
 import audio.SoundManager;
 import controller.HandAntenna;
 import controller.Handler;
+import controller.TestAntennaHandler;
 
 /**
  * The Game class controls the logic for a game of bridge.
@@ -72,6 +72,12 @@ public class Game {
 
 	// the last card the blind player scanned
 	private Card lastBlindCard;
+	
+	// keeps track of whose turn it is
+	//private Stack<Direction> turnStack ;
+	
+	// keeps track of all the tricks
+	//private Stack<Trick> trickStack = new Stack<Trick>() ;
 
 	/**
 	 * Create a new game
@@ -94,6 +100,8 @@ public class Game {
 		this.handler = handler;
 
 		handler.setGame(this);
+		
+		//trickStack.push(currentTrick) ;
 
 		// construct the antenna handler
 		// handler = new AntennaHandler(new CardDatabase());
@@ -150,6 +158,7 @@ public class Game {
 		players[dummyDirection.ordinal()].setDummy(true);
 
 		turn = declarer.getNextDirection();
+		//turnStack.push(turn) ;
 		try {
 			handler.switchHand(turn);
 		} catch (IOException e) {
@@ -212,6 +221,8 @@ public class Game {
 
 		resetHands();
 		currentTrick = new Trick();
+		//trickStack = new Stack<Trick>() ;
+		//trickStack.push(currentTrick) ;
 		contract = new Contract();
 		cardsPlayed.clear();
 		lastWinner = null;
@@ -282,6 +293,11 @@ public class Game {
 			// System.out.println("dummyDirection = " + dummyDirection);
 
 			// First card is being played before the dummy is revealed.
+			
+			System.out.println("direction " + direction);
+			
+			System.out.println("turn " + turn);
+			
 			if (direction == turn) {
 
 				System.out.println("Game : Playing first card");
@@ -430,6 +446,7 @@ public class Game {
 		int winner = determineWinner();
 		players[winner].wonTrick();
 		turn = Direction.values()[winner];
+		//turnStack.push(turn) ;
 		switchHand(turn);
 		for (GameListener listener : listeners) {
 			listener.trickWon(turn);
@@ -510,6 +527,7 @@ public class Game {
 
 			// System.out.println("Starting new trick");
 			currentTrick = new Trick();
+			//trickStack.push(currentTrick) ;
 			currentTrick.setLedSuit(card.getSuit());
 		}
 
@@ -567,6 +585,7 @@ public class Game {
 		// System.out.println("Done notifying listeners");
 
 		turn = turn.getNextDirection();
+		//turnStack.push(turn) ;
 
 		// System.out.println("Switching antenna");
 
@@ -646,6 +665,7 @@ public class Game {
 		int totalTricks = 0;
 
 		for (int i = 0; i < players.length; i++) {
+			
 			totalTricks += players[i].getTricksWon();
 		}
 
@@ -690,6 +710,7 @@ public class Game {
 
 		// TODO : may cause error
 		turn = blindPosition;
+		//turnStack.push(turn) ;
 
 		players[blindDirection.ordinal()].setBlind(true);
 		handler.setBlindDirection(blindPosition);
@@ -724,22 +745,41 @@ public class Game {
 	/**
 	 * Undoes the playing of the last card into the trick. Does nothing if the
 	 * trick is empty.
+	 * @return TODO
 	 */
-	public void undo() {
+	public Direction undo() {
 
-		System.out.println("undo card");
+		System.out.println("Game : undo card");
 
 		if (!currentTrick.isEmpty()) {
+			
 			int predecessorPos = turn.getPreviousDirection().ordinal();
-			players[predecessorPos].addCard(currentTrick
-					.getCard(predecessorPos));
+			
+			Card undoCard = currentTrick
+					.getCard(predecessorPos);
+			
+			players[predecessorPos].addCard(undoCard);
+			
 			currentTrick.clearCard(predecessorPos);
+			
+			cardsPlayed.remove(undoCard) ;
+			
 			turn = turn.getPreviousDirection();
+			
 			switchHand(turn);
+			
+			System.out.println("turn is " + turn);
+			
+			return turn ;
 		}
+		
+		return null ;
 	}
 
 	/**
+	 * 
+	 * Not sure if this is needed
+	 * 
 	 * Undo an entire trick. Does nothing if the trick is empty or over.
 	 */
 	public void undoTrick() {
@@ -794,7 +834,7 @@ public class Game {
 	@SuppressWarnings("javadoc")
 	public void setGameState(GameState gameState) {
 		this.gameState = gameState;
-		System.out.println("State set to " + gameState);
+		//System.out.println("State set to " + gameState);
 	}
 
 	public boolean isScanningDummy() {
@@ -959,5 +999,102 @@ public class Game {
 
 		switchHand(turn);
 	}
+	
+	/**
+	 * Allows the user to reselect the position of the visually impaired player
+	 */
+	public void resetVIPlayer(){
+		
+		System.out.println("Game : undoVIPlayer");
+		
+		// the direction of the blind player has changed. So the player at the previous position has no cards.
+		players[blindDirection.ordinal()].newHand();
+		players[blindDirection.ordinal()].setBlind(false);
+		
+		if(Game.isTestMode()){
+		
+		 TestAntennaHandler.reverseScanBlind();
+		}
+	
+	}
+	
+	/**
+	 * Returns true if the blind player has no cards. Otherwise returns false.
+	 * @return True if the blind player has no cards. Otherwise returns false.
+	 */
+	public boolean blindPayerHasNoCard(){
+		
+		return players[blindDirection.ordinal()].getHand().isEmpty() ;
+	}
+	
+	/**
+	 * Lets the user remove the most recent card added to the blind player's hand
+	 */
+	public void undoBlindPlayerCard(){
+		
+		Card toRemove = players[blindDirection.ordinal()].getHand().removeRecentCard() ;
+		
+		players[blindDirection.ordinal()].getHand().removeCard(toRemove);
+	}
+	
+	/**
+	 * Lets the user remove the most recent card added to the dummy player's hand
+	 */
+	public Card undoDummyPlayerCard(){
+		
+		Card toRemove = players[dummyDirection.ordinal()].getHand().removeRecentCard() ;
+		
+		players[dummyDirection.ordinal()].getHand().removeCard(toRemove);
+		
+		return toRemove ;
+	}
+	
+	public void removeCurrentPlayerCardPlayed(){
+		
+		players[turn.ordinal()].getHand().removeRecentCard() ;
+	}
+	
+	public void undoFirstCardPlayed(){
+		
+		assert (cardsPlayed.size() == 1) ;
+		
+		Iterator<Card> iter = cardsPlayed.iterator() ;
+		
+		while(iter.hasNext()){
+			
+			Card toRemove = iter.next() ;
+			cardsPlayed.remove(toRemove) ;
+						
+		}
+		
+		
+		
+	}
+
+	public Direction getTurn() {
+		return turn;
+	}
+
+	public void reverseBidPosition(){
+		
+		gameState = GameState.DEALING ;
+		turn = blindDirection ;
+		
+		players[blindDirection.ordinal()].newHand();
+		switchHand(blindDirection);
+		
+		if(isTestMode()){
+			
+			TestAntennaHandler.reverseScanBlind();
+		}
+		
+	}
+	
+	public boolean isGameState(GameState state){
+		
+		return this.gameState == state ;
+	}
+	
+	
 
 }

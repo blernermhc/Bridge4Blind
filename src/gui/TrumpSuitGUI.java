@@ -3,6 +3,7 @@ package gui;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.Graphics;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -189,6 +190,14 @@ public class TrumpSuitGUI extends JPanel {
 		this.handNum = handNum;
 		
 		enableAndDisableButtons();
+	}
+	
+	@Override
+	public void paintComponent(Graphics g){
+		
+		super.paintComponent(g);
+		
+		gameGUI.undoButtonSetEnabled(true);
 	}
 
 }
