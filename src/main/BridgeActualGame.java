@@ -19,8 +19,10 @@ import audio.AudibleGameListener;
 public class BridgeActualGame implements BridgeMode {
 
 	// path where the .exe is
-	private static final String PATH = "C://Users//orche22h//Documents//Bridge-IndependentStudy//Bridge-Workspace//Bridge4Blind//Server//bin//Debug//SkyeTekReader";
-
+	//private static final String PATH = "C://Users//orche22h//Documents//Bridge-IndependentStudy//Bridge-Workspace//Bridge4Blind//Server//bin//Debug//SkyeTekReader";
+	private static final String PATH = "C://Users//Public//BridgeServer//Server//bin//Debug//SkyeTekReader";
+	
+	
 	// command to start the .exe file
 	// the space at the end is important
 	private static final String COMMAND = "start ";
