@@ -57,7 +57,7 @@ public class PlayerStatusGUI extends JComponent {
 	}
 
 	public void paintComponent(Graphics g) {
-
+		
 		Graphics2D g2d = (Graphics2D) g;
 		// g2d.drawRect((getWidth() - CARD_WIDTH) / 2, (getHeight() -
 		// CARD_HEIGHT)/2, CARD_WIDTH, CARD_HEIGHT);
@@ -271,5 +271,22 @@ public class PlayerStatusGUI extends JComponent {
 		// TODO Auto-generated method stub
 		
 	}
+	
+	public void undo(){
+		
+		System.out.println("player status gui undo");
+		
+		suitPlayed = "" ;
+		rankPlayed = "" ;
+		setBorder(NEXT_PLAYER_BORDER);
+		//repaint();
+		paintImmediately(0, 0, getWidth(), getHeight());
+		
+	}
 
+	public static Border getPlayerBorder() {
+		return PLAYER_BORDER;
+	}
+
+	
 }

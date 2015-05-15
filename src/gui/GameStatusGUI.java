@@ -28,9 +28,8 @@ public class GameStatusGUI extends JPanel implements GameListener {
 	private PlayerStatusGUI[] playerGUIs = new PlayerStatusGUI[4];
 	private BidStatusGUI bidGUI = new BidStatusGUI();
 
-	
-	//private int count = 0 ;
-	
+	// private int count = 0 ;
+
 	// keeps track of the current player
 	private int currentPlayer = 0;
 
@@ -114,19 +113,18 @@ public class GameStatusGUI extends JPanel implements GameListener {
 
 	@Override
 	public void gameReset() {
-		
-//		
-//		//count++ ;
-//
-//		//System.out.println("GameStatusGui gameReset  " + count);
-//		
-//		bidGUI.clear();
-//
-//		firstCardPlayed = false;
-//		trickOverHandled = true;
-//		currentPlayer = 0;
 
-		
+		//
+		// //count++ ;
+		//
+		// //System.out.println("GameStatusGui gameReset  " + count);
+		//
+		// bidGUI.clear();
+		//
+		// firstCardPlayed = false;
+		// trickOverHandled = true;
+		// currentPlayer = 0;
+
 	}
 
 	@Override
@@ -177,11 +175,11 @@ public class GameStatusGUI extends JPanel implements GameListener {
 					.println("not last player so choosing next player from cardPlayed()");
 
 			playerGUIs[(turn.ordinal() + 1) % 4].nextPlayer();
-			
+
 			gameGUI.undoButtonSetEnabled(true);
 
-		}else{
-			
+		} else {
+
 			gameGUI.undoButtonSetEnabled(false);
 		}
 
@@ -252,34 +250,33 @@ public class GameStatusGUI extends JPanel implements GameListener {
 					playerGUI.trickOver();
 
 				}
-				
+
 				System.out.println("back to game status gui trichWon run");
 
 				// decides if the hand has ended or not
-				 if(currentPlayer != 13*4){
-				
-					 System.out.println("hand has not ended");
-					 
-					 System.out.println("currentplayer " + currentPlayer);
-				
-					 playerGUIs[winner.ordinal()].nextPlayer();
-					 
-				 }else{
-					 
-					 System.out.println("hand has ended");
-					 
-					 System.out.println("currentplayer " + currentPlayer);					 
-					 
-					 // hand has ended
-					 
+				if (currentPlayer != 13 * 4) {
+
+					System.out.println("hand has not ended");
+
+					System.out.println("currentplayer " + currentPlayer);
+
+					playerGUIs[winner.ordinal()].nextPlayer();
+
+				} else {
+
+					System.out.println("hand has ended");
+
+					System.out.println("currentplayer " + currentPlayer);
+
+					// hand has ended
+
 					gameGUI.setSwitchFromGameStatusGUI(GameGUI.SWITCH_TO_NEXT_HAND);
-					 
-					 // TODO : might need to call gameReset() here as well
-					 //gameReset();
-					 
+
+					// TODO : might need to call gameReset() here as well
+					// gameReset();
+
 					gameGUI.changeFrame();
-				 }
-				
+				}
 
 				synchronized (GameStatusGUI.this) {
 
@@ -307,14 +304,15 @@ public class GameStatusGUI extends JPanel implements GameListener {
 	@Override
 	public void contractSet(Contract contract) {
 		bidGUI.setBid(contract);
-		
+
 		for (int i = 0; i < playerGUIs.length; i++) {
 
 			playerGUIs[i].clear();
 		}
-		
+
 		// highlight the first player of each hand
-		playerGUIs[contract.getBidWinner().getNextDirection().ordinal()].nextPlayer();
+		playerGUIs[contract.getBidWinner().getNextDirection().ordinal()]
+				.nextPlayer();
 	}
 
 	@Override
@@ -354,26 +352,39 @@ public class GameStatusGUI extends JPanel implements GameListener {
 
 		add(new JLabel(dir.toString()), dirLabelConstraint);
 	}
-	
-	public void undoCardPlayed(int currentPlayerIndex){
+
+	public void undoCardPlayed(int currentPlayerIndex, int undoPlayerIndex) {
+
+		System.out.println("Game status gui undo");
 		
+		currentPlayer-- ;
 		
-			currentPlayerIndex-- ;
+		assert currentPlayer >= 0 ;
 		
-		assert currentPlayerIndex >= 0 ;
+		// if the first player's hand was undone
+		if ((currentPlayer % 4) == 1) {
 		
-		
-		playerGUIs[currentPlayerIndex].clear();
+			trickOverHandled = true ;
+		}
+
+		playerGUIs[currentPlayerIndex].undo();
+
+		// -1 means there was no previous player
+		if (undoPlayerIndex != -1) {
+			playerGUIs[undoPlayerIndex].setBorder(PlayerStatusGUI
+					.getPlayerBorder());
+		}
+
+		repaint();
 	}
 
 	public void undoTrick() {
 
-		for(int i = 0 ; i < playerGUIs.length ; i++){
-			
-			playerGUIs[i].undoTrick() ;
-		}
-		
-	}
+		for (int i = 0; i < playerGUIs.length; i++) {
 
+			playerGUIs[i].undoTrick();
+		}
+
+	}
 
 }

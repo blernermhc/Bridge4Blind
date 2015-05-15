@@ -765,7 +765,7 @@ public class GameGUI extends JFrame implements GameListener {
 			if (screensViewed.peek() == GAME_STATUS_GUI) {
 
 				game.undoFirstCardPlayed();
-				gameStatusGUI.undoCardPlayed(game.getTurn().ordinal());
+				gameStatusGUI.undoCardPlayed(game.getTurn().ordinal(), -1);
 
 				if (Game.isTestMode()) {
 
@@ -783,6 +783,8 @@ public class GameGUI extends JFrame implements GameListener {
 		if (!screensViewed.isEmpty()) {
 			currentScreen = screensViewed.pop();
 
+			System.out.println("current screen is " + currentScreen);
+			
 			// something extra is needed to revert to SCAN_DUMMY_GUI
 			if (currentScreen == SCAN_DUMMY_GUI) {
 
@@ -796,6 +798,9 @@ public class GameGUI extends JFrame implements GameListener {
 			}
 
 			layout.show(cardPanel, cardNames[currentScreen]);
+			
+			determineIfRightGUI();
+			
 			requestFocusInWindow();
 		}
 	}
@@ -843,12 +848,14 @@ public class GameGUI extends JFrame implements GameListener {
 			}
 
 		} else if (currentScreen == GAME_STATUS_GUI) {
+			
+			Direction undoTurn = game.getTurn() ;
 
 			Direction currentTurn = game.undo();
 
 			if (currentTurn != null) {
 
-				gameStatusGUI.undoCardPlayed(currentTurn.ordinal());
+				gameStatusGUI.undoCardPlayed(currentTurn.ordinal(), undoTurn.ordinal());
 
 				if (Game.isTestMode()) {
 

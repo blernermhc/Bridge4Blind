@@ -744,15 +744,25 @@ public class Game {
 	 */
 	public Direction undo() {
 
-		System.out.println("undo card");
+		System.out.println("Game : undo card");
 
 		if (!currentTrick.isEmpty()) {
+			
 			int predecessorPos = turn.getPreviousDirection().ordinal();
-			players[predecessorPos].addCard(currentTrick
-					.getCard(predecessorPos));
+			
+			Card undoCard = currentTrick
+					.getCard(predecessorPos);
+			
+			players[predecessorPos].addCard(undoCard);
+			
 			currentTrick.clearCard(predecessorPos);
+			
+			cardsPlayed.remove(undoCard) ;
+			
 			turn = turn.getPreviousDirection();
+			
 			switchHand(turn);
+			
 			return turn ;
 		}
 		
@@ -1046,6 +1056,7 @@ public class Game {
 			cardsPlayed.remove(toRemove) ;
 						
 		}
+		
 		
 		
 	}

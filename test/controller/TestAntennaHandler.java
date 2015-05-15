@@ -213,6 +213,8 @@ public class TestAntennaHandler extends Handler {
 
 		// no need to do anything if its not the right gui
 		if (!rightGUI) {
+			
+			System.out.println("not right gui");
 
 			return;
 		}
