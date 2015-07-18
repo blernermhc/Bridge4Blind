@@ -39,6 +39,8 @@ public abstract class Handler implements Runnable, KeyListener {
 	 */
 	public abstract void connect() throws UnknownHostException, IOException;
 	
+	public abstract void disconnect () throws IOException;
+	
 	/**
 	 * Repeatedly sends card requests to the server.
 	 */

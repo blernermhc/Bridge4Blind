@@ -65,6 +65,8 @@ public class AntennaHandler extends Handler {
 	// Id of the current player antenna
 	private String turnId;
 
+	private Thread handlerThread;
+
 	/**
 	 * Creates a new AntennaHandler with the appropriate Card Database
 	 * 
@@ -78,6 +80,9 @@ public class AntennaHandler extends Handler {
 	@Override
 	public void connect() throws UnknownHostException, IOException {
 		System.out.println("Connecting...");
+		if (requestSocket != null && requestSocket.isConnected()) {
+			System.out.println("requestSocekt is still connected!!!");
+		}
 		requestSocket = new Socket(HOST, PORT);
 		System.out.println("Connected to " + HOST + " in port "
 				+ Integer.toString(PORT));
@@ -85,6 +90,28 @@ public class AntennaHandler extends Handler {
 		// get Input and Output streams
 		out = requestSocket.getOutputStream();
 		in = requestSocket.getInputStream();
+		cardRequestSent = false;
+	}
+	
+	public void disconnect() throws IOException {
+		if (requestSocket != null && requestSocket.isConnected()) {
+			System.out.println("Quititng server");
+			quitServer();
+			
+			if (handlerThread != null && handlerThread.isAlive()) {
+				System.out.println("Stopping antenna handler thread");
+				handlerThread.interrupt();
+			}
+			System.out.println("Closing existing connection");
+			requestSocket.close();
+			System.out.println("Is request socket closed?" + !requestSocket.isClosed());
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
 
 	}
 
@@ -92,7 +119,7 @@ public class AntennaHandler extends Handler {
 	public void run() {
 		try {
 			try {
-
+				handlerThread = Thread.currentThread();
 				String message;
 
 				// Repeatedly request cards and handle the responses.
@@ -110,7 +137,7 @@ public class AntennaHandler extends Handler {
 					// Avoid sending card requests too quickly.
 					Thread.sleep(CARD_REQUEST_PAUSE);
 
-				} while (true);
+				} while (!handlerThread.isInterrupted());
 
 			} finally {
 				if (in != null) {
@@ -125,8 +152,8 @@ public class AntennaHandler extends Handler {
 			System.err.println("Lost connection to the server!");
 			ioException.printStackTrace();
 		} catch (InterruptedException e) {
-			System.err.println("Antenna server was interrupted");
-			e.printStackTrace();
+			System.out.println("Antenna server was interrupted");
+			//e.printStackTrace();
 		}
 	}
 
@@ -178,7 +205,7 @@ public class AntennaHandler extends Handler {
 	public String requestCard(byte[] messageRec) throws IOException {
 		synchronized (out) {
 
-			try {
+			//try {
 
 				out.write("T".getBytes());
 				out.flush();
@@ -195,10 +222,11 @@ public class AntennaHandler extends Handler {
 				// System.out.println("Got a card");
 
 				out.notify();
-			} catch (SocketException e) {
-
-				System.err.println("Lostt connection to server. Please press resume button to continue");
-			}
+//			} catch (SocketException e) {
+//
+//				System.err.println("AntennaHandler.requestCard: Lost connection to server. Please press resume button to continue");
+//				e.printStackTrace();
+//			}
 
 		}
 
@@ -292,11 +320,13 @@ public class AntennaHandler extends Handler {
 		}
 
 		byte[] output = handID.getBytes();
+		
+		System.out.println("Waiting for lock");
 
 		// Make sure only one thread is talking to the server at a time
 		// System.out.println("switchHand waiting for lock");
 		synchronized (out) {
-			// System.out.println("switchHand got lock");
+			System.out.println("switchHand got lock");
 			out.write(output);
 			out.flush();
 			// System.out.println("Command sent: " + handID + ".");
@@ -336,30 +366,34 @@ public class AntennaHandler extends Handler {
 		turnId = getDirectionCode(turn);
 		// switchHand(currentHand);
 		switchHand(turnId);
-		// System.out.println("Current hand: " + turn);
+		System.out.println("Current hand: " + turn);
 
 		if (cyclingThread == null) {
 			cyclingThread = new Thread("Cycling thread") {
 				@Override
 				public void run() {
+					System.out.println("Running cycling thread");
 					while (!isInterrupted()) {
 						try {
+							System.out.println("Cycling hands");
 							cycleHands();
 						} catch (IOException e) {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
-							return;
+							interrupt();
 						} catch (InterruptedException e) {
 							e.printStackTrace();
-							return;
+							interrupt();
 						}
 					}
+					cyclingThread = null;
 				}
 			};
+			System.out.println("Starting cycling thread");
 			cyclingThread.start();
 		}
-		// System.out.println("*** SwitchHand returning; switched to " + turn +
-		// " ***");
+		System.out.println("*** SwitchHand returning; switched to " + turn +
+		 " ***");
 	}
 
 	/**

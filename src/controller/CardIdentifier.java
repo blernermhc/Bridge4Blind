@@ -65,9 +65,11 @@ public class CardIdentifier implements CardListener {
 
 					try {
 						synchronized (CardIdentifier.this) {
-							System.out.println("Resetting lastfound.  Was "
+							if (lastIded != null) {
+								System.out.println("Resetting lastfound.  Was "
 									+ lastIded.toString());
-							lastIded = null;
+								lastIded = null;
+							}
 						}
 					} catch (Exception e) {
 

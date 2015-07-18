@@ -142,6 +142,11 @@ public class Game {
 				Direction.WEST);
 		// handler.addIdListener(id);
 	}
+	
+	public void closeHandler() throws IOException {
+		System.out.println("Closing handler");
+		handler.disconnect();
+	}
 
 	/**
 	 * Sets the dummy and prepares for the player after the declarer to go.
@@ -994,10 +999,11 @@ public class Game {
 	 * 
 	 */
 	public void resumeGame() {
-
+		debugMsg("Setting cycling thread");
 		handler.setCyclingThread(null);
-
+		debugMsg("Switching hand");
 		switchHand(turn);
+		debugMsg("Done switching hand");
 	}
 	
 	/**

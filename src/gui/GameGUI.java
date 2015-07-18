@@ -24,6 +24,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 
+import controller.Handler;
 import controller.TestAntennaHandler;
 import main.BridgeActualGame;
 import model.Card;
@@ -192,7 +193,7 @@ public class GameGUI extends JFrame implements GameListener {
 		add(mainPanel, BorderLayout.CENTER);
 
 		// add the area for debugging messages
-		// add(new JScrollPane(debugArea), BorderLayout.SOUTH);
+		//add(new JScrollPane(debugArea), BorderLayout.SOUTH);
 
 		// turn off focus traversal keys so that the tab key can be used as game
 		// input
@@ -496,9 +497,21 @@ public class GameGUI extends JFrame implements GameListener {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
 				// reverse();
+				if (game != null) {
+					System.out.println("Stopping server");
+					try {
+						game.closeHandler();
+						//BridgeActualGame.closeServerWindow();
+
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						System.out.println("Unable to close connection");
+						e.printStackTrace();
+					}
+				}
 
 				// game.resumeGame();
-
+				debugMsg ("Starting server");
 				BridgeActualGame.startServer();
 
 				// start the game 15 seconds after starting the C# Server
@@ -508,22 +521,29 @@ public class GameGUI extends JFrame implements GameListener {
 					public void run() {
 
 						try {
-
+							debugMsg("Activating antennas");
 							game.activateAntennas();
+							Handler handler = game.getHandler();
+							if (handler != null) {
+								new Thread(handler, "Antenna handler").start() ;
+							}
+
 
 						} catch (UnknownHostException e) {
 
 							// TODO Auto-generated catch block
+							debugMsg(e.getMessage());
 							e.printStackTrace();
 
 						} catch (IOException e) {
 
 							// TODO Auto-generated catch block
+							debugMsg(e.getMessage());
 							e.printStackTrace();
 						}
-
+						debugMsg("Resuming game");
 						game.resumeGame();
-
+						debugMsg("Game resumed");
 					}
 
 				};

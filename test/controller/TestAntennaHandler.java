@@ -291,6 +291,12 @@ public class TestAntennaHandler extends Handler {
 		
 		testCards.reverseScanBlind();
 	}
+
+	@Override
+	public void disconnect() throws IOException {
+		// TODO Auto-generated method stub
+		
+	}
 	
 	
 }
