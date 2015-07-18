@@ -311,7 +311,7 @@ public class KeyPad extends KeyAdapter {
 					ignoringKeys = false;
 				}
 
-			}, 1000);
+			}, 5000);
 
 		}
 
