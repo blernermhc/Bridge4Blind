@@ -950,21 +950,21 @@ public class Game {
 	 * 
 	 */
 	public void playBlindCard() {
-		
-		boolean startedPlaying = (gameState == GameState.FIRSTCARD) || (gameState == GameState.PLAYING);
-
+		System.out.println("In playBlindCard");
+		boolean startedPlaying = (gameState == GameState.FIRSTCARD) || (gameState == GameState.SCANNING_DUMMY		) || (gameState == GameState.PLAYING);
+		System.out.println("gameState = " + gameState);
 		if(!startedPlaying){
-			
+			System.out.println("playBlindCard: !startedPlaying; returning");
 			return ;
 		}
-		// System.out.println("Game : play blind card");
+		System.out.println("Game : play blind card");
 
 		// System.out.println("blind direction " + blindDirection.ordinal());
 
-		// System.out.println("card " + lastBlindCard);
+		System.out.println("card " + lastBlindCard);
 
 		if (canPlayCard(lastBlindCard, getBlindPosition().ordinal())) {
-
+			System.out.println("Can play card");
 			// check if current trick is over
 			if (currentTrick.isOver()) {
 
@@ -983,6 +983,9 @@ public class Game {
 				gameState = GameState.DEALING;
 
 			}
+		}
+		else {
+			System.out.println("Cannot play card");
 		}
 
 	}

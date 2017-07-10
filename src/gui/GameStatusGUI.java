@@ -105,6 +105,13 @@ public class GameStatusGUI extends JPanel implements GameListener {
 		bidConstraints.gridy = 2;
 		bidConstraints.fill = GridBagConstraints.BOTH;
 		add(bidGUI, bidConstraints);
+		
+		GridBagConstraints trickConstraints = new GridBagConstraints();
+		trickConstraints.gridx = 2;
+		trickConstraints.gridy = 1;
+		TricksWonPanel tricksWonPanel = new TricksWonPanel();
+		game.addListener(tricksWonPanel);
+		add(tricksWonPanel, trickConstraints);
 	}
 
 	@Override

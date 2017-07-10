@@ -45,6 +45,7 @@ public class KeyPad extends KeyAdapter {
 	private static final int BACKSPACE_CODE = 8;
 	private static final int SPACE_CODE = 32;
 
+	private int numTimers = 0;
 	private boolean ignoringKeys = false;
 
 	private int lastCode = 0;
@@ -124,198 +125,199 @@ public class KeyPad extends KeyAdapter {
 	 * @param keyCode
 	 *            The keycode being interpreted.
 	 */
-	protected void interpretKeyCode(int keyCode) {
-
-		if (keyCode != lastCode || !ignoringKeys) {
-
-			if (game.getBlindPosition() != null) {
-
-				Player blindPlayer = game.getBlindPlayer();
-
-				// if the backspace key was pressed
-				if (blindPlayer != null) {
-					if (keyCode == TAB_CODE) {
-
-						// read the visually impaired player's clubs
-						gameGUI.debugMsg("Own clubs:");
-						// printCards(Suit.CLUBS, blindPlayer);
-						readBlindSuit(Suit.CLUBS, blindPlayer);
-
-						// if the asterisk was pressed
-					} else if (keyCode == BACKSLASH_CODE) {
-
-						// read the visually impaired player's diamonds
-						// gameGUI.debugMsg("Own diamonds:");
-						// printCards(Suit.DIAMONDS, blindPlayer);
-						readBlindSuit(Suit.DIAMONDS, blindPlayer);
-
-						// if the backslash was pressed
-					} else if (keyCode == ASTERISK_CODE) {
-
-						// read the visually impaired player's hearts
-						gameGUI.debugMsg("Own hearts:");
-						// printCards(Suit.HEARTS, blindPlayer);
-						readBlindSuit(Suit.HEARTS, blindPlayer);
-
-						// if the tab key was pressed
-					} else if (keyCode == BACKSPACE_CODE) {
-
-						// read the visually impaired player's spades
-						gameGUI.debugMsg("Own spades:");
-						// printCards(Suit.SPADES, blindPlayer);
-						readBlindSuit(Suit.SPADES, blindPlayer);
-
-						// if the four key was pressed
-					} else if (keyCode == FOUR_CODE) {
-
-						// read the VI player's entire hand
-						gameGUI.debugMsg("Own hand:");
-						readBlindHand(blindPlayer);
-					}
-				}
-			}
-
-			System.out.println("Dummy Position " + game.getDummyPosition());
-			
-			if (game.getDummyPosition() != null) {
-				Player dummyPlayer = game.getDummyPlayer();
+//	protected void interpretKeyCode(int keyCode) {
+//
+//		if (keyCode != lastCode || !ignoringKeys) {
+//			lastCode = keyCode;
+//			// start ignoring key presses
+//			ignoringKeys = true;
+//
+//			// create a timer to stop ignoring after 1 second
+//			Timer t = new Timer(true);
+//			t.schedule(new TimerTask() {
+//				@Override
+//				public void run() {
+//					ignoringKeys = false;
+//				}
+//
+//			}, 5000);
+//
+//
+//			if (game.getBlindPosition() != null) {
+//
+//				Player blindPlayer = game.getBlindPlayer();
+//
+//				// if the backspace key was pressed
+//				if (blindPlayer != null) {
+//					if (keyCode == TAB_CODE) {
+//
+//						// read the visually impaired player's clubs
+//						gameGUI.debugMsg("Own clubs:");
+//						// printCards(Suit.CLUBS, blindPlayer);
+//						readBlindSuit(Suit.CLUBS, blindPlayer);
+//
+//						// if the asterisk was pressed
+//					} else if (keyCode == BACKSLASH_CODE) {
+//
+//						// read the visually impaired player's diamonds
+//						// gameGUI.debugMsg("Own diamonds:");
+//						// printCards(Suit.DIAMONDS, blindPlayer);
+//						readBlindSuit(Suit.DIAMONDS, blindPlayer);
+//
+//						// if the backslash was pressed
+//					} else if (keyCode == ASTERISK_CODE) {
+//
+//						// read the visually impaired player's hearts
+//						gameGUI.debugMsg("Own hearts:");
+//						// printCards(Suit.HEARTS, blindPlayer);
+//						readBlindSuit(Suit.HEARTS, blindPlayer);
+//
+//						// if the tab key was pressed
+//					} else if (keyCode == BACKSPACE_CODE) {
+//
+//						// read the visually impaired player's spades
+//						gameGUI.debugMsg("Own spades:");
+//						// printCards(Suit.SPADES, blindPlayer);
+//						readBlindSuit(Suit.SPADES, blindPlayer);
+//
+//						// if the four key was pressed
+//					} else if (keyCode == FOUR_CODE) {
+//
+//						// read the VI player's entire hand
+//						gameGUI.debugMsg("Own hand:");
+//						readBlindHand(blindPlayer);
+//					}
+//				}
+//			}
+//
+//			System.out.println("Dummy Position " + game.getDummyPosition());
+//			
+//			if (game.getDummyPosition() != null) {
+//				Player dummyPlayer = game.getDummyPlayer();
+////				
+////				System.out.println("Dummy Player " + game.getDummyPlayer());
+////				
+////				System.out.println("keyCode " + keyCode);
+////				
+////				System.out.println("DASH " + DASH_CODE);
+////				
+////				System.out.println("NINE " + NINE_CODE);
+////				
+////				System.out.println("EIGHT " + EIGHT_CODE);
+////				
+////				System.out.println("SEVEN " + SEVEN_CODE);
+//
+//				if (keyCode == SEVEN_CODE) {
+//
+//					// read the dummy's clubs
+//					gameGUI.debugMsg("Dummy clubs:");
+//					
+//					System.out.println("Dummy Clubs");
+//					
+//					// printCards(Suit.CLUBS, dummyPlayer);
+//					readDummySuit(Suit.CLUBS, dummyPlayer);
+//
+//					// if the 9 was pressed
+//				} else if (keyCode == EIGHT_CODE) {
+//
+//					// read the dummy's diamonds
+//					gameGUI.debugMsg("Dummy diamonds:");
+//					
+//					System.out.println("Dummy diamonds");
+//					
+//					// printCards(Suit.DIAMONDS, dummyPlayer);
+//					readDummySuit(Suit.DIAMONDS, dummyPlayer);
+//
+//					// if the 8 was pressed
+//				} else if (keyCode == NINE_CODE) {
+//
+//					// read the dummy's hearts
+//					gameGUI.debugMsg("Dummy hearts:");
+//					
+//					System.out.println("Dummy hearts");
+//					// printCards(Suit.HEARTS, dummyPlayer);
+//					readDummySuit(Suit.HEARTS, dummyPlayer);
+//
+//					// if the 7 was pressed
+//				} else if (keyCode == DASH_CODE) {
+//
+//					// read the dummy's spades
+//					gameGUI.debugMsg("Dummy spades:");
+//					
+//					System.out.println("Dummy spades");
+//					// printCards(Suit.SPADES, dummyPlayer);
+//					readDummySuit(Suit.SPADES, dummyPlayer);
+//
+//					// if the five key was pressed
+//				} else if (keyCode == FIVE_CODE) {
+//
+//					// read the dummy's entire hand
+//					gameGUI.debugMsg("Dummy hand:");
+//					
+//					System.out.println("Dummy Hand");
+//					
+//					readDummyHand(dummyPlayer);
+//				}
+//			}
+//
+//			if (keyCode == PLUS_CODE) {
+//
+//				// read the cards in the current trick
+//				gameGUI.debugMsg("Current trick");
+//				readTrick();
+//
+//				// if the 1 was pressed
+//			} else if (keyCode == ONE_CODE) {
+//
+//				// read the contract
+//				gameGUI.debugMsg("Contract");
+//				playContract(game.getContract());
+//
+//				// if the 2 was pressed
+//			} else if (keyCode == TWO_CODE) {
+//
+//				// read N/S's current tricks won
+//				gameGUI.debugMsg("N/S tricks won");
+//				playTricksWonNS();
+//
+//				// if the 3 was pressed
+//			} else if (keyCode == THREE_CODE) {
+//
+//				// read E/W's current tricks won
+//				gameGUI.debugMsg("E/W tricks won");
+//				playTricksWonEW();
+//
+//				// if the 0 was pressed
+//			} else if (keyCode == ZERO_CODE) {
+//
+//				// repeat the last thing said
+//				gameGUI.debugMsg("Repeat");
+//				soundMgr.playLastSound();
+//
+//				// if the enter key is pressed then play the blid player's card
+//			} else if (keyCode == ENTER_CODE) {
+//				//playTutorial();
 //				
-//				System.out.println("Dummy Player " + game.getDummyPlayer());
+//				System.out.println("################ Enter is pressed #########################");
 //				
-//				System.out.println("keyCode " + keyCode);
+//				try{
+//				game.playBlindCard();
+//				}catch(NullPointerException e){
+//					
+//					System.err.println("Blind person pressed the Enter button by mistake");
+//				}
 //				
-//				System.out.println("DASH " + DASH_CODE);
-//				
-//				System.out.println("NINE " + NINE_CODE);
-//				
-//				System.out.println("EIGHT " + EIGHT_CODE);
-//				
-//				System.out.println("SEVEN " + SEVEN_CODE);
-
-				if (keyCode == SEVEN_CODE) {
-
-					// read the dummy's clubs
-					gameGUI.debugMsg("Dummy clubs:");
-					
-					System.out.println("Dummy Clubs");
-					
-					// printCards(Suit.CLUBS, dummyPlayer);
-					readDummySuit(Suit.CLUBS, dummyPlayer);
-
-					// if the 9 was pressed
-				} else if (keyCode == EIGHT_CODE) {
-
-					// read the dummy's diamonds
-					gameGUI.debugMsg("Dummy diamonds:");
-					
-					System.out.println("Dummy diamonds");
-					
-					// printCards(Suit.DIAMONDS, dummyPlayer);
-					readDummySuit(Suit.DIAMONDS, dummyPlayer);
-
-					// if the 8 was pressed
-				} else if (keyCode == NINE_CODE) {
-
-					// read the dummy's hearts
-					gameGUI.debugMsg("Dummy hearts:");
-					
-					System.out.println("Dummy hearts");
-					// printCards(Suit.HEARTS, dummyPlayer);
-					readDummySuit(Suit.HEARTS, dummyPlayer);
-
-					// if the 7 was pressed
-				} else if (keyCode == DASH_CODE) {
-
-					// read the dummy's spades
-					gameGUI.debugMsg("Dummy spades:");
-					
-					System.out.println("Dummy spades");
-					// printCards(Suit.SPADES, dummyPlayer);
-					readDummySuit(Suit.SPADES, dummyPlayer);
-
-					// if the five key was pressed
-				} else if (keyCode == FIVE_CODE) {
-
-					// read the dummy's entire hand
-					gameGUI.debugMsg("Dummy hand:");
-					
-					System.out.println("Dummy Hand");
-					
-					readDummyHand(dummyPlayer);
-				}
-			}
-
-			if (keyCode == PLUS_CODE) {
-
-				// read the cards in the current trick
-				gameGUI.debugMsg("Current trick");
-				readTrick();
-
-				// if the 1 was pressed
-			} else if (keyCode == ONE_CODE) {
-
-				// read the contract
-				gameGUI.debugMsg("Contract");
-				playContract(game.getContract());
-
-				// if the 2 was pressed
-			} else if (keyCode == TWO_CODE) {
-
-				// read N/S's current tricks won
-				gameGUI.debugMsg("N/S tricks won");
-				playTricksWonNS();
-
-				// if the 3 was pressed
-			} else if (keyCode == THREE_CODE) {
-
-				// read E/W's current tricks won
-				gameGUI.debugMsg("E/W tricks won");
-				playTricksWonEW();
-
-				// if the 0 was pressed
-			} else if (keyCode == ZERO_CODE) {
-
-				// repeat the last thing said
-				gameGUI.debugMsg("Repeat");
-				soundMgr.playLastSound();
-
-				// if the enter key is pressed then play the blid player's card
-			} else if (keyCode == ENTER_CODE) {
-				//playTutorial();
-				
-				System.out.println("################ Enter is pressed #########################");
-				
-				try{
-				game.playBlindCard();
-				}catch(NullPointerException e){
-					
-					System.err.println("Blind person pressed the Enter button by mistake");
-				}
-				
-			} else {
-
-				if (keyCode != SPACE_CODE) {
-					gameGUI.debugMsg("Unexpected key: " + keyCode);
-				}
-			}
-
-			lastCode = keyCode;
-			// start ignoring key presses
-			ignoringKeys = true;
-
-			// create a timer to stop ignoring after 1 second
-			Timer t = new Timer(true);
-			t.schedule(new TimerTask() {
-				@Override
-				public void run() {
-					ignoringKeys = false;
-				}
-
-			}, 5000);
-
-		}
-
-	}
+//			} else {
+//
+//				if (keyCode != SPACE_CODE) {
+//					gameGUI.debugMsg("Unexpected key: " + keyCode);
+//				}
+//			}
+//
+//
+//		}
+//
+//	}
 
 	private void playTutorial() {
 		// gameGUI.debugMsg("Tutorial");
@@ -638,87 +640,102 @@ public class KeyPad extends KeyAdapter {
 //	}
 	
 	protected void interpretKeyChar(char keyCharacter) {
+		System.out.println("In interpretKeyChar");
 
-		if (keyCharacter != KeyEvent.VK_0 || !ignoringKeys) {
+		synchronized (this) {
+			if (/* keyCharacter != KeyEvent.VK_0 || */!ignoringKeys
+					|| keyCharacter != lastKeyChar) {
+				lastKeyChar = keyCharacter;
 
-			if (game.getBlindPosition() != null) {
+				// start ignoring key presses
+				ignoringKeys = true;
 
-				Player blindPlayer = game.getBlindPlayer();
+				// Count the number of timers so that we only unset ignoringKeys
+				// 5 seconds after the last key is typed.
+				numTimers++;
+				// create a timer to stop ignoring after 1 second
+				Timer t = new Timer(true);
+				t.schedule(new TimerTask() {
+					@Override
+					public void run() {
+						synchronized (KeyPad.this) {
+							if (numTimers == 1) {
+								ignoringKeys = false;
+							}
+							numTimers--;
+						}
+					}
 
-				// if the backspace key was pressed
-				if (blindPlayer != null) {
-					readBlindPlayerHand(keyCharacter, blindPlayer);
+				}, 5000);
+				if (game.getBlindPosition() != null) {
+
+					Player blindPlayer = game.getBlindPlayer();
+
+					// if the backspace key was pressed
+					if (blindPlayer != null) {
+						readBlindPlayerHand(keyCharacter, blindPlayer);
+					}
 				}
+
+				if (game.getDummyPosition() != null) {
+					readDummyHand(keyCharacter);
+				}
+
+				if (keyCharacter == KeyEvent.VK_PLUS) {
+
+					// read the cards in the current trick
+					gameGUI.debugMsg("Current trick");
+					readTrick();
+
+					// if the 1 was pressed
+				} else if (keyCharacter == KeyEvent.VK_1) {
+
+					// read the contract
+					gameGUI.debugMsg("Contract");
+					playContract(game.getContract());
+
+					// if the 2 was pressed
+				} else if (keyCharacter == KeyEvent.VK_2) {
+
+					// read N/S's current tricks won
+					gameGUI.debugMsg("N/S tricks won");
+					playTricksWonNS();
+
+					// if the 3 was pressed
+				} else if (keyCharacter == KeyEvent.VK_3) {
+
+					// read E/W's current tricks won
+					gameGUI.debugMsg("E/W tricks won");
+					playTricksWonEW();
+
+					// if the 0 was pressed
+				} else if (keyCharacter == KeyEvent.VK_0) {
+
+					// repeat the last thing said
+					gameGUI.debugMsg("Repeat");
+					soundMgr.playLastSound();
+
+					// if the enter key is pressed then play the blid player's
+					// card
+				} else if (keyCharacter == KeyEvent.VK_ENTER) {
+					// playTutorial();
+
+					System.out
+							.println("################ Enter is pressed #########################");
+
+					try {
+						game.playBlindCard();
+					} catch (NullPointerException e) {
+
+						System.err
+								.println("Blind person pressed the Enter button by mistake");
+					}
+
+				}
+
+				// lastCode = keyCode;
+
 			}
-			
-			if (game.getDummyPosition() != null) {
-				readDummyHand(keyCharacter);
-			}
-
-			if (keyCharacter == KeyEvent.VK_PLUS) {
-
-				// read the cards in the current trick
-				gameGUI.debugMsg("Current trick");
-				readTrick();
-
-				// if the 1 was pressed
-			} else if (keyCharacter == KeyEvent.VK_1) {
-
-				// read the contract
-				gameGUI.debugMsg("Contract");
-				playContract(game.getContract());
-
-				// if the 2 was pressed
-			} else if (keyCharacter == KeyEvent.VK_2) {
-
-				// read N/S's current tricks won
-				gameGUI.debugMsg("N/S tricks won");
-				playTricksWonNS();
-
-				// if the 3 was pressed
-			} else if (keyCharacter == KeyEvent.VK_3) {
-
-				// read E/W's current tricks won
-				gameGUI.debugMsg("E/W tricks won");
-				playTricksWonEW();
-
-				// if the 0 was pressed
-			} else if (keyCharacter == KeyEvent.VK_0) {
-
-				// repeat the last thing said
-				gameGUI.debugMsg("Repeat");
-				soundMgr.playLastSound();
-
-				// if the enter key is pressed then play the blid player's card
-			} else if (keyCharacter == KeyEvent.VK_ENTER) {
-				//playTutorial();
-				
-				System.out.println("################ Enter is pressed #########################");
-				
-				try{
-					game.playBlindCard();
-				}catch(NullPointerException e){
-					
-					System.err.println("Blind person pressed the Enter button by mistake");
-				}
-				
-			} 
-
-			//lastCode = keyCode;
-			
-			lastKeyChar = keyCharacter ;
-			// start ignoring key presses
-			ignoringKeys = true;
-
-			// create a timer to stop ignoring after 1 second
-			Timer t = new Timer(true);
-			t.schedule(new TimerTask() {
-				@Override
-				public void run() {
-					ignoringKeys = false;
-				}
-
-			}, 1000);
 
 		}
 

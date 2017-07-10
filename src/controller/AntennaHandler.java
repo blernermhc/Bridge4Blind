@@ -321,12 +321,12 @@ public class AntennaHandler extends Handler {
 
 		byte[] output = handID.getBytes();
 		
-		System.out.println("Waiting for lock");
+		//System.out.println("Waiting for lock");
 
 		// Make sure only one thread is talking to the server at a time
 		// System.out.println("switchHand waiting for lock");
 		synchronized (out) {
-			System.out.println("switchHand got lock");
+			//System.out.println("switchHand got lock");
 			out.write(output);
 			out.flush();
 			// System.out.println("Command sent: " + handID + ".");
@@ -375,7 +375,7 @@ public class AntennaHandler extends Handler {
 					System.out.println("Running cycling thread");
 					while (!isInterrupted()) {
 						try {
-							System.out.println("Cycling hands");
+							//System.out.println("Cycling hands");
 							cycleHands();
 						} catch (IOException e) {
 							// TODO Auto-generated catch block
