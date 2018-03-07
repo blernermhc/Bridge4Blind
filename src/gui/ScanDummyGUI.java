@@ -195,7 +195,7 @@ public class ScanDummyGUI extends JPanel implements GameListener {
 
 		default:
 			System.err.println("There should not be a fifth suit");
-			break;
+			return;
 		}
 
 		// getting rid of that rank

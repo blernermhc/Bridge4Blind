@@ -1,5 +1,6 @@
 package gui;
 
+import java.awt.BorderLayout;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.GridBagConstraints;
@@ -7,6 +8,7 @@ import java.awt.GridBagLayout;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
@@ -17,6 +19,8 @@ import model.Direction;
 import model.Game;
 import model.GameListener;
 import model.GameState;
+import model.Rank;
+import model.Suit;
 
 /**
  * This class visually represents what the visually impaired person hears.
@@ -52,7 +56,9 @@ public class GameStatusGUI extends JPanel implements GameListener {
 		this.game = game;
 		this.gameGUI = gameGUI;
 
-		this.game.addListener(this);
+		if (this.game != null) {
+			this.game.addListener(this);
+		}
 
 		setLayout(new GridBagLayout());
 
@@ -110,7 +116,10 @@ public class GameStatusGUI extends JPanel implements GameListener {
 		trickConstraints.gridx = 2;
 		trickConstraints.gridy = 1;
 		TricksWonPanel tricksWonPanel = new TricksWonPanel();
-		game.addListener(tricksWonPanel);
+		
+		if (game != null) {
+			game.addListener(tricksWonPanel);
+		}
 		add(tricksWonPanel, trickConstraints);
 	}
 
@@ -186,7 +195,9 @@ public class GameStatusGUI extends JPanel implements GameListener {
 
 			playerGUIs[(turn.ordinal() + 1) % 4].nextPlayer();
 
-			gameGUI.undoButtonSetEnabled(true);
+			if (gameGUI != null) {
+				gameGUI.undoButtonSetEnabled(true);
+			}
 
 		} else {
 
@@ -195,7 +206,7 @@ public class GameStatusGUI extends JPanel implements GameListener {
 
 		// the frame should be changed to ScanDummyGUI only after the first card
 		// has been played
-		if (!firstCardPlayed) {
+		if (!firstCardPlayed && game != null) {
 
 			switchToScanDummy();
 		}
@@ -419,12 +430,22 @@ public class GameStatusGUI extends JPanel implements GameListener {
 		
 		super.paintComponent(g);
 		
-		if(game.isGameState(GameState.FIRSTCARD)){
+		if(game != null && game.isGameState(GameState.FIRSTCARD)){
 			
 			gameGUI.undoButtonSetEnabled(false);
 			gameGUI.backButtonSetEnabled(false);
 			
 		}
+	}
+	
+	public static void main (String[] args) {
+		JFrame testFrame = new JFrame();
+		GameStatusGUI gameStatusGUI = new GameStatusGUI(null, null);
+		testFrame.add(gameStatusGUI, BorderLayout.CENTER);
+		gameStatusGUI.cardPlayed(Direction.SOUTH, new Card(Rank.ACE, Suit.CLUBS));
+		gameStatusGUI.cardPlayed(Direction.WEST, new Card(Rank.TEN, Suit.CLUBS));
+		testFrame.pack();
+		testFrame.setVisible(true);
 	}
 
 }
