@@ -55,7 +55,7 @@ public class Card implements Comparable<Card> {
 	/**
 	 * Return a comparator that sorts by suit in the normal way, but
 	 * sorts rank from high to low.
-	 * @return
+	 * @return a comparator
 	 */
 	public static Comparator<Card> getReverseRankComparator() {
 		return new Comparator<Card>() {

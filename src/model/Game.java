@@ -992,7 +992,7 @@ public class Game {
 
 	/**
 	 * 
-	 * @return
+	 * @return last blind card
 	 */
 	public Card getLastBlindCard() {
 		return lastBlindCard;
