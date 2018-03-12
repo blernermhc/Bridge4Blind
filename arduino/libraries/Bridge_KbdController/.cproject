@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<?fileVersion 4.0.0?><cproject storage_type_id="org.eclipse.cdt.core.XmlProjectDescriptionStorage">
+    	
+    <storageModule moduleId="org.eclipse.cdt.core.settings">
+        		
+        <cconfiguration id="org.eclipse.cdt.core.default.config.1852229444">
+            			
+            <storageModule buildSystemId="org.eclipse.cdt.core.defaultConfigDataProvider" id="org.eclipse.cdt.core.default.config.1852229444" moduleId="org.eclipse.cdt.core.settings" name="Configuration">
+                				
+                <externalSettings/>
+                				
+                <extensions/>
+                			
+            </storageModule>
+            			
+            <storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
+            		
+        </cconfiguration>
+        	
+    </storageModule>
+    	
+    <storageModule moduleId="org.eclipse.cdt.make.core.buildtargets"/>
+    	
+    <storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
+    	
+    <storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
+    	
+    <storageModule moduleId="org.eclipse.cdt.core.pathentry">
+        		
+        <pathentry include="/Applications/Arduino.app/Contents/Java/hardware/tools/avr/avr/include" kind="inc" path="" system="true"/>
+        		
+        <pathentry base-path="WaveHCL" include="" kind="inc" path="" system="true"/>
+        		
+        <pathentry include="/Applications/Arduino.app/Contents/Java/hardware/arduino/avr/cores/arduino" kind="inc" path="" system="true"/>
+        		
+        <pathentry kind="out" path="build"/>
+        		
+        <pathentry kind="src" path=""/>
+        	
+    </storageModule>
+    
+</cproject>
