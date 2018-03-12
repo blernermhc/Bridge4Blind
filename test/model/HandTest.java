@@ -13,7 +13,7 @@ public class HandTest {
 	private Hand h;
 	private Hand fullSpadesHand;
 	private Card aceSpades = new Card(Rank.ACE, Suit.SPADES);
-	private Card twoSpades = new Card(Rank.DEUCE, Suit.SPADES);
+	private Card twoSpades = new Card(Rank.TWO, Suit.SPADES);
 	private Card threeSpades = new Card(Rank.THREE, Suit.SPADES);
 	private Card fourSpades = new Card(Rank.FOUR, Suit.SPADES);
 	private Card fiveSpades = new Card(Rank.FIVE, Suit.SPADES);

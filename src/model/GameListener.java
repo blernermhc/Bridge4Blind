@@ -8,7 +8,8 @@ package model;
  * @version Aug 9, 2012
  *
  */
-public interface GameListener {
+public interface GameListener
+{
 	/** 
 	 * Informs the listener of a debugging message to display.
 	 * @param string the message
@@ -47,9 +48,9 @@ public interface GameListener {
 	public void contractSet(Contract contract);
 	
 	/**
-	 * Called when the blind hand is completely scanned in
+	 * Called when all of the blind hands have been completely scanned in
 	 */
-	public void blindHandScanned();
+	public void blindHandsScanned();
 	
 	/**
 	 * Called when the dummy hand is completely scanned in

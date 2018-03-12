@@ -16,7 +16,7 @@ public class GameTest {
 	private static final Direction FIRST_PLAYER = Direction.EAST;
 	private static final Direction BLIND_DIRECTION = Direction.NORTH;
 	private static final Card ACE_SPADES = new Card (Rank.ACE, Suit.SPADES);
-	private static final Card TWO_SPADES = new Card (Rank.DEUCE, Suit.SPADES);
+	private static final Card TWO_SPADES = new Card (Rank.TWO, Suit.SPADES);
 	private static final Card THREE_SPADES = new Card (Rank.THREE, Suit.SPADES);
 	private static final Card FOUR_SPADES = new Card (Rank.FOUR, Suit.SPADES);
 	private static final Card FIVE_SPADES = new Card (Rank.FIVE, Suit.SPADES);

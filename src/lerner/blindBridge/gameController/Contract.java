@@ -1,4 +1,8 @@
-package model;
+// -*- mode: java; standard-indent: 4; tab-width: 4; -*-
+// Copyright, (c) 2008 Clickshare Service Corp., All Rights Reserved.
+//----------------------------------------------------------------------
+
+package lerner.blindBridge.gameController;
 
 /**
  * Manages information about a contract:  the suit and number of tricks to win.

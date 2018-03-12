@@ -944,7 +944,7 @@ public class GameGUI extends JFrame implements GameListener {
 
 	}
 
-	public void blindHandScanned() {
+	public void blindHandsScanned() {
 
 	}
 

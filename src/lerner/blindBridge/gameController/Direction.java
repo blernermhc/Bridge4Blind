@@ -1,4 +1,8 @@
-package model;
+// -*- mode: java; standard-indent: 4; tab-width: 4; -*-
+// Copyright, (c) 2008 Clickshare Service Corp., All Rights Reserved.
+//----------------------------------------------------------------------
+
+package lerner.blindBridge.gameController;
 
 /***********************************************************************
  * Represents a player's position (e.g., North, South, etc.)

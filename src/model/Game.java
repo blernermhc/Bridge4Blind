@@ -431,7 +431,7 @@ public class Game {
 				setGameState(GameState.FIRSTCARD);
 
 				for (GameListener listener : listeners) {
-					listener.blindHandScanned();
+					listener.blindHandsScanned();
 				}
 
 			}

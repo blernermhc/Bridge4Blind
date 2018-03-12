@@ -337,7 +337,7 @@ public class GameStatusGUI extends JPanel implements GameListener {
 	}
 
 	@Override
-	public void blindHandScanned() {
+	public void blindHandsScanned() {
 		// TODO Auto-generated method stub
 
 	}

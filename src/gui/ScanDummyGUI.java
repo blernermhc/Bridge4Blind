@@ -132,7 +132,7 @@ public class ScanDummyGUI extends JPanel implements GameListener {
 	}
 
 	@Override
-	public void blindHandScanned() {
+	public void blindHandsScanned() {
 	}
 
 	/**

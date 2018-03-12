@@ -1,101 +1,89 @@
-package model;
+// -*- mode: java; standard-indent: 4; tab-width: 4; -*-
+// Copyright, (c) 2008 Clickshare Service Corp., All Rights Reserved.
+//----------------------------------------------------------------------
+
+package lerner.blindBridge.gameController;
 
 /***********************************************************************
- * Represents the rank (the number) of a card
+ * Represents the suit component of a playing card
  ***********************************************************************/
-public enum Rank
+public enum Suit
 {
-	TWO		("2")
-	, THREE	("3") 
-	, FOUR	("4")
-	, FIVE	("5") 
-	, SIX	("6")
-	, SEVEN	("7") 
-	, EIGHT	("8") 
-	, NINE	("9")
-	, TEN	("T") 
-	, JACK	("J") 
-	, QUEEN	("Q") 
-	, KING	("K")
-	, ACE	("A")
+	CLUBS		("C") 
+	, DIAMONDS	("D")  
+	, HEARTS		("H")
+	, SPADES		("S") 
+	, NOTRUMP	("N")
 	;
 	
 	//--------------------------------------------------
 	// CONSTANTS
 	//--------------------------------------------------
-
-	private static final String SOUND_FOLDER = "/sounds/ranks/";
 	
+	private static final String SOUND_FOLDER = "/sounds/suits/";
+
 	//--------------------------------------------------
 	// CONFIGURATION MEMBER DATA
 	//--------------------------------------------------
 
 	/** 
-	 * String name of the rank, used to construct the name of the file
-	 * containing the audio of this rank
+	 * string name of the suit, used to construct the name of the file
+	 * containing the audio of this suit
 	 */
-	private final String m_rankValue;
+	private String m_suitString;
 
 	//--------------------------------------------------
 	// INTERNAL MEMBER DATA
 	//--------------------------------------------------
-	
-	/** the name of the file containing the audio announcement of this rank */
+
+	/** the name of the file containing the audio announcement of this suit */
 	private String m_sound;
-	
+		
 	//--------------------------------------------------
 	// CONSTRUCTORS
 	//--------------------------------------------------
 
-	private Rank(String p_rank)
+	private Suit(String p_suit)
 	{
-		m_rankValue = p_rank;
-		m_sound = SOUND_FOLDER + p_rank + ".WAV";
+		m_suitString = p_suit;
+		m_sound = SOUND_FOLDER + m_suitString + ".WAV";
 	}
-
+	
 	//--------------------------------------------------
 	// METHODS
 	//--------------------------------------------------
-
+	
 	/**
-	 * Given a letter find the appropriate Value.  '2' for two, etc.  'T' for ten, 
-	 * 'J', 'Q', 'K' for face cards, 'A' for ace.
-	 * @param p_c the Letter 
-	 * @return the Rank.  Returns null if an unexpected character is passed in.
+	 * Finds the appropriate Suit given a letter.  H = Hearts, C = Clubs, S = Spades
+	 * D = Diamonds
+	 * @param p_c the letter
+	 * @return the Suit.  Returns null if an unexpected code is found.
 	 */
-	public static Rank findValue(char p_c)
+	public static Suit findSuit(char p_c)
 	{
-		switch(p_c) 
+		switch(p_c)
 		{
-		case '2': return TWO;
-		case '3': return THREE;
-		case '4': return FOUR;
-		case '5': return FIVE;
-		case '6': return SIX;
-		case '7': return SEVEN;
-		case '8': return EIGHT;
-		case '9': return NINE;
-		case 'T': return TEN;
-		case 'J': return JACK;
-		case 'Q': return QUEEN;
-		case 'K': return KING;
-		case 'A': return ACE;
+		case 'H': return HEARTS;
+		case 'D': return DIAMONDS;
+		case 'S': return SPADES;
+		case 'C': return CLUBS;
 		}
+		
 		assert false;
 		return null;
 	}
-
+	
 	//--------------------------------------------------
 	// HELPER METHODS
 	//--------------------------------------------------
-
+	
 	/* (non-Javadoc)
 	 * @see java.lang.Enum#toString()
 	 */
 	@Override
 	public String toString()
 	{
-		return m_rankValue;
+		return m_suitString;
 	}
 
 	//--------------------------------------------------
@@ -103,14 +91,12 @@ public enum Rank
 	//--------------------------------------------------
 	
 	/***********************************************************************
-	 * The name of the file that contains the sound for this rank
+	 * The name of the file that contains the sound for this suit
 	 * @return file name
 	 ***********************************************************************/
 	public String getSound()
 	{
 		return m_sound;
 	}
-	
 
-	
 }

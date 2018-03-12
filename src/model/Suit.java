@@ -1,52 +1,64 @@
 package model;
 
-/** An enumerated type representing the suit of a card.
-*
-* @author Allison DeJordy
-**/
-
-public enum Suit{
+/***********************************************************************
+ * Represents the suit component of a playing card
+ ***********************************************************************/
+public enum Suit
+{
+	CLUBS		("C") 
+	, DIAMONDS	("D")  
+	, HEARTS		("H")
+	, SPADES		("S") 
+	, NOTRUMP	("N")
+	;
 	
-	CLUBS("C"),  
-	DIAMONDS("D"),  
-	HEARTS("H"),
-	SPADES("S"), 
-	NOTRUMP("NT");
+	//--------------------------------------------------
+	// CONSTANTS
+	//--------------------------------------------------
 	
 	private static final String SOUND_FOLDER = "/sounds/suits/";
 
-	private String sound;
-	
-	private String suitString;
-	
-	private Suit(String suit){
-		suitString = suit;
-		sound = SOUND_FOLDER + suitString + ".WAV";
-	}
-	
-	/**
-	 * @return the name of the file that contains the sound for this suit
-	 */
-	public String getSound() {
-		return sound;
-	}
-	
-	/**
-	 * @return a string representation of the suit
-	 */
-	@Override
-	public String toString(){
-		return suitString;
-	}
+	//--------------------------------------------------
+	// CONFIGURATION MEMBER DATA
+	//--------------------------------------------------
 
+	/** 
+	 * string name of the suit, used to construct the name of the file
+	 * containing the audio of this suit
+	 */
+	private String m_suitString;
+
+	//--------------------------------------------------
+	// INTERNAL MEMBER DATA
+	//--------------------------------------------------
+
+	/** the name of the file containing the audio announcement of this suit */
+	private String m_sound;
+		
+	//--------------------------------------------------
+	// CONSTRUCTORS
+	//--------------------------------------------------
+
+	private Suit(String p_suit)
+	{
+		m_suitString = p_suit;
+		m_sound = SOUND_FOLDER + m_suitString + ".WAV";
+	}
+	
+	//--------------------------------------------------
+	// METHODS
+	//--------------------------------------------------
+	
 	/**
 	 * Finds the appropriate Suit given a letter.  H = Hearts, C = Clubs, S = Spades
 	 * D = Diamonds
-	 * @param c the letter
+	 * @param p_c the letter
 	 * @return the Suit.  Returns null if an unexpected code is found.
 	 */
-	public static Suit findSuit(char c){
-		switch(c) {
+	public static Suit findSuit(char p_c)
+	{
+		switch(p_c)
+		{
 		case 'H': return HEARTS;
 		case 'D': return DIAMONDS;
 		case 'S': return SPADES;
@@ -57,4 +69,30 @@ public enum Suit{
 		return null;
 	}
 	
+	//--------------------------------------------------
+	// HELPER METHODS
+	//--------------------------------------------------
+	
+	/* (non-Javadoc)
+	 * @see java.lang.Enum#toString()
+	 */
+	@Override
+	public String toString()
+	{
+		return m_suitString;
+	}
+
+	//--------------------------------------------------
+	// ACCESSORS
+	//--------------------------------------------------
+	
+	/***********************************************************************
+	 * The name of the file that contains the sound for this suit
+	 * @return file name
+	 ***********************************************************************/
+	public String getSound()
+	{
+		return m_sound;
+	}
+
 }

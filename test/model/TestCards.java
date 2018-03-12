@@ -18,7 +18,7 @@ public class TestCards {
 
 	// spades
 	public static final Card ACE_SPADES = new Card (Rank.ACE, Suit.SPADES);
-	public static final Card TWO_SPADES = new Card (Rank.DEUCE, Suit.SPADES);
+	public static final Card TWO_SPADES = new Card (Rank.TWO, Suit.SPADES);
 	public static final Card THREE_SPADES = new Card (Rank.THREE, Suit.SPADES);
 	public static final Card FOUR_SPADES = new Card (Rank.FOUR, Suit.SPADES);
 	public static final Card FIVE_SPADES = new Card (Rank.FIVE, Suit.SPADES);
@@ -33,7 +33,7 @@ public class TestCards {
 
 	// clubs
 	public static final Card ACE_CLUBS = new Card (Rank.ACE, Suit.CLUBS);
-	public static final Card TWO_CLUBS = new Card (Rank.DEUCE, Suit.CLUBS);
+	public static final Card TWO_CLUBS = new Card (Rank.TWO, Suit.CLUBS);
 	public static final Card THREE_CLUBS = new Card (Rank.THREE, Suit.CLUBS);
 	public static final Card FOUR_CLUBS = new Card (Rank.FOUR, Suit.CLUBS);
 	public static final Card FIVE_CLUBS = new Card (Rank.FIVE, Suit.CLUBS);
@@ -48,7 +48,7 @@ public class TestCards {
 	
 	// hearts
 	public static final Card ACE_HEARTS = new Card (Rank.ACE, Suit.HEARTS);
-	public static final Card TWO_HEARTS = new Card (Rank.DEUCE, Suit.HEARTS);
+	public static final Card TWO_HEARTS = new Card (Rank.TWO, Suit.HEARTS);
 	public static final Card THREE_HEARTS = new Card (Rank.THREE, Suit.HEARTS);
 	public static final Card FOUR_HEARTS = new Card (Rank.FOUR, Suit.HEARTS);
 	public static final Card FIVE_HEARTS = new Card (Rank.FIVE, Suit.HEARTS);
@@ -64,7 +64,7 @@ public class TestCards {
 	
 	// diamonds
 	public static final Card ACE_DIAMONDS = new Card (Rank.ACE, Suit.DIAMONDS);
-	public static final Card TWO_DIAMONDS = new Card (Rank.DEUCE, Suit.DIAMONDS);
+	public static final Card TWO_DIAMONDS = new Card (Rank.TWO, Suit.DIAMONDS);
 	public static final Card THREE_DIAMONDS = new Card (Rank.THREE, Suit.DIAMONDS);
 	public static final Card FOUR_DIAMONDS = new Card (Rank.FOUR, Suit.DIAMONDS);
 	public static final Card FIVE_DIAMONDS = new Card (Rank.FIVE, Suit.DIAMONDS);

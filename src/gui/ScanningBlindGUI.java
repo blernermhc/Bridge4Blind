@@ -66,7 +66,7 @@ public class ScanningBlindGUI extends JPanel implements GameListener {
 		
 	}
 	
-	public void blindHandScanned() {
+	public void blindHandsScanned() {
 		gameGUI.changeFrame();
 	}
 
