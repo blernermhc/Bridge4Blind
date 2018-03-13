@@ -5,5 +5,15 @@
 	<classpathentry kind="src" path="test"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
+	<classpathentry kind="lib" path="lib/java/commons-cli-1.4.jar"/>
+	<classpathentry kind="lib" path="lib/java/log4j-1.2-api-2.7.jar"/>
+	<classpathentry kind="lib" path="lib/java/log4j-api-2.7.jar"/>
+	<classpathentry kind="lib" path="lib/java/log4j-core-2.7.jar"/>
+	<classpathentry kind="lib" path="lib/java/log4j-web-2.7.jar"/>
+	<classpathentry kind="lib" path="lib/java/RXTXcomm.jar">
+		<attributes>
+			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="Bridge4Blind/lib/java"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
