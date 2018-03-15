@@ -31,7 +31,7 @@ EventList eventList;
 #define INITIATE_RESET_MSG 0b11000010
 
 // options
-#define SUIT_LOW_HIGH 1
+#define SUIT_HIGH_LOW 1
 
 // global state data
 uint8_t s_options = 0;
@@ -659,10 +659,10 @@ void btn_announceHand (uint8_t p_playerId, uint8_t p_buttonId)
   }
   
   uint8_t suitId;
-  if ((s_options & SUIT_LOW_HIGH) != 0)
-    suitId = p_buttonId;
+  if ((s_options & SUIT_HIGH_LOW) != 0)
+	  suitId = 3 - p_buttonId;
   else
-    suitId = 3 - p_buttonId;
+	  suitId = p_buttonId;
 
   // reset selected card if changing suit
   if (suitId != s_selectedSuitId)
@@ -710,7 +710,7 @@ void resetKeyboard(uint8_t p_playerId)
 // -------------------------------------------------------------------------------------------------------------
 void checkButton()
 {
-  if(Button > 0)                              // If Button is > 0, then it was pressed or released (SPI only)
+  if(Button > 0 && Button != m_lastButtonId)  // If Button is > 0, then it was pressed or released (SPI only), ignore repeats
   {
     Serial.write(START_SEND_MSG);
     putstring("Button: ");
@@ -720,13 +720,13 @@ void checkButton()
       Serial.print(Button, DEC);
       putstring_nl(" - Pressed");
     }
-    /*
     else
     {
       Serial.print(Button, DEC);                // A released button is from 1 to 64
-      putstring(" - Released");
+      putstring_nl(" - Released");
+      m_lastButtonId = 0;
+      Button = 0;
     }
-    */
 
     switch (Button)
     {
