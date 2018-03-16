@@ -736,7 +736,6 @@ public class KeyboardController implements SerialPortEventListener, GameListener
 	@Override
 	public void contractSet ( model.Contract p_contract )
 	{
-		m_dummyPosition = p_contract.getBidWinner();
 		send_contract(p_contract);
 	}
 
@@ -745,7 +744,8 @@ public class KeyboardController implements SerialPortEventListener, GameListener
 	 */
 	public void setDummyPosition ( Direction p_direction )
 	{
-		send_multiByteMessage(MULTIBYTE_MESSAGE.SET_DUMMY, m_dummyPosition);
+		m_dummyPosition = p_direction;
+		send_multiByteMessage(MULTIBYTE_MESSAGE.SET_DUMMY, p_direction);
 	}
 
 	/* (non-Javadoc)
