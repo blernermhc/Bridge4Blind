@@ -97,20 +97,20 @@ public class ScanDummyGUI extends JPanel implements GameListener {
 	}
 
 	@Override
-	public void cardScanned(Card card) {
+	public void cardScanned(Direction p_direction, Card p_card, boolean p_handComplete) {
 		if (game.isScanningDummy()) {
-			switch (card.getSuit()) {
+			switch (p_card.getSuit()) {
 			case CLUBS:
-				updateCardsScanned(card, clubsScanned);
+				updateCardsScanned(p_card, clubsScanned);
 				break;
 			case DIAMONDS:
-				updateCardsScanned(card, diamondsScanned);
+				updateCardsScanned(p_card, diamondsScanned);
 				break;
 			case HEARTS:
-				updateCardsScanned(card, heartsScanned);
+				updateCardsScanned(p_card, heartsScanned);
 				break;
 			case SPADES:
-				updateCardsScanned(card, spadesScanned);
+				updateCardsScanned(p_card, spadesScanned);
 				break;
 			}
 		}

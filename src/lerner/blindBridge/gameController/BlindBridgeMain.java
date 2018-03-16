@@ -1,8 +1,5 @@
 package lerner.blindBridge.gameController;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -19,7 +16,8 @@ import org.apache.commons.cli.ParseException;
 import org.apache.log4j.Category;
 import org.apache.logging.log4j.Level;
 
-import lerner.blindBridge.gameController.KeyboardController.KBD_MESSAGE;
+import model.Card;
+import model.Direction;
 
 /**********************************************************************
  * Main program for playing Blind Bridge.
@@ -38,40 +36,9 @@ public class BlindBridgeMain
 	// CONSTANTS
 	//--------------------------------------------------
 
-	public enum BridgeCommand {
-		  NEWHAND("Starts a new hand")
-		, CONTRACT("Set contract: position numTricks suit")
-		, PLAY("Play card (simulates RFID scan from sighted player next to play): cardAbbrev (e.g., QH)")
-		, SCANHAND("Simulates scanning keyboard hand for testing: kbdPosition")
-		, SCANDUMMY("Simulates scanning the dummy's hand for teasting")
-		, B("Simulates pressing a keyboard controller button for testing: kbdPosition buttonName")
-		, REOPEN("Reopens connection to keyboard controller: kbdPosition")
-		, RESET("Sends request to reset keyboard controller: kbdPosition")
-		, PRINTHAND("For testing prints a hand: player")
-		, PRINTSTATE("Prints the Game Controller state")
-		, CANCELRESET("Send reset finished to ensure that audio is enabled: kbdPosition")
-		, SHOWKBDS("Print a list of the known keyboards with an index for use in changing the keyboard's position")
-		, KBDPOS("Move a keyboard to a new position: idx (from SHOWKBDS) newPosition)")
-		, SHOWANTS("Print a list of the known antennas with an index for use in changing the antenna's position")
-		, ANTPOS("Move an antenna to a new position: idx (from SHOWANTS) newPosition)")
-		;
-		
-		private String m_description;
-		
-		BridgeCommand (String p_description)
-		{
-			m_description = p_description;
-		}
-		
-		public String getDescription() { return m_description; } 
-	};
-
-	//--------------------------------------------------
-	// CONFIGURATION MEMBER DATA
-	//--------------------------------------------------
-
 	private Map<Direction, KeyboardController> m_keyboardControllers = new HashMap<>();
 	private Map<Direction, AntennaController> m_antennaControllers = new HashMap<>();
+	private CommandController m_commandController;
 	
 
 	//--------------------------------------------------
@@ -106,6 +73,11 @@ public class BlindBridgeMain
 		Level logLevel = Level.WARN;		// use warn until we determine what command line indicates
 		Logger.initialize(logLevel);
 
+		//------------------------------
+		// Create the game data object
+		//------------------------------
+		m_bridgeHand = new BridgeHand();
+		
 		//------------------------------
 		// Process command-line arguments
 		//------------------------------
@@ -240,266 +212,26 @@ public class BlindBridgeMain
 		Logger.resetConfiguration();
 		Logger.initialize(logLevel);
 		
-
+		//------------------------------
+		// Create the command line input controller and start it
+		//------------------------------
+		m_commandController = new CommandController(this, m_bridgeHand, System.in, System.out);
+		m_commandController.start();
+		
+		//------------------------------
+		// Start the game
+		//------------------------------
+		m_bridgeHand.startGame();
 	}
 
 	//--------------------------------------------------
 	// METHODS
 	//--------------------------------------------------
 	
-	/***********************************************************************
-	 * Initializes the application
-	 * @throws IOException
-	 ***********************************************************************/
-	public void startNewGame ()
-		throws IOException
-	{
-		m_bridgeHand = new BridgeHand(m_keyboardControllers);
-		m_bridgeHand.evt_startNewHand();
-	}
-	
-	/***********************************************************************
-	 * Main loop for commands from the game controller.
-	 * Input from Keyboard Controllers are handled via interrupt handlers.
-	 ***********************************************************************/
-	public void commandLine()
-	{
-		while (true)
-		{
-			System.out.println("Enter command: ");
-			BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
-			String line = "";
-			try
-			{
-				line = in.readLine();
-			}
-			catch (Exception e)
-			{
-				System.out.println ("commandLine: read failed: " + e);
-				e.printStackTrace(new PrintStream(System.out));
-			}
-
-			BridgeCommand cmd = null;
-			try
-			{
-				// special case for b (add space after b, if missing)
-				if (line.matches("^b[nNeEsSwW] .*"))
-				{
-					line = "b " + line.substring(1);
-				}
-
-				String[] args = line.split(" ");
-				if (args.length <= 0) continue;
-				
-				cmd = BridgeCommand.valueOf(args[0].toUpperCase());
-				
-				switch (cmd)
-				{
-					case SHOWKBDS:
-					{
-						int idx = 0;
-						System.out.println("Keyboards:");
-						for (KeyboardController kbdController : m_keyboardControllerList)
-						{
-							System.out.println("  " + idx + ": " + kbdController.getMyPosition() + " (" + kbdController.m_device + ")");
-							++idx;
-						}
-						break;
-					}
-					
-					case KBDPOS:
-					{ // change the position of a keyboard
-						if (args.length != 3)
-							throw new IllegalArgumentException("Wrong number of arguments");
-						int idx = 0;
-						int kbdIndex = Integer.parseInt(args[++idx]);
-						if (kbdIndex < 0 || kbdIndex >= m_keyboardControllerList.size())
-							throw new IllegalArgumentException("Invalid kbdIndex: " + kbdIndex);
-						Direction direction = Direction.fromString(args[++idx]);
-						KeyboardController kbdController = m_keyboardControllerList.get(kbdIndex);
-						m_keyboardControllers.remove(kbdController.getMyPosition());
-						kbdController.setPlayer(direction);
-						m_keyboardControllers.put(direction, kbdController);
-					}
-					break;
-						
-					case SHOWANTS:
-					{
-						int idx = 0;
-						System.out.println("Antennas:");
-						for (AntennaController antennaController : m_antennaControllerList)
-						{
-							System.out.println("  " + idx + ": " + antennaController.getMyPosition() + " (" + antennaController.m_device + ")");
-							++idx;
-						}
-						break;
-					}
-					
-					case ANTPOS:
-					{ // change the position of an antenna
-						if (args.length != 3)
-							throw new IllegalArgumentException("Wrong number of arguments");
-						int idx = 0;
-						int antIndex = Integer.parseInt(args[++idx]);
-						if (antIndex < 0 || antIndex >= m_antennaControllerList.size())
-							throw new IllegalArgumentException("Invalid antIndex: " + antIndex);
-						Direction direction = Direction.fromString(args[++idx]);
-						AntennaController antennaController = m_antennaControllerList.get(antIndex);
-						m_antennaControllers.remove(antennaController.getMyPosition());
-						antennaController.setPlayer(direction);
-						m_antennaControllers.put(direction, antennaController);
-					}
-					break;
-						
-					case NEWHAND:
-					{
-						m_bridgeHand.evt_startNewHand();
-					}
-					break;
-						
-					case CONTRACT:
-					{
-						if (args.length != 4)
-							throw new IllegalArgumentException("Wrong number of arguments");
-						int idx = 0;
-						Direction direction = Direction.fromString(args[++idx]);
-						int numTricks = Integer.parseInt(args[++idx]);
-						if (numTricks < 0 || numTricks > 7)
-							throw new IllegalArgumentException("Invalid numTricks: " + numTricks);
-						Suit suit = Suit.valueOf(args[++idx].toUpperCase());
-						Contract contract = new Contract(direction, suit, numTricks);
-						m_bridgeHand.evt_setContract(contract);
-					}
-					break;
-
-					case PLAY:
-					{
-						if (args.length != 2)
-							throw new IllegalArgumentException("Wrong number of arguments");
-						if (m_bridgeHand.getNextPlayer() == null)
-							throw new IllegalArgumentException("Cannot play, no next player");
-						int idx = 0;
-						Card card = new Card(args[++idx]);
-						m_bridgeHand.evt_playCard(m_bridgeHand.getNextPlayer(), card);
-					}
-					break;
-						
-					case REOPEN:
-					{
-						if (args.length != 2)
-							throw new IllegalArgumentException("Wrong number of arguments");
-						int idx = 0;
-						Direction direction = Direction.fromString(args[++idx]);
-						m_keyboardControllers.get(direction).initialize();
-					}
-					break;
-						
-					case RESET:
-					{
-						if (args.length != 2)
-							throw new IllegalArgumentException("Wrong number of arguments");
-						int idx = 0;
-						Direction direction = Direction.fromString(args[++idx]);
-						m_keyboardControllers.get(direction).send_simpleMessage(KBD_MESSAGE.START_RELOAD);
-					}
-					break;
-						
-					case CANCELRESET:
-					{	// should not be necessary; ensures audio is enabled
-						if (args.length != 2)
-							throw new IllegalArgumentException("Wrong number of arguments");
-						int idx = 0;
-						Direction direction = Direction.fromString(args[++idx]);
-						m_keyboardControllers.get(direction).send_simpleMessage(KBD_MESSAGE.FINISH_RELOAD);
-					}
-					break;
-						
-					case SCANHAND:
-					{
-						if (args.length != 2)
-							throw new IllegalArgumentException("Wrong number of arguments");
-						int idx = 0;
-						Direction direction = Direction.fromString(args[++idx]);
-						m_bridgeHand.evt_scanHandTest(direction);
-					}
-					break;
-						
-					case SCANDUMMY:
-					{
-						if (args.length != 1)
-							throw new IllegalArgumentException("Wrong number of arguments");
-						m_bridgeHand.evt_scanHandTest(m_bridgeHand.getDummyPosition());
-					}
-					break;
-						
-					case B:
-					{
-						if (args.length != 3)
-							throw new IllegalArgumentException("Wrong number of arguments");
-						int idx = 0;
-						Direction direction = Direction.fromString(args[++idx]);
-						m_keyboardControllers.get(direction).send_pressButton(args[++idx]);					
-					}
-					break;
-						
-					case PRINTHAND:
-					{
-						if (args.length != 2)
-							throw new IllegalArgumentException("Wrong number of arguments");
-						int idx = 0;
-						Direction direction = Direction.fromString(args[++idx]);
-						printHand(direction);
-					}
-					break;
-					
-					case PRINTSTATE:
-					{
-						if (args.length != 1)
-							throw new IllegalArgumentException("Wrong number of arguments");
-						System.out.println(m_bridgeHand.toString());
-					}
-					break;
-
-					default:
-						break;
-				}
-			}
-			catch (Exception e)
-			{
-				System.out.print("Error: ");
-				System.out.println(e.getMessage());
-				e.printStackTrace(new PrintStream(System.out));
-				if (cmd != null) System.out.println(cmd.getDescription());
-			}
-		}
-	}
-
 	//--------------------------------------------------
 	// INTERNAL METHODS
 	//--------------------------------------------------
 
-	/***********************************************************************
-	 * Prints a hand, if known, for testing
-	 * @param p_direction	the play to print
-	 ***********************************************************************/
-	private void printHand (Direction p_direction)
-	{
-		PlayerHand hand = m_bridgeHand.getHands().get(p_direction);
-		if (hand == null) hand = m_bridgeHand.getTestHands().get(p_direction);
-		if (hand == null)
-		{
-			if (s_cat.isDebugEnabled()) s_cat.debug("printHand: no hand for player: " + p_direction);
-			return;
-		}
-		
-		System.out.print(p_direction);
-		for (Card card : hand.m_cards)
-		{
-			System.out.print(" " + card.abbreviation());
-		}
-		System.out.println();
-	}	
-	
 	/***********************************************************************
 	 * Main handler for messages from the Keyboard Controllers.
 	 * @param p_controller	the keyboard controller sending the message
@@ -609,6 +341,7 @@ public class BlindBridgeMain
 		KeyboardController kbdController = new KeyboardController(this, p_direction, p_device);
 		m_keyboardControllers.put(p_direction, kbdController);
 		m_keyboardControllerList.add(kbdController);
+		m_bridgeHand.addKeyboardController(p_direction, kbdController);
 	}
 	
 	/***********************************************************************
@@ -621,6 +354,7 @@ public class BlindBridgeMain
 		AntennaController antController = new AntennaController(this, p_direction, p_device);
 		m_antennaControllers.put(p_direction, antController);
 		m_antennaControllerList.add(antController);
+		m_bridgeHand.addAntennaController(p_direction, antController);
 	}
 	
 
@@ -637,20 +371,5 @@ public class BlindBridgeMain
 	{
 		BlindBridgeMain main = new BlindBridgeMain();
 		main.initialize(p_args);
-		/*
-		Thread t = new Thread()
-		{
-			public void run()
-			{
-				//the following line will keep this app alive for 1000 seconds,
-				//waiting for events to occur and responding to them (printing incoming messages to console).
-				try {Thread.sleep(1000000);} catch (InterruptedException ie) {}
-			}
-		};
-		t.start();
-		*/
-		System.out.println("Started");
-		main.startNewGame();
-		main.commandLine();
 	}
 }

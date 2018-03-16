@@ -9,6 +9,8 @@ import gnu.io.CommPortIdentifier;
 import gnu.io.SerialPort;
 import gnu.io.SerialPortEvent;
 import gnu.io.SerialPortEventListener;
+import model.Card;
+import model.Direction;
 
 /**********************************************************************
  * Communicates with an RFID Antenna Controller 

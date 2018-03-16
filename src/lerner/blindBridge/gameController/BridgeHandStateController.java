@@ -1,0 +1,146 @@
+// -*- mode: java; standard-indent: 4; tab-width: 4; -*-
+// Copyright, (c) 2008 Clickshare Service Corp., All Rights Reserved.
+//----------------------------------------------------------------------
+
+package lerner.blindBridge.gameController;
+
+import org.apache.log4j.Category;
+
+/***********************************************************************
+ * The State Controller for the Bridge Game.
+ * Executes the onEntry() and checkState() methods of each state.
+ ***********************************************************************/
+public class BridgeHandStateController
+{
+
+	/**
+	 * Used to collect logging output for this class
+	 */
+	private static Category s_cat = Category.getInstance(BridgeHandStateController.class.getName());
+
+	//--------------------------------------------------
+	// CONSTANTS
+	//--------------------------------------------------
+	
+	/** max time to wait before checking state again (ensures we do not miss a notify event and hang) */
+	public static final long STATE_WAIT_TIME_MILLIS = 1000;
+
+	//--------------------------------------------------
+	// CONFIGURATION MEMBER DATA
+	//--------------------------------------------------
+	
+	/** the game data */
+	BridgeHand m_bridgeHand;
+
+	/** If set, state machine transitions to the indicated state upon wakeup */
+	BridgeHandState		m_forceNewState		= null;
+
+	//--------------------------------------------------
+	// INTERNAL MEMBER DATA
+	//--------------------------------------------------
+
+	/** The current state.  Default is the initial game state: SCAN_BLIND_HANDS */
+	BridgeHandState		m_currentState		= BridgeHandState.SCAN_BLIND_HANDS;
+
+	//--------------------------------------------------
+	// CONSTRUCTORS
+	//--------------------------------------------------
+	
+	public BridgeHandStateController ( BridgeHand p_bridgeHand )
+	{
+		m_bridgeHand = p_bridgeHand;
+	}
+
+	//--------------------------------------------------
+	// METHODS
+	//--------------------------------------------------
+	
+	/***********************************************************************
+	 * Main processing loop.
+	 * 
+	 * This waits for an event (any event) and then invokes the checkState() method
+	 * of the current state, to see if the system should transition to a new
+	 * state.  On entry, the onEnter() method is invoked for the current state
+	 * and on every state transition.  If checkState() returns null, the loop
+	 * terminates.
+	 * 
+	 * Event generators, such as keyboard controllers and card antennas update
+	 * state and issue a notify to let this method check the state.
+	 ***********************************************************************/
+	public synchronized void runStateMachine ()
+	{
+		if (m_currentState == null) return;
+
+		m_currentState.getControllerState().onEntry(m_bridgeHand);
+
+		while (true)
+		{
+			BridgeHandState newState = m_currentState.getControllerState().checkState();
+			if (newState == null)
+			{
+				if (s_cat.isDebugEnabled())
+					s_cat.debug("runStateMachine: transition from " + m_currentState + " to exit");
+				break;
+			}
+			if (newState != m_currentState)
+			{
+				if (s_cat.isDebugEnabled()) s_cat.debug("runStateMachine: transition from "
+														+ m_currentState + " to " + newState);
+				m_currentState = newState;
+				m_currentState.getControllerState().onEntry(m_bridgeHand);
+			}
+			else
+			{
+				try
+				{
+					// wait for an event to be processed, but keep checking periodically, just in case
+					wait(STATE_WAIT_TIME_MILLIS);
+				}
+				catch (InterruptedException e)
+				{
+					s_cat.error("runStateMachine: wait interrupted with exception: " + e);
+				}
+			}
+		}
+	}
+
+	public synchronized void notifyStateMachine ()
+	{
+		notify();
+	}
+	//--------------------------------------------------
+	// HELPER METHODS
+	//--------------------------------------------------
+
+	//--------------------------------------------------
+	// ACCESSORS
+	//--------------------------------------------------
+
+	/***********************************************************************
+	 * The current state.  Default is the initial game state: SCAN_BLIND_HANDS
+	 * @return state
+	 ***********************************************************************/
+	public BridgeHandState getCurrentState ()
+	{
+		return m_currentState;
+	}
+
+	/***********************************************************************
+	 * If set, state machine transitions to the indicated state upon wakeup.
+	 * @return the new state
+	 ***********************************************************************/
+	public BridgeHandState getForceNewState ()
+	{
+		return m_forceNewState;
+	}
+
+	/***********************************************************************
+	 * If set, state machine transitions to the indicated state upon wakeup.
+	 * @param p_forceNewState the new state
+	 ***********************************************************************/
+	public void setForceNewState ( BridgeHandState p_forceNewState )
+	{
+		m_forceNewState = p_forceNewState;
+	}
+
+}

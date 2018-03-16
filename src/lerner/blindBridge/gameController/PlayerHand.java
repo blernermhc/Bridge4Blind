@@ -9,6 +9,10 @@ import java.util.Set;
 
 import org.apache.log4j.Category;
 
+import model.Card;
+import model.Direction;
+import model.Suit;
+
 /***********************************************************************
  * TODO
  ***********************************************************************/
@@ -84,6 +88,16 @@ public class PlayerHand
 			if (card.getSuit() == p_suit) return false;
 		}
 		return true;
+	}
+	
+	/***********************************************************************
+	 * Returns true if the hand has been completely scanned.
+	 * @return true if hand is complete, false if we need to wait for more cards
+	 ***********************************************************************/
+	public boolean isComplete ()
+	{
+		if (m_cards.size() == BridgeHand.CARDS_IN_HAND) return true;
+		return false;
 	}
 	//--------------------------------------------------
 	// HELPER METHODS

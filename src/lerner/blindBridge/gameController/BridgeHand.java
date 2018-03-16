@@ -15,31 +15,17 @@ import org.apache.log4j.Category;
 
 import lerner.blindBridge.gameController.KeyboardController.KBD_MESSAGE;
 import lerner.blindBridge.gameController.KeyboardController.MULTIBYTE_MESSAGE;
+import model.BridgeScore;
+import model.Card;
+import model.Contract;
+import model.Direction;
+import model.GameListener;
+import model.Rank;
+import model.Suit;
 
 /***********************************************************************
- * Represents the state of the current hand and manages the hand play
- * The hand can be in one of the following states (HandState m_handState):
- * 
- * <br>SCAN_BLIND_HANDS - waits for all of the Blind player's Keyboard
- * Controllers to report all 13 cards in their hand.  Once all are complete,
- * the state moves on to:
- * 
- *  <br>ENTER_CONTRACT - waits for the players to complete the bidding process
- *  and come up with a contract.  Once someone enters the Contract, the state
- *  moves on to:
- *  
- *  <br>WAIT_FOR_FIRST_PLAYER - waits for the first player to play a card.
- *  This differs from waiting for the general state of waiting for the next
- *  player to play because special actions occur following this state. Once
- *  the first player has played a card, the state moves on to:
- *  
- *  <br>SCAN_DUMMY - waits for someone to scan in all of the dummy's cards.
- *  Once complete, the state moves on to:
- *  
- *  <br>WAIT_FOR_NEXT_PLAYER - waits for the next player (m_nextPlayerId) to
- *  play a card.  This could come from an antenna, or a blind player's
- *  Keyboard Controller.  This is the final state until the hand is complete.
- *  At which time the state moves back to SCAN_BLIND_HANDS.
+ * Represents the data representing the current state of the current hand
+ * and manages the hand play.
  *  
  *  <P>This class supports the following events, which can trigger state
  *  changes.
@@ -58,6 +44,7 @@ import lerner.blindBridge.gameController.KeyboardController.MULTIBYTE_MESSAGE;
  *  in response to a request from the Keybaord Controller to be reset.
  *  We need to wait for the request, so we know it is listening.  This
  *  can be run in any hand state and does not change the hand state.
+ *  
  ***********************************************************************/
 public class BridgeHand
 {
@@ -67,49 +54,51 @@ public class BridgeHand
 	 */
 	private static Category s_cat = Category.getInstance(BridgeHand.class.getName());
 
-	public enum HandState {
-		  SCAN_BLIND_HANDS
-		  , ENTER_CONTRACT
-		  , WAIT_FOR_FIRST_PLAYER
-		  , SCAN_DUMMY
-		  , WAIT_FOR_NEXT_PLAYER
-		  , TRICK_COMPLETE
-		  , HAND_COMPLETE
-	};
-	
 	//--------------------------------------------------
 	// CONSTANTS
 	//--------------------------------------------------
+	
+	/** Number of cards to make a complete player hand */
+	public static final int	CARDS_IN_HAND	= 13;
 
 	//--------------------------------------------------
-	// CONFIGURATION MEMBER DATA
+	// MEMBER DATA
 	//--------------------------------------------------
-	
-	private HandState			m_handState		= HandState.SCAN_BLIND_HANDS;
-	
+
 	// hand data
-	private Map<Direction, PlayerHand> m_hands;
+	private Map<Direction, PlayerHand> 		m_hands;
 
 	/** for dealing complete hands for testing */
-	private Map<Direction, PlayerHand> m_testHands;
+	private Map<Direction, PlayerHand> 		m_testHands;
 	
 	private Map<Direction, List<CardPlay>>	m_tricksTaken;
 	
-	private Suit					m_currentTrump;
+	private Suit								m_currentTrump;
 	
-	private Contract				m_contract;
+	private Contract							m_contract;
 
-	private Direction				m_dummyPosition;
+	private Direction						m_dummyPosition;
 	
 	// trick data
 	
-	private List<CardPlay> 		m_currentTrick;
+	private List<CardPlay> 					m_currentTrick;
 	
-	private Suit					m_currentSuit;
+	private Suit								m_currentSuit;
 
-	private Direction				m_nextPlayer;
+	private Direction						m_nextPlayer;
 	
-	private Map<Direction, KeyboardController>		m_keyboardControllers;
+	private Map<Direction, KeyboardController>		m_keyboardControllers = new HashMap<>();
+
+	private Map<Direction, AntennaController>		m_antennaControllers = new HashMap<>();
+
+	/** all of the objects that may need to be notified of state changes */
+	private List<GameListener>				m_gameListeners = new ArrayList<>();;
+	
+	/** the state controller engine */
+	private BridgeHandStateController		m_bridgeHandStateController;
+	
+	/** The current score of the bridge game */
+	private BridgeScore						m_bridgeScore = new BridgeScore();
 
 	//--------------------------------------------------
 	// INTERNAL MEMBER DATA
@@ -119,17 +108,20 @@ public class BridgeHand
 	// CONSTRUCTORS
 	//--------------------------------------------------
 	
-	public BridgeHand (Map<Direction, KeyboardController> p_keyboardControllers)
+	public BridgeHand ()
 	{
-		m_keyboardControllers = p_keyboardControllers;
+		m_bridgeHandStateController = new BridgeHandStateController(this);
+		
 		resetHand();
 	}
 	
+	//--------------------------------------------------
+	// CONFIGURATION METHODS
+	//--------------------------------------------------
 	private void resetTrick ()
 	{
 		m_currentTrick	= new ArrayList<>();
 		m_currentSuit	= null;
-		m_handState = HandState.WAIT_FOR_FIRST_PLAYER;
 	}
 	
 	private void resetHand ()
@@ -152,8 +144,18 @@ public class BridgeHand
 		list = new ArrayList<>();
 		m_tricksTaken.put(Direction.EAST, list);
 		m_tricksTaken.put(Direction.WEST, list);	// E and W use the same list
+		
+		m_bridgeHandStateController.setForceNewState(BridgeHandState.SCAN_BLIND_HANDS);
 	}
 
+	/***********************************************************************
+	 * Starts the state machine
+	 ***********************************************************************/
+	public void startGame()
+	{
+		m_bridgeHandStateController.runStateMachine();
+	}
+	
 	//--------------------------------------------------
 	// EVENT METHODS (PUBLIC)
 	//--------------------------------------------------
@@ -164,21 +166,10 @@ public class BridgeHand
 	 ***********************************************************************/
 	public boolean evt_startNewHand ()
 	{
-		if (s_cat.isDebugEnabled()) s_cat.debug("evt_startNewHand: entered.  State: " + m_handState);
+		if (s_cat.isDebugEnabled()) s_cat.debug("evt_startNewHand: entered.");
 
 		resetHand();
-		for (KeyboardController kbdController : m_keyboardControllers.values())
-		{
-			kbdController.send_simpleMessage(KBD_MESSAGE.NEW_HAND);
-		}
-		for (KeyboardController kbdController : m_keyboardControllers.values())
-		{
-			kbdController.send_simpleMessage(KBD_MESSAGE.SCAN_HAND);
-		}
-		m_handState = HandState.SCAN_BLIND_HANDS;
 
-		if (s_cat.isDebugEnabled()) s_cat.debug("evt_startNewHand: finished.  State: " + m_handState);
-			
 		return true;
 	}
 	
@@ -191,12 +182,13 @@ public class BridgeHand
 	 ***********************************************************************/
 	public boolean evt_addScannedCard (Direction p_direction, Card p_card)
 	{
-		if (s_cat.isDebugEnabled()) s_cat.debug("evt_addScannedCard: entered.  State: " + m_handState
+		if (s_cat.isDebugEnabled()) s_cat.debug("evt_addScannedCard: entered for"
 		                                        + " player: " + p_direction + " card: " + p_card);
 
-		if (m_handState != HandState.SCAN_BLIND_HANDS && m_handState != HandState.SCAN_DUMMY)
+		BridgeHandState currentState = m_bridgeHandStateController.getCurrentState();
+		if (currentState != BridgeHandState.SCAN_BLIND_HANDS && currentState != BridgeHandState.SCAN_DUMMY)
 		{
-			s_cat.error("evt_addScannedCard: ignoring event since state is not SCAN_BLIND_HANDS or SCAN_DUMMY.  State: " + m_handState);
+			s_cat.error("evt_addScannedCard: ignoring event since state is not SCAN_BLIND_HANDS or SCAN_DUMMY.  State: " + currentState);
 			return false;
 		}
 		
@@ -208,41 +200,17 @@ public class BridgeHand
 		}
 		hand.addCard(p_card);
 		
-		boolean handComplete = (hand.m_cards.size() == 13);
+		boolean handComplete = (hand.m_cards.size() == CARDS_IN_HAND);
 		
-		for (KeyboardController kbdController : m_keyboardControllers.values())
+		// notify listeners of new card
+		for (GameListener gameListener : m_gameListeners)
 		{
-			if (p_direction == m_dummyPosition || p_direction == kbdController.getMyPosition())
-			{
-				kbdController.send_multiByteMessage(MULTIBYTE_MESSAGE.ADD_CARD_TO_HAND, p_direction, p_card);
-				if (handComplete)
-				{
-					kbdController.send_simpleMessage(KBD_MESSAGE.HAND_COMPLETE);
-				}
-			}
+			gameListener.cardScanned(p_direction, p_card, handComplete);
 		}
 		
-		if (m_handState == HandState.SCAN_BLIND_HANDS && handComplete)
-		{
-			boolean complete = true;
-			for (KeyboardController kbdController : m_keyboardControllers.values())
-			{
-				PlayerHand blindHand = m_hands.get(kbdController.getMyPosition());
-				if (blindHand == null || blindHand.m_cards.size() != 13)
-				{
-					complete = false;
-					break;
-				}
-			}
-			if (complete) sc_finishedBlindScan();
-		}
-
-		if (m_handState == HandState.SCAN_DUMMY && handComplete && p_direction == m_dummyPosition)
-		{
-			sc_finishedDummyScan();
-		}
+		if (s_cat.isDebugEnabled()) s_cat.debug("evt_addScannedCard: finished.");
 		
-		if (s_cat.isDebugEnabled()) s_cat.debug("evt_addScannedCard: finished.  State: " + m_handState);
+		m_bridgeHandStateController.notifyStateMachine();
 
 		return true;
 	}
@@ -258,38 +226,22 @@ public class BridgeHand
 	 ***********************************************************************/
 	public boolean evt_setContract ( Contract p_contract )
 	{
-		if (s_cat.isDebugEnabled()) s_cat.debug("evt_setContract: entered.  State: " + m_handState
+		if (s_cat.isDebugEnabled()) s_cat.debug("evt_setContract: entered for "
 		                                        + " contract: " + p_contract);
 
-		if (m_handState != HandState.ENTER_CONTRACT)
+		BridgeHandState currentState = m_bridgeHandStateController.getCurrentState();
+		if (currentState != BridgeHandState.ENTER_CONTRACT)
 		{
-			s_cat.error("evt_setContract: ignoring event since state is not ENTER_CONTRACT.  State: " + m_handState);
+			s_cat.error("evt_setContract: ignoring event since state is not ENTER_CONTRACT.  State: " + currentState);
 			return false;
 		}
 		
 		m_contract = p_contract;
 		m_currentTrump = p_contract.getTrump();
-		for (KeyboardController kbdController : m_keyboardControllers.values())
-		{
-			kbdController.send_contract(p_contract);
-		}
-
-		// set first player
-		m_nextPlayer = p_contract.getBidWinner().getNextDirection();
-		m_dummyPosition = m_nextPlayer.getNextDirection();
-		for (KeyboardController kbdController : m_keyboardControllers.values())
-		{
-			kbdController.send_multiByteMessage(MULTIBYTE_MESSAGE.SET_NEXT_PLAYER, m_nextPlayer);
-		}
-		for (KeyboardController kbdController : m_keyboardControllers.values())
-		{
-			kbdController.send_multiByteMessage(MULTIBYTE_MESSAGE.SET_DUMMY, m_dummyPosition);
-		}
-
-		// update state
-		m_handState = HandState.WAIT_FOR_FIRST_PLAYER;
-
-		if (s_cat.isDebugEnabled()) s_cat.debug("evt_setContract: finished.  State: " + m_handState);
+		
+		m_bridgeHandStateController.notifyStateMachine();
+		
+		if (s_cat.isDebugEnabled()) s_cat.debug("evt_setContract: finished.");
 
 		return true;
 	}
@@ -303,12 +255,13 @@ public class BridgeHand
 	 ***********************************************************************/
 	public boolean evt_playCard (Direction p_direction, Card p_card)
 	{
-		if (s_cat.isDebugEnabled()) s_cat.debug("evt_playCard: entered.  State: " + m_handState
+		if (s_cat.isDebugEnabled()) s_cat.debug("evt_playCard: entered for"
 		                                        + " player: " + p_direction + " card: " + p_card);
 
-		if (m_handState != HandState.WAIT_FOR_FIRST_PLAYER && m_handState != HandState.WAIT_FOR_NEXT_PLAYER)
+		BridgeHandState currentState = m_bridgeHandStateController.getCurrentState();
+		if (currentState != BridgeHandState.WAIT_FOR_FIRST_PLAYER && currentState != BridgeHandState.WAIT_FOR_NEXT_PLAYER)
 		{
-			s_cat.error("evt_addScannedCard: ignoring event since state is not WAIT_FOR_FIRST_PLAYER or WAIT_FOR_NEXT_PLAYER.  State: " + m_handState);
+			s_cat.error("evt_addScannedCard: ignoring event since state is not WAIT_FOR_FIRST_PLAYER or WAIT_FOR_NEXT_PLAYER.  State: " + currentState);
 			return false;
 		}
 
@@ -352,33 +305,20 @@ public class BridgeHand
 		CardPlay cardPlay = new CardPlay(p_direction, p_card);
 		m_currentTrick.add(cardPlay);
 		
-		for (KeyboardController kbdController : m_keyboardControllers.values())
+		// notify listeners of new card
+		for (GameListener gameListener : m_gameListeners)
 		{
-			kbdController.send_multiByteMessage(MULTIBYTE_MESSAGE.PLAY_CARD, p_direction, p_card);
+			gameListener.cardPlayed(p_direction, p_card);
 		}
 		
 		if (m_currentTrick.size() == 4)
 		{
+			//TODO: remove/fix this
 			sc_finishTrick();
 			// sets next player to winner of trick
 		}
-		else if (m_currentTrick.size() == 1)
-		{
-			sc_firstCardPlayed(cardPlay);
-			m_nextPlayer = m_nextPlayer.getNextDirection();
-		}
-		else
-		{
-			m_handState = HandState.WAIT_FOR_NEXT_PLAYER;
-			m_nextPlayer = m_nextPlayer.getNextDirection();
-		}
 			
-		for (KeyboardController kbdController : m_keyboardControllers.values())
-		{
-			kbdController.send_multiByteMessage(MULTIBYTE_MESSAGE.SET_NEXT_PLAYER, m_nextPlayer);
-		}
-		
-		if (s_cat.isDebugEnabled()) s_cat.debug("evt_playCard: finished.  State: " + m_handState);
+		if (s_cat.isDebugEnabled()) s_cat.debug("evt_playCard: finished.");
 
 		return true;
 	}
@@ -391,7 +331,7 @@ public class BridgeHand
 	 ***********************************************************************/
 	public void evt_resetKeyboard (KeyboardController p_kbdController)
 	{
-		if (s_cat.isDebugEnabled()) s_cat.debug("evt_resetKeyboard: entered.  State: " + m_handState
+		if (s_cat.isDebugEnabled()) s_cat.debug("evt_resetKeyboard: entered for"
 		                                        + " position: " + p_kbdController.getMyPosition());
 
 
@@ -476,7 +416,7 @@ public class BridgeHand
 		p_kbdController.setMessageReserveMillis(1000); // ensure at least one second between reset start and finish audio
 		p_kbdController.send_simpleMessage(KBD_MESSAGE.FINISH_RELOAD);
 		
-		if (s_cat.isDebugEnabled()) s_cat.debug("evt_resetKeyboard: finished.  State: " + m_handState);
+		if (s_cat.isDebugEnabled()) s_cat.debug("evt_resetKeyboard: finished.");
 	}
 	
 	
@@ -511,68 +451,63 @@ public class BridgeHand
 	}
 
 	//--------------------------------------------------
-	// STATE CHANGE HELPER METHODS (PRIVATE)
+	// DATA ACCESS HELPER METHODS (used by ControllerState objects)
 	//--------------------------------------------------
 	
 	/***********************************************************************
-	 * Actions to take once all blind keyboard controllers have completely scanned their cards.
-	 * Changes state to ENTER_CONTRACT
+	 * Returns true if the hands for all of the Blind Keyboard Controllers
+	 * have been completely scanned.
+	 * @return true if all are complete, false if waiting for more cards
 	 ***********************************************************************/
-	private void sc_finishedBlindScan ()
+	public boolean testBlindHandsComplete()
 	{
-		m_handState = HandState.ENTER_CONTRACT;
-		
-		for (KeyboardController kbdController : m_keyboardControllers.values())
+		// test hands for each direction with a Blind Keyboard Controller
+		for (Direction direction : m_keyboardControllers.keySet())
 		{
-			kbdController.send_simpleMessage(KBD_MESSAGE.ENTER_CONTRACT);
+			PlayerHand hand = m_hands.get(direction); 
+			if (hand == null || ! hand.isComplete()) return false;
 		}
-		if (s_cat.isDebugEnabled()) s_cat.debug("sc_finishedBlindScan: finished.  State: " + m_handState);
+		return true;
 	}
-
+	
 	/***********************************************************************
-	 * Actions to take once the dummy has completely scanned their cards
-	 * Changes state to WAIT_FOR_NEXT_PLAYER
+	 * Returns true if contract is complete (GUI enters contract one component at a time).
+	 * @return true if complete, false, otw.
 	 ***********************************************************************/
-	private void sc_finishedDummyScan ()
+	public boolean testContractComplete ()
 	{
-		m_handState = HandState.WAIT_FOR_NEXT_PLAYER;
-		if (s_cat.isDebugEnabled()) s_cat.debug("sc_finishedDummyScan: finished.  State: " + m_handState);
+		if (m_contract == null) return false;
+		return m_contract.isComplete();
 	}
-
+	
 	/***********************************************************************
-	 * Special processing run after the first card of a trick has been played.
-	 * Sets the current suit for the trick.
-	 * Changes the state to either SCAN_DUMMY or WAIT_FOR_NEXT_PLAYER.
-	 * @param p_cardPlay	card being played
+	 * Returns true if the dummy hand has been completely scanned.
+	 * @return true if hand is complete, false otherwise.
 	 ***********************************************************************/
-	private void sc_firstCardPlayed (CardPlay p_cardPlay)
+	public boolean testDummyComplete ()
 	{
-		m_currentSuit = p_cardPlay.getCard().getSuit();
-		
-		if (m_hands.get(m_dummyPosition) == null)
-		{
-			PlayerHand hand = new PlayerHand(m_dummyPosition);
-			m_hands.put(m_dummyPosition, hand);
-			m_handState = HandState.SCAN_DUMMY;
-			
-			// run Keyboard Controller hooks
-			for (KeyboardController kbdController : m_keyboardControllers.values())
-			{
-				kbdController.send_simpleMessage(KBD_MESSAGE.SCAN_DUMMY);
-			}
-		}
+		PlayerHand hand = m_hands.get(m_dummyPosition); 
+		if (hand == null || ! hand.isComplete()) return false;
+		return true;
+	}
+	
+	/***********************************************************************
+	 * Returns true if all tricks have been completed.
+	 * @return true if hand is complete, false otherwise
+	 ***********************************************************************/
+	public boolean testHandComplete ()
+	{
+		if (m_tricksTaken.get(Direction.NORTH).size() + m_tricksTaken.get(Direction.EAST).size() >= 13)
+			return true;
 		else
-		{
-			m_handState = HandState.WAIT_FOR_NEXT_PLAYER;
-		}
-		if (s_cat.isDebugEnabled()) s_cat.debug("sc_firstCardPlayed: finished.  State: " + m_handState);
+			return false;
 	}
 	
 	/***********************************************************************
 	 * Activities that happen at the end of a trick.
-	 * Sets state to WAIT_FOR_FIRST_PLAYER
+	 * @return The position of the winner of the trick 
 	 ***********************************************************************/
-	private void sc_finishTrick ()
+	public Direction sc_finishTrick ()
 	{
 		// determine winner
 		CardPlay best = null;
@@ -589,31 +524,10 @@ public class BridgeHand
 		
 		resetTrick();
 		m_nextPlayer = best.getPlayer();
+		
+		return best.getPlayer();
+	}
 
-		for (KeyboardController kbdController : m_keyboardControllers.values())
-		{
-			kbdController.send_multiByteMessage(MULTIBYTE_MESSAGE.TRICK_TAKEN, best.getPlayer());
-		}
-		
-		if (m_tricksTaken.get(Direction.NORTH).size() + m_tricksTaken.get(Direction.EAST).size() >= 13)
-		{
-			sc_finishHand();
-		}
-		
-		m_handState = HandState.WAIT_FOR_FIRST_PLAYER;
-		if (s_cat.isDebugEnabled()) s_cat.debug("sc_finishTrick: finished.  State: " + m_handState);
-	}
-	
-	/***********************************************************************
-	 * Actions taken when hand is finished (all thirteen tricks taken).
-	 ***********************************************************************/
-	private void sc_finishHand()
-	{
-		scoreContract();
-		evt_startNewHand();
-		if (s_cat.isDebugEnabled()) s_cat.debug("sc_finishHand: finished.  State: " + m_handState);
-	}
-	
 	//--------------------------------------------------
 	// HELPER METHODS
 	//--------------------------------------------------
@@ -663,7 +577,7 @@ public class BridgeHand
 	/***********************************************************************
 	 * Determines who gets what points
 	 ***********************************************************************/
-	private void scoreContract ()
+	public void scoreContract ()
 	{
 		//TODO: scoring not implemented yet
 	}
@@ -742,7 +656,7 @@ public class BridgeHand
 		StringBuilder out = new StringBuilder();
 		
 		out.append("BridgeHand:");
-		out.append("\n  Hand State: " + m_handState);
+		out.append("\n  Hand State: " + m_bridgeHandStateController.getCurrentState());
 		out.append("\n  Contract: " + m_contract);
 		out.append("\n  Current Suit: " + m_currentSuit);
 		out.append("\n  Current Trump: " + m_currentTrump);
@@ -771,13 +685,26 @@ public class BridgeHand
 	//--------------------------------------------------
 
 	/***********************************************************************
-	 * The current state of play 
-	 * @return current state
+	 * Adds a keyboard controller to the configuration
+	 * @param p_direction		the position of the controller
+	 * @param p_device		the device path to use (attempts to find one if null)
 	 ***********************************************************************/
-	public HandState getHandState ()
+	public void addKeyboardController (Direction p_direction, KeyboardController p_kbdController)
 	{
-		return m_handState;
+		m_keyboardControllers.put(p_direction, p_kbdController);
+		m_gameListeners.add(p_kbdController);
 	}
+	
+	/***********************************************************************
+	 * Adds an antenna controller to the configuration
+	 * @param p_direction		the position of the controller
+	 * @param p_device		the device path to use (attempts to find one if null)
+	 ***********************************************************************/
+	public void addAntennaController (Direction p_direction, AntennaController p_antController)
+	{
+		m_antennaControllers.put(p_direction, p_antController);
+	}
+	
 
 	/***********************************************************************
 	 * Hands as known so far
@@ -817,6 +744,16 @@ public class BridgeHand
 	}
 
 	/***********************************************************************
+	 * The current suit (suit of first card played)
+	 * May be null.
+	 * @param p_currentSuit current suit
+	 ***********************************************************************/
+	public void setCurrentSuit ( Suit p_currentSuit )
+	{
+		m_currentSuit = p_currentSuit;
+	}
+
+	/***********************************************************************
 	 * The current trump suit.
 	 * May be null.
 	 * @return trump suit
@@ -847,6 +784,16 @@ public class BridgeHand
 	}
 
 	/***********************************************************************
+	 * Next player to play a card.
+	 * May be null.
+	 * @param p_nextPlayer next player
+	 ***********************************************************************/
+	public void setNextPlayer ( Direction p_nextPlayer )
+	{
+		m_nextPlayer = p_nextPlayer;
+	}
+
+	/***********************************************************************
 	 * Position of the dummy.
 	 * May be null
 	 * @return dummy position
@@ -854,6 +801,52 @@ public class BridgeHand
 	public Direction getDummyPosition ()
 	{
 		return m_dummyPosition;
+	}
+
+	/***********************************************************************
+	 * Position of the dummy.
+	 * May be null
+	 * @param p_dummyPosition dummy position
+	 ***********************************************************************/
+	public void setDummyPosition ( Direction p_dummyPosition )
+	{
+		m_dummyPosition = p_dummyPosition;
+	}
+
+	/***********************************************************************
+	 * The objects to be notified of various events.
+	 * @return list of listeners
+	 ***********************************************************************/
+	public List<GameListener> getGameListeners ()
+	{
+		return m_gameListeners;
+	}
+
+	/***********************************************************************
+	 * The current score of the bridge game
+	 * @return score
+	 ***********************************************************************/
+	public BridgeScore getBridgeScore ()
+	{
+		return m_bridgeScore;
+	}
+
+	/***********************************************************************
+	 * Get the Keyboard Controller map (Direction, KeyboardController).
+	 * @return keyboard controllers
+	 ***********************************************************************/
+	public Map<Direction, KeyboardController> getKeyboardControllers ()
+	{
+		return m_keyboardControllers;
+	}
+
+	/***********************************************************************
+	 * Get the Antenna Controller map (Direction, AntennaController).
+	 * @return antenna controllers
+	 ***********************************************************************/
+	public Map<Direction, AntennaController> getAntennaControllers ()
+	{
+		return m_antennaControllers;
 	}
 
 }

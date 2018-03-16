@@ -51,7 +51,7 @@ public class ScanningBlindGUI extends JPanel implements GameListener {
 	}
 
 	@Override
-	public void cardScanned(Card card) {
+	public void cardScanned(Direction p_direction, Card p_card, boolean p_handComplete) {
 	}
 
 	@Override

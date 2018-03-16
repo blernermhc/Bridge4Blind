@@ -911,12 +911,11 @@ public class GameGUI extends JFrame implements GameListener {
 
 	/**
 	 * Updates the antenna label after a card is scanned
-	 * 
-	 * @param card
+	 * @param p_card
 	 *            the card just scanned
 	 */
 	@Override
-	public void cardScanned(Card card) {
+	public void cardScanned(Direction p_direction, Card p_card, boolean p_handComplete) {
 		// setAntennaLabel(game.getCurrentHand());
 	}
 

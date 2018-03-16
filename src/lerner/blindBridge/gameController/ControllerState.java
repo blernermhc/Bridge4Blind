@@ -4,19 +4,16 @@
 
 package lerner.blindBridge.gameController;
 
-import model.Card;
-import model.Direction;
-
 /***********************************************************************
- * Represents a card played by a player
+ * Interface of all state controller state objects
  ***********************************************************************/
-public class CardPlay
+public abstract class ControllerState
 {
 
 	/**
 	 * Used to collect logging output for this class
 	 */
-	// private static Category s_cat = Category.getInstance(CardPlay.class.getName());
+	// private static Category s_cat = Category.getInstance(ControllerState.class.getName());
 
 	//--------------------------------------------------
 	// CONSTANTS
@@ -26,9 +23,8 @@ public class CardPlay
 	// CONFIGURATION MEMBER DATA
 	//--------------------------------------------------
 	
-	private Direction			m_direction;
-	
-	private	Card				m_card;
+	/** the game data */
+	BridgeHand m_bridgeHand;
 
 	//--------------------------------------------------
 	// INTERNAL MEMBER DATA
@@ -37,64 +33,50 @@ public class CardPlay
 	//--------------------------------------------------
 	// CONSTRUCTORS
 	//--------------------------------------------------
-	
-	public CardPlay (Direction p_direction, Card p_card)
-	{
-		m_direction		= p_direction;
-		m_card		= p_card;
-	}
 
 	//--------------------------------------------------
 	// METHODS
 	//--------------------------------------------------
+	
+	/***********************************************************************
+	 * Code to execute when the state machine transitions to this state.
+	 * Some states update game data, send messages to controllers and listeners.
+	 * @param p_bridgeHand game data (save to use in checkState, if necessary)
+	 ***********************************************************************/
+	public abstract void onEntry( BridgeHand p_bridgeHand );
+	
+	/***********************************************************************
+	 * Check the game state to determine if it is time to transition to a new state
+	 * @return the new state, if the conditions are met, or the current state
+	 * to wait for more data changes.  Returns null to break out of state machine
+	 * loop.
+	 ***********************************************************************/
+	public abstract BridgeHandState checkState();
 
 	//--------------------------------------------------
 	// HELPER METHODS
 	//--------------------------------------------------
-	
-	public String toString()
-	{
-		return "CardPlay: " + m_direction + " " + m_card;
-	}
 
 	//--------------------------------------------------
 	// ACCESSORS
 	//--------------------------------------------------
 
 	/***********************************************************************
-	 * Player playing the card
-	 * @return player
+	 * The BridgeHand managing overall game play
+	 * @return the BridgeHand object
 	 ***********************************************************************/
-	public Direction getPlayer ()
+	public BridgeHand getBridgeHand ()
 	{
-		return m_direction;
+		return m_bridgeHand;
 	}
 
 	/***********************************************************************
-	 * Player playing the card
-	 * @param p_direction player
+	 * The BridgeHand managing overall game play
+	 * @param p_bridgeHand the BridgeHand object
 	 ***********************************************************************/
-	public void setPlayer ( Direction p_direction )
+	public void setBridgeHand ( BridgeHand p_bridgeHand )
 	{
-		m_direction = p_direction;
+		m_bridgeHand = p_bridgeHand;
 	}
-
-	/***********************************************************************
-	 * Card played
-	 * @return card
-	 ***********************************************************************/
-	public Card getCard ()
-	{
-		return m_card;
-	}
-
-	/***********************************************************************
-	 * Card played
-	 * @param p_card card
-	 ***********************************************************************/
-	public void setCard ( Card p_card )
-	{
-		m_card = p_card;
-	}
-
+	
 }

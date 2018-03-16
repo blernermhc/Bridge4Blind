@@ -22,31 +22,23 @@ public interface GameListener
 	public void gameReset();
 
 	/**
-	 * Called when a card is added to the trick
-	 * @param turn the player who played the card
-	 * @param card the card played
+	 * Called when waiting for all of the blind hands to be scanned in
 	 */
-	public void cardPlayed(Direction turn, Card card);
+	public void scanBlindHands();
 
 	/**
-	 * Called when a card is scanned into the blind or dummy hand or 
-	 * scanned over the id antenna
-	 * @param card the card scanned
+	 * Called when waiting for the dummy hand to be scanned in
 	 */
-	public void cardScanned(Card card);
-
-	/**
-	 * Called at the end of a trick
-	 * @param winner the player who won the trick
-	 */
-	public void trickWon(Direction winner);
-
-	/**
-	 * Called when bidding is complete
-	 * @param contract the contract for the hand
-	 */
-	public void contractSet(Contract contract);
+	public void scanDummyHand();
 	
+	/**
+	 * Called when a card is scanned into the blind or dummy hand
+	 * @param p_direction	the player whose hand the card belongs to
+	 * @param p_card			the card scanned
+	 * @param p_handComplete true if card completes hand
+	 */
+	public void cardScanned(Direction p_direction, Card p_card, boolean p_handComplete);
+
 	/**
 	 * Called when all of the blind hands have been completely scanned in
 	 */
@@ -56,5 +48,53 @@ public interface GameListener
 	 * Called when the dummy hand is completely scanned in
 	 */
 	public void dummyHandScanned();
+
+	/**
+	 * Called when contract needs to be entered
+	 */
+	public void enterContract();
+	
+	/**
+	 * Called when bidding is complete
+	 * @param contract the contract for the hand
+	 */
+	public void contractSet(Contract contract);
+	
+	/***********************************************************************
+	 * Called when the dummy position has been determined.
+	 * @param p_direction the position of the dummy
+	 ***********************************************************************/
+	public void setDummyPosition ( Direction p_direction );
+
+	/***********************************************************************
+	 * Called to indicate the position of the next player to play a card.
+	 * @param p_direction the position of the player
+	 ***********************************************************************/
+	public void setNextPlayer ( Direction p_direction );
+
+	/***********************************************************************
+	 * Called when a suit is determined for the trick (from first card played).
+	 * @param p_suit the suit
+	 ***********************************************************************/
+	public void setCurrentSuit ( Suit p_suit );
+	
+	/**
+	 * Called when a card is added to the trick
+	 * @param turn the player who played the card
+	 * @param card the card played
+	 */
+	public void cardPlayed(Direction turn, Card card);
+
+	/**
+	 * Called at the end of a trick
+	 * @param winner the player who won the trick
+	 */
+	public void trickWon(Direction winner);
+	
+	/***********************************************************************
+	 * The current score of the bridge game
+	 * @param p_score score
+	 ***********************************************************************/
+	public void handComplete (BridgeScore p_score );
 
 }

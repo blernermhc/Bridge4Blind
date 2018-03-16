@@ -10,12 +10,18 @@ import gnu.io.CommPortIdentifier;
 import gnu.io.SerialPort;
 import gnu.io.SerialPortEvent;
 import gnu.io.SerialPortEventListener;
+import model.BridgeScore;
+import model.Card;
+import model.Contract;
+import model.Direction;
+import model.GameListener;
+import model.Suit;
 
 /**********************************************************************
  * Communicates with a Blind players' Keyboard Controller 
  *********************************************************************/
 
-public class KeyboardController implements SerialPortEventListener
+public class KeyboardController implements SerialPortEventListener, GameListener
 {
 	/**
 	 * Used to collect logging output for this class
@@ -48,13 +54,13 @@ public class KeyboardController implements SerialPortEventListener
 		, CLEAR_DUMMY		(3, 0)
 		, REMIND_PLAY		(4, 1000)
 		, REMIND_DUMMY		(5, 1000)
-		, HAND_COMPLETE		(6, 1000)
+		, HAND_COMPLETE		(6, 1500)
 		, ALREADY_PLAYED		(7, 2000)
 		, PRESS_TO_CONFIRM	(8, 2000)
 		, NEW_GAME			(9, 0)
 		, NEW_HAND			(10, 0)
 		, START_RELOAD		(11, 1000)
-		, FINISH_RELOAD		(12, 1000)
+		, FINISH_RELOAD		(12, 1500)
 		, ENTER_CONTRACT		(13, 1500)
 		, CANNOT_PLAY		(14, 1500)
 		;
@@ -138,15 +144,14 @@ public class KeyboardController implements SerialPortEventListener
 	 */
 	boolean m_readOneLineEventMode = false;
 	
-	/**
-	 * The position of this Keyboard Controller
-	 */
+	/** The position of this Keyboard Controller */
 	Direction m_myPosition;
 	
-	/**
-	 * The position of the partner of this controller
-	 */
+	/** The position of the partner of this controller */
 	Direction m_myPartnersPosition;
+	
+	/** The position of the dummy */
+	Direction m_dummyPosition;
 	
 	//--------------------------------------------------
 	// INTERNAL MEMBER DATA
@@ -640,6 +645,151 @@ public class KeyboardController implements SerialPortEventListener
 		// Ignore all the other eventTypes, but you should consider the other ones.
 	}
 
+	//--------------------------------------------------
+	// GAME LISTENER METHODS
+	//--------------------------------------------------
+
+	/* (non-Javadoc)
+	 * @see model.GameListener#debugMsg(java.lang.String)
+	 */
+	@Override
+	public void debugMsg ( String p_string )
+	{
+		// nothing to do
+	}
+
+	/* (non-Javadoc)
+	 * @see model.GameListener#gameReset()
+	 */
+	@Override
+	public void gameReset ()
+	{
+		send_simpleMessage(KBD_MESSAGE.NEW_HAND);
+	}
+
+	/* (non-Javadoc)
+	 * @see model.GameListener#scanBlindHands()
+	 */
+	@Override
+	public void scanBlindHands ()
+	{
+		send_simpleMessage(KBD_MESSAGE.SCAN_HAND);
+	}
+
+	/* (non-Javadoc)
+	 * @see model.GameListener#scanDummyHand()
+	 */
+	@Override
+	public void scanDummyHand ()
+	{
+		send_simpleMessage(KBD_MESSAGE.SCAN_DUMMY);
+	}
+
+	/* (non-Javadoc)
+	 * @see model.GameListener#cardScanned(model.Direction, model.Card, boolean)
+	 */
+	@Override
+	public void cardScanned ( Direction p_direction, model.Card p_card, boolean p_handComplete )
+	{
+		if (p_direction == m_myPosition || p_direction == m_dummyPosition)
+		{
+			send_multiByteMessage(MULTIBYTE_MESSAGE.ADD_CARD_TO_HAND, p_direction, p_card);
+			if (p_handComplete)
+			{
+				send_simpleMessage(KBD_MESSAGE.HAND_COMPLETE);
+			}
+		}
+	}
+
+	/* (non-Javadoc)
+	 * @see model.GameListener#blindHandsScanned()
+	 */
+	@Override
+	public void blindHandsScanned ()
+	{
+		// Nothing to do
+		// cardScanned sends hand complete notification, since this goes to only one listener)
+	}
+
+	/* (non-Javadoc)
+	 * @see model.GameListener#dummyHandScanned()
+	 */
+	@Override
+	public void dummyHandScanned ()
+	{
+		// Nothing to do
+		// cardScanned sends hand complete notification)
+	}
+
+	/* (non-Javadoc)
+	 * @see model.GameListener#enterContract()
+	 */
+	@Override
+	public void enterContract ()
+	{
+		send_simpleMessage(KBD_MESSAGE.ENTER_CONTRACT);
+	}
+
+	/* (non-Javadoc)
+	 * @see model.GameListener#contractSet(model.Contract)
+	 */
+	@Override
+	public void contractSet ( model.Contract p_contract )
+	{
+		m_dummyPosition = p_contract.getBidWinner();
+		send_contract(p_contract);
+	}
+
+	/* (non-Javadoc)
+	 * @see model.GameListener#setDummyPosition(model.Direction)
+	 */
+	public void setDummyPosition ( Direction p_direction )
+	{
+		send_multiByteMessage(MULTIBYTE_MESSAGE.SET_DUMMY, m_dummyPosition);
+	}
+
+	/* (non-Javadoc)
+	 * @see model.GameListener#setNextPlayer(model.Direction)
+	 */
+	public void setNextPlayer ( Direction p_direction )
+	{
+		send_multiByteMessage(MULTIBYTE_MESSAGE.SET_NEXT_PLAYER, p_direction);
+	}
+
+	/* (non-Javadoc)
+	 * @see model.GameListener#setNextPlayer(model.Direction)
+	 */
+	public void setCurrentSuit ( Suit p_suit )
+	{
+		// nothing to do (Arduino sets currentSuit set from first trick)
+	}
+
+	/* (non-Javadoc)
+	 * @see model.GameListener#cardPlayed(model.Direction, model.Card)
+	 */
+	@Override
+	public void cardPlayed ( Direction p_direction, Card p_card )
+	{
+		send_multiByteMessage(MULTIBYTE_MESSAGE.PLAY_CARD, p_direction, p_card);
+	}
+
+	/* (non-Javadoc)
+	 * @see model.GameListener#trickWon(model.Direction)
+	 */
+	@Override
+	public void trickWon ( model.Direction p_winner )
+	{
+		send_multiByteMessage(MULTIBYTE_MESSAGE.TRICK_TAKEN, p_winner);
+	}
+
+	/* (non-Javadoc)
+	 * @see model.GameListener#gameComplete(model.BridgeScore)
+	 */
+	public void handComplete (BridgeScore p_score )
+	{
+		send_simpleMessage(KBD_MESSAGE.HAND_COMPLETE);
+	}
+	
 	//--------------------------------------------------
 	// ACCESSORS
 	//--------------------------------------------------

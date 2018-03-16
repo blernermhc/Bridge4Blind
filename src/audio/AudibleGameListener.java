@@ -22,7 +22,7 @@ public class AudibleGameListener implements GameListener {
 	 * @param c the card to speak
 	 */
 	@Override
-	public synchronized void cardScanned(Card c){
+	public synchronized void cardScanned(Direction p_direction, Card c, boolean p_handComplete){
 		//System.out.println("AudibleGameListener: Scanned card sound added: " + c);
 		//System.out.println("SoundManager.addSound: Thread " + Thread.currentThread().getName() + " trying to get lock");
 		soundMgr.addSound(c.getSound());
@@ -135,7 +135,7 @@ public class AudibleGameListener implements GameListener {
 		listener.soundMgr.pauseSounds();
 		
 		System.out.println("Should say \"King of Diamonds\"");
-		listener.cardScanned(new Card(Rank.KING, Suit.DIAMONDS));
+		listener.cardScanned(direction, new Card(Rank.KING, Suit.DIAMONDS), null);
 		listener.soundMgr.pauseSounds();
 		
 		System.out.println("Should say \"Trick is over and won by South\"");

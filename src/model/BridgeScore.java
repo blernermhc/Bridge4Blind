@@ -2,101 +2,78 @@
 // Copyright, (c) 2008 Clickshare Service Corp., All Rights Reserved.
 //----------------------------------------------------------------------
 
-package lerner.blindBridge.gameController;
+package model;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /***********************************************************************
- * Represents the suit component of a playing card
+ * Represents the score of a Bridge Game
  ***********************************************************************/
-public enum Suit
+public class BridgeScore
 {
-	CLUBS		("C") 
-	, DIAMONDS	("D")  
-	, HEARTS		("H")
-	, SPADES		("S") 
-	, NOTRUMP	("N")
-	;
-	
+
+	/**
+	 * Used to collect logging output for this class
+	 */
+	// private static Category s_cat = Category.getInstance(BridgeScore.class.getName());
+
 	//--------------------------------------------------
 	// CONSTANTS
 	//--------------------------------------------------
-	
-	private static final String SOUND_FOLDER = "/sounds/suits/";
 
 	//--------------------------------------------------
 	// CONFIGURATION MEMBER DATA
 	//--------------------------------------------------
-
-	/** 
-	 * string name of the suit, used to construct the name of the file
-	 * containing the audio of this suit
-	 */
-	private String m_suitString;
+	
+	private Map<Direction, Integer[]> m_score	= new HashMap<>();
 
 	//--------------------------------------------------
 	// INTERNAL MEMBER DATA
 	//--------------------------------------------------
 
-	/** the name of the file containing the audio announcement of this suit */
-	private String m_sound;
-		
 	//--------------------------------------------------
 	// CONSTRUCTORS
 	//--------------------------------------------------
-
-	private Suit(String p_suit)
-	{
-		m_suitString = p_suit;
-		m_sound = SOUND_FOLDER + m_suitString + ".WAV";
-	}
 	
+	/***********************************************************************
+	 * Creats a new score object with zero points
+	 ***********************************************************************/
+	public BridgeScore ()
+	{
+		Integer northScore[] = { new Integer(0), new Integer(0) };
+		m_score.put(Direction.NORTH, northScore);
+
+		Integer eastScore[] = { new Integer(0), new Integer(0) };
+		m_score.put(Direction.EAST, eastScore);
+}
+
 	//--------------------------------------------------
 	// METHODS
 	//--------------------------------------------------
 	
-	/**
-	 * Finds the appropriate Suit given a letter.  H = Hearts, C = Clubs, S = Spades
-	 * D = Diamonds
-	 * @param p_c the letter
-	 * @return the Suit.  Returns null if an unexpected code is found.
-	 */
-	public static Suit findSuit(char p_c)
+	public void scoreHand (Contract p_contract, int p_NSTricksTaken, int p_EWTricksTaken)
 	{
-		switch(p_c)
-		{
-		case 'H': return HEARTS;
-		case 'D': return DIAMONDS;
-		case 'S': return SPADES;
-		case 'C': return CLUBS;
-		}
-		
-		assert false;
-		return null;
+		// TODO: implement scoring
 	}
-	
+
 	//--------------------------------------------------
 	// HELPER METHODS
 	//--------------------------------------------------
-	
-	/* (non-Javadoc)
-	 * @see java.lang.Enum#toString()
-	 */
-	@Override
-	public String toString()
-	{
-		return m_suitString;
-	}
 
 	//--------------------------------------------------
 	// ACCESSORS
 	//--------------------------------------------------
-	
+
 	/***********************************************************************
-	 * The name of the file that contains the sound for this suit
-	 * @return file name
+	 * Return the current bridge score map.  The keys are NORTH, for the North/South team,
+	 * and EAST, for the East/West team.  The values are an array of Integers representing
+	 * points above the line (index 0) and below the line (index 1).
+	 * @return score map
 	 ***********************************************************************/
-	public String getSound()
+	public Map<Direction, Integer[]> getScore ()
 	{
-		return m_sound;
+		return m_score;
 	}
 
 }

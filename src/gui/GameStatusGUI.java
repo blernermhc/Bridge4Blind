@@ -251,7 +251,7 @@ public class GameStatusGUI extends JPanel implements GameListener {
 	}
 
 	@Override
-	public void cardScanned(Card card) {
+	public void cardScanned(Direction p_direction, Card p_card, boolean p_handComplete) {
 		// TODO Auto-generated method stub
 
 	}

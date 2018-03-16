@@ -632,8 +632,9 @@ public class Game {
 			}
 		}
 
+		boolean handComplete = players[pos].getHand().getNumCards() == 13;
 		for (GameListener listener : listeners) {
-			listener.cardScanned(card);
+			listener.cardScanned(dir, card, handComplete);
 		}
 
 		// int pos = dir.ordinal();
@@ -650,7 +651,7 @@ public class Game {
 	 */
 	public void cardIded(Card c) {
 		for (GameListener listener : listeners) {
-			listener.cardScanned(c);
+			listener.cardScanned(direction, c, null);
 		}
 	}
 

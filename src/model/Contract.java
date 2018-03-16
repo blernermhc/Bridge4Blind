@@ -14,6 +14,9 @@ public class Contract
 
 	public static final int MAX_BID = 7;
 	
+	/** value of numTricks indicating that this property has not been set yet */
+	public static final int CONTRACT_TRICKS_NOT_SET = 0;
+	
 	//--------------------------------------------------
 	// CONFIGURATION MEMBER DATA
 	//--------------------------------------------------
@@ -22,7 +25,7 @@ public class Contract
 	private Suit m_trumpSuit;
 	
 	/** the number of tricks in the contract */
-	private int m_contractNum;
+	private int m_contractNum = CONTRACT_TRICKS_NOT_SET;
 	
 	/** The player who won the bid */
 	private Direction m_bidWinner;
@@ -56,6 +59,17 @@ public class Contract
 	//--------------------------------------------------
 	// METHODS
 	//--------------------------------------------------
+	
+	/***********************************************************************
+	 * Returns true if contract is complete (GUI enters contract one component at a time).
+	 * @return true if complete, false, otw.
+	 ***********************************************************************/
+	public boolean isComplete ()
+	{
+		if (m_bidWinner == null || m_contractNum == 0 || m_trumpSuit == null) return false;
+		return true;
+	}
+	
 
 	//--------------------------------------------------
 	// HELPER METHODS
