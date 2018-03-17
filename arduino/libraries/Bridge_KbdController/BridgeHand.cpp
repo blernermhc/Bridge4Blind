@@ -60,32 +60,34 @@ void BridgeHand::setDummy(uint8_t p_playerId, uint8_t p_repeat)
 
 void BridgeHand::setNextPlayer(uint8_t p_playerId, uint8_t p_repeat)
 {
-  if (p_repeat) return;
+	if (!p_repeat)
+	{
+		m_nextPlayerId = p_playerId;
+		if (m_firstPlayerId == PLAYERID_NOT_SET)
+		{
+			m_firstPlayerId = m_nextPlayerId;
+			m_currentSuitId = SUITID_NOT_SET;
+		}
 
-  m_nextPlayerId = p_playerId;
-  if (m_firstPlayerId == PLAYERID_NOT_SET)
-  {
-	  m_firstPlayerId = m_nextPlayerId;
-	  m_currentSuitId = SUITID_NOT_SET;
-  }
-
-  // if my partner is the dummy, switch m_currentHandId between my hand and dummy hand
-  if (m_dummyPlayerId == m_myPartnersId)
-  {
-	  if (p_playerId == m_myPartnersId)
-		  m_currentHandId = PLAYER_DUMMY;
-	  else if (p_playerId == m_myPlayerId)
-		  m_currentHandId = PLAYER_ME;
-	  else
-	  {
-		  uint8_t playerAfterMe = m_myPlayerId + 1;
-		  if (playerAfterMe > 3) playerAfterMe = 0;
-		  if (p_playerId == playerAfterMe)
-			  m_currentHandId = PLAYER_DUMMY;
-		  else
-			  m_currentHandId = PLAYER_ME;
-	  }
-  }
+		// if my partner is the dummy, switch m_currentHandId between my hand and dummy hand
+		if (m_dummyPlayerId == m_myPartnersId)
+		{
+			if (p_playerId == m_myPartnersId)
+				m_currentHandId = PLAYER_DUMMY;
+			else if (p_playerId == m_myPlayerId)
+				m_currentHandId = PLAYER_ME;
+			else
+			{
+				uint8_t playerAfterMe = m_myPlayerId + 1;
+				if (playerAfterMe > 3)
+					playerAfterMe = 0;
+				if (p_playerId == playerAfterMe)
+					m_currentHandId = PLAYER_DUMMY;
+				else
+					m_currentHandId = PLAYER_ME;
+			}
+		}
+	}
 
 	if (p_playerId == m_myPlayerId)
 	{

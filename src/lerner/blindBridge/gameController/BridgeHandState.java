@@ -38,9 +38,9 @@ public enum BridgeHandState
 {
 	SCAN_BLIND_HANDS			(new State_ScanBlindHands())
 	, ENTER_CONTRACT			(new State_EnterContract())
-	, WAIT_FOR_FIRST_PLAYER	(new State_WaitForFirstPlayer())
+	, WAIT_FOR_FIRST_PLAYER	(new State_WaitForPlayer(true))
 	, SCAN_DUMMY				(new State_ScanDummy())
-	, WAIT_FOR_NEXT_PLAYER	(new State_WaitForNextPlayer())
+	, WAIT_FOR_NEXT_PLAYER	(new State_WaitForPlayer(false))
 	, TRICK_COMPLETE			(new State_TrickComplete())
 	, HAND_COMPLETE			(new State_HandComplete())
 	;

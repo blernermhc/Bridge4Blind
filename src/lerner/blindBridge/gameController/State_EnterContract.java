@@ -87,12 +87,6 @@ public class State_EnterContract extends ControllerState
 			gameListener.setDummyPosition(dummyPosition);
 		}
 		
-		// notify all listeners we have entered this state
-		for (GameListener gameListener : m_bridgeHand.getGameListeners())
-		{
-			gameListener.contractSet(m_bridgeHand.getContract());
-		}
-
 		return BridgeHandState.WAIT_FOR_FIRST_PLAYER;
 	}
 

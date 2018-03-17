@@ -47,9 +47,10 @@ public class State_TrickComplete extends ControllerState
 	{
 		m_bridgeHand = p_bridgeHand;
 		
+		Direction winner = m_bridgeHand.sc_finishTrick();
+
 		for (GameListener gameListener : m_bridgeHand.getGameListeners())
 		{
-			Direction winner = m_bridgeHand.sc_finishTrick();
 			gameListener.trickWon(winner);
 		}
 

@@ -122,6 +122,8 @@ public class BridgeHand
 	{
 		m_currentTrick	= new ArrayList<>();
 		m_currentSuit	= null;
+		
+		if (s_cat.isDebugEnabled()) s_cat.debug("resetTrick: finished");
 	}
 	
 	private void resetHand ()
@@ -146,6 +148,8 @@ public class BridgeHand
 		m_tricksTaken.put(Direction.WEST, list);	// E and W use the same list
 		
 		m_bridgeHandStateController.setForceNewState(BridgeHandState.SCAN_BLIND_HANDS);
+		
+		if (s_cat.isDebugEnabled()) s_cat.debug("resetHand: finished");
 	}
 
 	/***********************************************************************
@@ -208,10 +212,10 @@ public class BridgeHand
 			gameListener.cardScanned(p_direction, p_card, handComplete);
 		}
 		
-		if (s_cat.isDebugEnabled()) s_cat.debug("evt_addScannedCard: finished.");
-		
 		m_bridgeHandStateController.notifyStateMachine();
 
+		if (s_cat.isDebugEnabled()) s_cat.debug("evt_addScannedCard: finished.");
+		
 		return true;
 	}
 		
@@ -305,19 +309,8 @@ public class BridgeHand
 		CardPlay cardPlay = new CardPlay(p_direction, p_card);
 		m_currentTrick.add(cardPlay);
 		
-		// notify listeners of new card
-		for (GameListener gameListener : m_gameListeners)
-		{
-			gameListener.cardPlayed(p_direction, p_card);
-		}
-		
-		if (m_currentTrick.size() == 4)
-		{
-			//TODO: remove/fix this
-			sc_finishTrick();
-			// sets next player to winner of trick
-		}
-			
+		m_bridgeHandStateController.notifyStateMachine();
+
 		if (s_cat.isDebugEnabled()) s_cat.debug("evt_playCard: finished.");
 
 		return true;

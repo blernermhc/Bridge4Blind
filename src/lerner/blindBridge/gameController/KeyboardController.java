@@ -2,7 +2,9 @@ package lerner.blindBridge.gameController;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.ArrayDeque;
 import java.util.Enumeration;
+import java.util.Queue;
 
 import org.apache.log4j.Category;
 
@@ -21,7 +23,7 @@ import model.Suit;
  * Communicates with a Blind players' Keyboard Controller 
  *********************************************************************/
 
-public class KeyboardController implements SerialPortEventListener, GameListener
+public class KeyboardController implements SerialPortEventListener, GameListener, Runnable
 {
 	/**
 	 * Used to collect logging output for this class
@@ -92,7 +94,7 @@ public class KeyboardController implements SerialPortEventListener, GameListener
 		NOOP					(0, 0)
 		, SET_PLAYER			(1, 2000)
 		, SET_DUMMY			(2, 2000)
-		, SET_NEXT_PLAYER	(3, 0)
+		, SET_NEXT_PLAYER	(3, 2250)
 		, SET_CONTRACT		(4, 3000)
 		, ADD_CARD_TO_HAND	(5, 1500)
 		, PLAY_CARD			(6, 3000)
@@ -156,7 +158,54 @@ public class KeyboardController implements SerialPortEventListener, GameListener
 	//--------------------------------------------------
 	// INTERNAL MEMBER DATA
 	//--------------------------------------------------
+
+	/***********************************************************************
+	 * Represents a message to be sent to the hardware.  Used to queue messages
+	 * so a single thread serializes the message.
+	 ***********************************************************************/
+	class KbdMsg
+	{
+		int byte0;
+		int byte1;
+		int numBytes;	// 1 or 2
+		int reserve;
+		String description;
+		
+		public KbdMsg (int p_byte0, int p_reserve, String p_description)
+		{
+			numBytes = 1;
+			byte0 = p_byte0;
+			reserve = p_reserve;
+			description = p_description;
+		}
+		
+		public KbdMsg (int p_byte0, int p_byte1, int p_reserve, String p_description)
+		{
+			numBytes = 2;
+			byte0 = p_byte0;
+			byte1 = p_byte1;
+			reserve = p_reserve;
+			description = p_description;
+		}
+		
+		public String toString()
+		{
+			StringBuilder out = new StringBuilder();
+			out.append("KbdMsg:");
+			out.append("\n  description: " + description);
+			out.append("\n  numBytes: " + numBytes);
+			out.append("\n  byte0: " + byte0 + " (" + Integer.toBinaryString(byte0) + ")");
+			if (numBytes > 1)
+				out.append("\n  byte1: " + byte1 + " (" + Integer.toBinaryString(byte1) + ")");
+			out.append("\n  reserve: " + reserve);
+			out.append("\n");
+			
+			return out.toString();
+		}
+	};
 	
+	/** Queue of messages to send to the keyboard controller hardware */
+	Queue<KbdMsg>	m_sendMessageQueue = new ArrayDeque<>();;
 
 	SerialPort serialPort;
 
@@ -202,6 +251,9 @@ public class KeyboardController implements SerialPortEventListener, GameListener
 	 */
 	private long m_messageReserveMillis = 0;
 	
+	/** thread to serialize actual sending of messages to the controller */
+	private Thread 			m_thread;
+
 	//--------------------------------------------------
 	// CONSTRUCTORS
 	//--------------------------------------------------
@@ -216,6 +268,13 @@ public class KeyboardController implements SerialPortEventListener, GameListener
 		m_gameController = p_gameController;
 		m_device = p_device;
 		initialize();
+		
+		//--------------------------------------------------
+		// Start thread to send queued messages to keyboard controller hardware
+		//--------------------------------------------------
+	    m_thread = new Thread (this);
+	    m_thread.start();
+
 		setPlayer(p_direction);
 	}
 
@@ -263,7 +322,81 @@ public class KeyboardController implements SerialPortEventListener, GameListener
 	
 	
 	//--------------------------------------------------
-	// METHODS TO SEND EVENTS TO Keyboard Controller
+	// MESSAGE QUEUE METHODS FOR SENDING EVENTS TO Keyboard Controller
+	//--------------------------------------------------
+	
+	/***********************************************************************
+	 * Queues a message to be sent to the Keyboard Controller hardware
+	 * @param p_msg the message
+	 ***********************************************************************/
+	public void queueMessage (KbdMsg p_msg)
+	{
+		synchronized (m_sendMessageQueue)
+		{
+			m_sendMessageQueue.add(p_msg);
+			if (s_cat.isDebugEnabled()) s_cat.debug("queueMessage: queued message: " + p_msg);
+			m_sendMessageQueue.notify();
+		}
+	}
+	
+	/***********************************************************************
+	 * Waits for messages to be queued and sends them 
+	 ***********************************************************************/
+	public void sendQueuedMessages ()
+	{
+		while (true)
+		{
+			KbdMsg msg;
+
+			synchronized (m_sendMessageQueue)
+			{
+				msg = m_sendMessageQueue.poll();
+			}
+
+			if (msg != null)
+			{
+				if (s_cat.isDebugEnabled()) s_cat.debug("sendQueuedMessages: dequeued message: " + msg);
+
+				ensureMessageReserve(msg.reserve);
+				try
+				{
+					if (msg.numBytes >= 1) output.write((byte)msg.byte0);	
+					if (msg.numBytes >= 2) output.write((byte)msg.byte1);
+				}
+				catch (Exception e)
+				{
+					s_cat.error("sendQueuedMessages: failed to send message: " + msg, e);
+				}
+			}
+			
+			synchronized (m_sendMessageQueue)
+			{
+				if (m_sendMessageQueue.peek() == null)
+				{
+					try
+					{
+						m_sendMessageQueue.wait();
+					}
+					catch (InterruptedException e)
+					{
+						s_cat.error("sendQueuedMessages: wait interrupted", e);
+					}
+				}
+			}
+		}
+	}
+	
+	/* (non-Javadoc)
+	 * @see java.lang.Runnable#run()
+	 * Invoked in new thread started in constructor 
+	 */
+	public void run ()
+	{
+		sendQueuedMessages();
+	}
+	
+	//--------------------------------------------------
+	// PUBLIC METHODS TO SEND EVENTS TO Keyboard Controller
 	//--------------------------------------------------
 	
 	/***********************************************************************
@@ -279,17 +412,9 @@ public class KeyboardController implements SerialPortEventListener, GameListener
 		boolean status	= true;
 		int msg			= p_msg.getMsgId();
 		int reserve		= p_msg.getReserveInMillis();
-		try
-		{
-			ensureMessageReserve(reserve);
-			output.write((byte)msg);			
-		}
-		catch (IOException e)
-		{
-			s_cat.error("send_simpleMessage: failed:", e);
-			status = false;
-		}
-		if (s_cat.isDebugEnabled()) s_cat.debug("send_simpleMessage: finished");
+		
+		queueMessage(new KbdMsg(msg, reserve, p_msg.toString()));
+
 		return status;
 	}
 	
@@ -403,21 +528,12 @@ public class KeyboardController implements SerialPortEventListener, GameListener
 		boolean status	= true;
 		int opId			= p_msg.getMsgId();
 		int reserve		= p_msg.getReserveInMillis();
-		try
-		{
-			byte msg[] = {
-			              (byte) ((0b10000000) | ((opId & 0b1111) << 3) | (p_suit & 0b111))
-			              , (byte) (((p_player & 0b1111) << 4) | (p_cardNumber & 0b1111))
-						};
-			ensureMessageReserve(reserve);
-			output.write(msg, 0, 2);
-		}
-		catch (IOException e)
-		{
-			s_cat.error("send_multiByteMessage: failed:", e);
-			status = false;
-		}
-		if (s_cat.isDebugEnabled()) s_cat.debug("send_multiByteMessage: finished");
+
+		queueMessage(new KbdMsg( ((0b10000000) | ((opId & 0b1111) << 3) | (p_suit & 0b111))
+		                         , (((p_player & 0b1111) << 4) | (p_cardNumber & 0b1111))
+		                         , reserve
+		                         , p_msg.toString()));
+
 		return status;
 	}
 	
@@ -435,16 +551,14 @@ public class KeyboardController implements SerialPortEventListener, GameListener
 		{
 			Button button = Button.valueOf(p_buttonName.toUpperCase());
 			
-			int msg = (0b01000000 | button.ordinal());
-			ensureMessageReserve(0);		// leave time for system messages, but do not reserve time for button audio
-			output.write((byte)msg);
+			queueMessage(new KbdMsg( (0b01000000 | button.ordinal()), 0, button.toString())); // resulting audio can be interrupted, so no reserve
 		}
 		catch (Exception e)
 		{
 			s_cat.error("pressButton: failed to press: " + p_buttonName, e);
 			status = false;
 		}
-		if (s_cat.isDebugEnabled()) s_cat.debug("pressButton: finished");
+
 		return status;
 	}
 
