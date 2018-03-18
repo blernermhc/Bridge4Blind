@@ -464,6 +464,21 @@ public class BridgeHand
 	}
 	
 	/***********************************************************************
+	 * Determines if the indicated player is a blind player.
+	 * Returns true if there is a Keyboard Controller for that direction.
+	 * @param p_direction	the direction to test
+	 * @return true if blind
+	 ***********************************************************************/
+	public boolean isBlindPlayer ( Direction p_direction )
+	{
+		for (Direction direction : m_keyboardControllers.keySet())
+		{
+			if (direction == p_direction) return true;
+		}
+		return false;
+	}
+	
+	/***********************************************************************
 	 * Returns true if contract is complete (GUI enters contract one component at a time).
 	 * @return true if complete, false, otw.
 	 ***********************************************************************/

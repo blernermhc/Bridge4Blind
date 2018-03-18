@@ -240,22 +240,6 @@ public class BlindBridgeMain
 	 * @return a description of the message
 	 * @throws IOException if there are communication problems
 	 ***********************************************************************/
-	public String processIncomingCard (AntennaController p_controller, int p_msg)
-		throws IOException
-	{
-		// TODO
-		System.out.println("From Antenna: " + p_msg);
-		return "Not Impl Yet.";
-	}
-	
-	/***********************************************************************
-	 * Main handler for messages from the Keyboard Controllers.
-	 * @param p_controller	the keyboard controller sending the message
-	 * @param p_msg			the message (only the low 8 bits are considered)
-	 * 						using an int rather than byte to avoid sign issues
-	 * @return a description of the message
-	 * @throws IOException if there are communication problems
-	 ***********************************************************************/
 	public String processIncomingMessage (KeyboardController p_controller, int p_msg)
 		throws IOException
 	{
@@ -351,7 +335,7 @@ public class BlindBridgeMain
 	 ***********************************************************************/
 	public void addAntennaController (Direction p_direction, String p_device)
 	{
-		AntennaController antController = new AntennaController(this, p_direction, p_device);
+		AntennaController antController = new AntennaController(m_bridgeHand, p_direction, p_device);
 		m_antennaControllers.put(p_direction, antController);
 		m_antennaControllerList.add(antController);
 		m_bridgeHand.addAntennaController(p_direction, antController);

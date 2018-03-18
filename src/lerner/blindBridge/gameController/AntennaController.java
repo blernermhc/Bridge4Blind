@@ -9,14 +9,18 @@ import gnu.io.CommPortIdentifier;
 import gnu.io.SerialPort;
 import gnu.io.SerialPortEvent;
 import gnu.io.SerialPortEventListener;
+import model.BridgeScore;
 import model.Card;
+import model.Contract;
 import model.Direction;
+import model.GameListener;
+import model.Suit;
 
 /**********************************************************************
  * Communicates with an RFID Antenna Controller 
  *********************************************************************/
 
-public class AntennaController implements SerialPortEventListener
+public class AntennaController implements SerialPortEventListener, GameListener
 {
 	/**
 	 * Used to collect logging output for this class
@@ -28,11 +32,14 @@ public class AntennaController implements SerialPortEventListener
 	// CONSTANTS
 	//--------------------------------------------------
 
+	private static String s_cardPresentPrefix = "CARD: ";
+	private static String s_cardRemovedPrefix = "CARD REMOVED";
+	
 	//--------------------------------------------------
 	// CONFIGURATION MEMBER DATA
 	//--------------------------------------------------
 	
-	BlindBridgeMain	m_gameController;
+	BridgeHand	m_bridgeHand;
 	
 	/** the device this controller uses */
 	String m_device;
@@ -42,12 +49,23 @@ public class AntennaController implements SerialPortEventListener
 	 * The position of this Keyboard Controller
 	 */
 	Direction m_myPosition;
-		
+
+
 	//--------------------------------------------------
 	// INTERNAL MEMBER DATA
 	//--------------------------------------------------
-	
+
+	enum AntennaControllerState {
+		CAPTURE_CARD
+		, SCAN_CARDS
+		, PLAY_CARDS
+	};
+
+	/** Last seen card */
 	private Card m_currentCard = null;
+
+	/** Processing state of the controller */
+	private AntennaControllerState m_controllerState = AntennaControllerState.CAPTURE_CARD;
 	
 
 	SerialPort serialPort;
@@ -79,49 +97,23 @@ public class AntennaController implements SerialPortEventListener
 	//private static final int DATA_RATE = 9600;
 	private static final int DATA_RATE = 115200;
 	
-
-	/**
-	 * The amount of time to reserve to ensure that the next message can be heard
-	 */
-	private long m_messageReserveMillis = 0;
-	
 	//--------------------------------------------------
 	// CONSTRUCTORS
 	//--------------------------------------------------
 	
 	/***********************************************************************
 	 * Configures and initializes a Keyboard Controller
-	 * @param p_gameController	The gameController managing the hands
-	 * @param p_direction			The player position of the player using this Keyboard Controller
+	 * @param p_bridgeHand		The game object managing the hands
+	 * @param p_direction		The player position of the player using this Keyboard Controller
+	 * @param p_device			The USB serial device of the antenna this controller is listening to 
 	 ***********************************************************************/
-	public AntennaController(BlindBridgeMain p_gameController, Direction p_direction, String p_device)
+	public AntennaController(BridgeHand p_bridgeHand, Direction p_direction, String p_device)
 	{
-		m_gameController = p_gameController;
+		m_bridgeHand = p_bridgeHand;
+		m_myPosition = p_direction;
 		m_device = p_device;
 		initialize();
-		setPlayer(p_direction);
 	}
-
-	/***********************************************************************
-	 * Sends a message to the Keyboard Controller to indicate the playerId of the keyboard controller.
-	 * (i.e., which position is the blind player playing)
-	 * Logs an error if the message fails.
-	 * @param p_direction	the position
-	 ***********************************************************************/
-	public void setPlayer(Direction p_direction)
-	{
-		if (s_cat.isDebugEnabled()) s_cat.debug("setPlayer: entered" + " player: " + p_direction);
-
-		m_myPosition = p_direction;
-		
-		if (s_cat.isDebugEnabled()) s_cat.debug("setPlayer: finished");
-	}
-	
-
-	//--------------------------------------------------
-	// HELPER METHODS
-	//--------------------------------------------------
-
 
 	//--------------------------------------------------
 	// COMMUNICATION METHODS
@@ -217,6 +209,10 @@ public class AntennaController implements SerialPortEventListener
 		}
 	}
 
+	//--------------------------------------------------
+	// HELPER METHODS
+	//--------------------------------------------------
+
 	private String readLine (BufferedInputStream p_input)
 		throws IOException
 	{
@@ -230,61 +226,97 @@ public class AntennaController implements SerialPortEventListener
 		return line.toString();
 	}
 
-	private static String s_cardPrefix = "UID Value:  ";
-	
 	/***********************************************************************
-	 * Parses the output of the antenna controller, looking for cards to play.
-	 * Card lines look like this:
-	 * UID Value:  0x4 0x5A 0x8B 0x7A 0x83 0x1E 0x80
+	 * Parses the output of the antenna controller, looking for cards present
+	 * and card removed events.  If any are found, processes them.
+	 * Lines using the following format are processed.  Other lines are simply returned.
+	 *   Card present events:
+	 *     4 byte hex:		"CARD: 0xAAbbCCdd"
+	 *     7 byte hex:		"CARD: 0xAAbbCCddEEffGG"
+	 *     
+	 *   Card removed events:
+	 *                      "CARD REMOVED"
+	 *                      
 	 * @param p_line the line to parse
-	 * @return the card, if found, or null otherwise
+	 * @return a message to print describing the message from the antenna
 	 ***********************************************************************/
-	private Card parseLine (String p_line)
+	private String processLine (String p_line)
 	{
-		//TODO change the Antenna Arduino Sketch to return the card Id as a simple hex string.
-		
-		if (! p_line.startsWith(s_cardPrefix)) return null;
-		
-		// parse space-separated hex values like "0x4" and "0x7A"
-		String[] hexStrings = p_line.substring(s_cardPrefix.length()).split(" ");
-		
-		if (hexStrings.length != 7)
+		if (p_line.startsWith(s_cardRemovedPrefix))
 		{
-			if (s_cat.isDebugEnabled()) s_cat.debug("parseLine: incorrect number of hex values (should be 7), found: " + hexStrings.length);
-			return null;
+			return processCardRemovedEvent();
 		}
 		
-		StringBuilder cardId = new StringBuilder();
-		for (String hexStr : hexStrings)
+		if (! p_line.startsWith(s_cardPresentPrefix))
 		{
-			if (! hexStr.startsWith("0x"))
-			{
-				if (s_cat.isDebugEnabled()) s_cat.debug("parseLine: illegal hex value (no 0x): " + hexStr);
-				return null;
-			}
-			hexStr = hexStr.substring(2);
-			if (hexStr.length() == 1) hexStr = "0" + hexStr;
-			if (hexStr.length() != 2)
-			{
-				if (s_cat.isDebugEnabled()) s_cat.debug("parseLine: illegal hex value (bad length): " + hexStr);
-				return null;
-			}
-			cardId.append(hexStr);
+			return p_line;
 		}
 		
-		return CardLibrary.findCard(cardId.toString());
+		String cardId = p_line.substring(s_cardPresentPrefix.length());
+		if (! cardId.startsWith("0x"))
+		{
+			if (s_cat.isDebugEnabled()) s_cat.debug("processLine: illegal hex value (no 0x): " + cardId);
+			return p_line;
+		}
+		
+		cardId = cardId.substring(2).trim();	// remove leading "0x:"
+
+		if (cardId.contains(" "))
+		{
+			if (s_cat.isDebugEnabled()) s_cat.debug("processLine: unexpected space in hex string): " + cardId);
+			return p_line;
+		}
+			
+		Card card = CardLibrary.findCard(cardId.toString());
+		return processCardPresentEvent(card);
+	}
+
+	private String processCardRemovedEvent()
+	{
+		if (m_currentCard != null)
+		{
+			m_currentCard = null;
+			return "Removed current card";
+		}
+		return "Ignore card-remove event, as there is no current card";
 	}
 	
-	private synchronized void setCurrentCard (Card p_card)
+	private String processCardPresentEvent ( Card p_card )
 	{
-		m_currentCard = p_card;
-	}
-	
-	public synchronized Card getCurrentCard ()
-	{
-		Card card = m_currentCard;
-		m_currentCard = null;
-		return card;
+		String description;
+		switch (m_controllerState)
+		{
+			case CAPTURE_CARD:
+			{
+				m_currentCard = p_card;
+				description = "Captured card: " + p_card;
+			}
+			break;
+			
+			case SCAN_CARDS:
+			{
+				m_bridgeHand.evt_addScannedCard(m_myPosition, p_card);
+				m_currentCard = null;
+				description = "Scanned card: " + p_card;
+			}
+			break;
+			
+			case PLAY_CARDS:
+			{
+				boolean accepted = m_bridgeHand.evt_playCard(m_myPosition, p_card);
+				if (!accepted) m_currentCard = p_card;
+				else m_currentCard = null;
+				description = "Played card: " + p_card;
+			}
+			break;
+			
+			default:
+			{
+				if (s_cat.isDebugEnabled()) s_cat.debug("processCardPresentEvent: unknown state: " + m_controllerState);
+				description = "unknown state: " + m_controllerState;
+			}
+		}
+		return description;
 	}
 	
 	/* *******************************************************************
@@ -301,13 +333,8 @@ public class AntennaController implements SerialPortEventListener
 				while (input.available() > 0)
 				{
 					String line = readLine(input);
-					System.out.println("From " + m_myPosition + " Antenna: " + line);
-					Card card = parseLine(line);
-					if (card != null)
-					{
-						System.out.println("From " + m_myPosition + " Antenna read card: " + card);
-						setCurrentCard(card);
-					}
+					String description = processLine(line);
+					System.out.println("From " + m_myPosition + " Antenna: " + description);
 				}
 			}
 			catch (Exception e)
@@ -318,6 +345,178 @@ public class AntennaController implements SerialPortEventListener
 		// Ignore all the other eventTypes, but you should consider the other ones.
 	}
 
+	//--------------------------------------------------
+	// GAME LISTENER METHODS
+	//--------------------------------------------------
+
+	/* (non-Javadoc)
+	 * @see model.GameListener#debugMsg(java.lang.String)
+	 */
+	@Override
+	public void debugMsg ( String p_string )
+	{
+		// nothing to do
+	}
+
+	/* (non-Javadoc)
+	 * @see model.GameListener#gameReset()
+	 */
+	@Override
+	public void gameReset ()
+	{
+		// nothing to do
+	}
+
+	/* (non-Javadoc)
+	 * @see model.GameListener#scanBlindHands()
+	 */
+	@Override
+	public void scanBlindHands ()
+	{
+		if (m_bridgeHand.isBlindPlayer(m_myPosition))
+		{
+			m_controllerState = AntennaControllerState.SCAN_CARDS;
+			if (m_currentCard != null)
+			{
+				m_bridgeHand.evt_addScannedCard(m_myPosition, m_currentCard);
+				m_currentCard = null;
+			}
+		}
+	}
+
+	/* (non-Javadoc)
+	 * @see model.GameListener#scanDummyHand()
+	 */
+	@Override
+	public void scanDummyHand ()
+	{
+		if (m_myPosition == m_bridgeHand.getDummyPosition())
+		{
+			m_controllerState = AntennaControllerState.SCAN_CARDS;
+			if (m_currentCard != null)
+			{
+				m_bridgeHand.evt_addScannedCard(m_myPosition, m_currentCard);
+				m_currentCard = null;
+			}
+		}
+	}
+
+	/* (non-Javadoc)
+	 * @see model.GameListener#cardScanned(model.Direction, model.Card, boolean)
+	 */
+	@Override
+	public void cardScanned ( Direction p_direction, Card p_card, boolean p_handComplete )
+	{
+		// nothing to do
+	}
+
+	/* (non-Javadoc)
+	 * @see model.GameListener#blindHandsScanned()
+	 */
+	@Override
+	public void blindHandsScanned ()
+	{
+		if (m_bridgeHand.isBlindPlayer(m_myPosition))
+		{
+			m_controllerState = AntennaControllerState.CAPTURE_CARD;
+		}
+	}
+
+	/* (non-Javadoc)
+	 * @see model.GameListener#dummyHandScanned()
+	 */
+	@Override
+	public void dummyHandScanned ()
+	{
+		if (m_myPosition == m_bridgeHand.getDummyPosition())
+		{
+			m_controllerState = AntennaControllerState.CAPTURE_CARD;
+		}
+	}
+
+	/* (non-Javadoc)
+	 * @see model.GameListener#enterContract()
+	 */
+	@Override
+	public void enterContract ()
+	{
+		// nothing to do
+	}
+
+	/* (non-Javadoc)
+	 * @see model.GameListener#contractSet(model.Contract)
+	 */
+	@Override
+	public void contractSet ( Contract p_contract )
+	{
+		// nothing to do
+	}
+
+	/* (non-Javadoc)
+	 * @see model.GameListener#setDummyPosition(model.Direction)
+	 */
+	@Override
+	public void setDummyPosition ( Direction p_direction )
+	{
+		// nothing to do
+	}
+
+	/* (non-Javadoc)
+	 * @see model.GameListener#setNextPlayer(model.Direction)
+	 */
+	@Override
+	public void setNextPlayer ( Direction p_direction )
+	{
+		if (m_myPosition == p_direction)
+		{
+			m_controllerState = AntennaControllerState.PLAY_CARDS;
+			if (m_currentCard != null)
+			{
+				boolean cardPlayed = m_bridgeHand.evt_playCard(m_myPosition, m_currentCard);
+				if (cardPlayed) m_currentCard = null;
+			}
+		}
+	}
+
+	/* (non-Javadoc)
+	 * @see model.GameListener#setCurrentSuit(model.Suit)
+	 */
+	@Override
+	public void setCurrentSuit ( Suit p_suit )
+	{
+		// nothing to do
+	}
+
+	/* (non-Javadoc)
+	 * @see model.GameListener#cardPlayed(model.Direction, model.Card)
+	 */
+	@Override
+	public void cardPlayed ( Direction p_direction, Card p_card )
+	{
+		if (m_myPosition == p_direction)
+		{
+			m_controllerState = AntennaControllerState.CAPTURE_CARD;
+		}
+	}
+
+	/* (non-Javadoc)
+	 * @see model.GameListener#trickWon(model.Direction)
+	 */
+	@Override
+	public void trickWon ( Direction p_winner )
+	{
+		// nothing to do
+	}
+
+	/* (non-Javadoc)
+	 * @see model.GameListener#handComplete(model.BridgeScore)
+	 */
+	@Override
+	public void handComplete ( BridgeScore p_score )
+	{
+		// nothing to do
+	}
+	
 	//--------------------------------------------------
 	// ACCESSORS
 	//--------------------------------------------------
@@ -332,23 +531,12 @@ public class AntennaController implements SerialPortEventListener
 	}
 
 	/***********************************************************************
-	 * The amount of time to reserve to ensure that the next message can be heard.
-	 * Set this to zero during reset, to avoid unnecessary delays.
-	 * @return time in milliseconds
+	 * The most recently seen (and not removed) card.
+	 * @return the card
 	 ***********************************************************************/
-	public long getMessageReserveMillis ()
+	public synchronized Card getCurrentCard ()
 	{
-		return m_messageReserveMillis;
-	}
-
-	/***********************************************************************
-	 * The amount of time to reserve to ensure that the next message can be heard
-	 * Set this to zero during reset, to avoid unnecessary delays.
-	 * @param p_messageReserveMillis time in milliseconds
-	 ***********************************************************************/
-	public void setMessageReserveMillis ( long p_messageReserveMillis )
-	{
-		m_messageReserveMillis = p_messageReserveMillis;
+		return m_currentCard;
 	}
 
 }

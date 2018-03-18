@@ -40,6 +40,7 @@ public class CommandController implements Runnable
 		, SCANDUMMY("Simulates scanning the dummy's hand for teasting")
 		, B("Simulates pressing a keyboard controller button for testing: kbdPosition buttonName")
 		, REOPEN("Reopens connection to keyboard controller: kbdPosition")
+		, REOPENANT("Reopens connection to antenna controller: kbdPosition")
 		, RESET("Sends request to reset keyboard controller: kbdPosition")
 		, PRINTHAND("For testing prints a hand: player")
 		, PRINTSTATE("Prints the Game Controller state")
@@ -263,6 +264,17 @@ public class CommandController implements Runnable
 						Direction direction = Direction.fromString(args[++idx]);
 						KeyboardController kbdController = m_bridgeHand.getKeyboardControllers().get(direction); 
 						if (kbdController != null) kbdController.initialize();
+					}
+					break;
+						
+					case REOPENANT:
+					{
+						if (args.length != 2)
+							throw new IllegalArgumentException("Wrong number of arguments");
+						int idx = 0;
+						Direction direction = Direction.fromString(args[++idx]);
+						AntennaController antController = m_bridgeHand.getAntennaControllers().get(direction); 
+						if (antController != null) antController.initialize();
 					}
 					break;
 						
