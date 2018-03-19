@@ -67,8 +67,7 @@ public class CommandController implements Runnable
 	// CONFIGURATION MEMBER DATA
 	//--------------------------------------------------
 	
-	BlindBridgeMain	m_gameController;
-	BridgeHand		m_bridgeHand;
+	Game				m_game;
 	
 	//--------------------------------------------------
 	// INTERNAL MEMBER DATA
@@ -87,10 +86,9 @@ public class CommandController implements Runnable
 	 * @param p_gameController	The gameController managing the hands
 	 * @param p_direction		The player position of the player using this Keyboard Controller
 	 ***********************************************************************/
-	public CommandController(BlindBridgeMain p_gameController, BridgeHand p_bridgeHand, InputStream p_input, PrintStream p_output)
+	public CommandController(Game p_gameController, InputStream p_input, PrintStream p_output)
 	{
-		m_gameController = p_gameController;
-		m_bridgeHand = p_bridgeHand;
+		m_game = p_gameController;
 		m_input = p_input;
 		m_output = p_output;
 	}
@@ -179,7 +177,7 @@ public class CommandController implements Runnable
 					{
 						int idx = 0;
 						p_out.println("Keyboards:");
-						for (KeyboardController kbdController : m_bridgeHand.getKeyboardControllers().values())
+						for (KeyboardController kbdController : m_game.getKeyboardControllers().values())
 						{
 							p_out.println("  " + idx + ": " + kbdController.getMyPosition() + " (" + kbdController.m_device + ")");
 							++idx;
@@ -209,7 +207,7 @@ public class CommandController implements Runnable
 					{
 						int idx = 0;
 						p_out.println("Antennas:");
-						for (AntennaController antennaController : m_bridgeHand.getAntennaControllers().values())
+						for (AntennaController antennaController : m_game.getAntennaControllers().values())
 						{
 							p_out.println("  " + idx + ": " + antennaController.getMyPosition() + " (" + antennaController.m_device + ")");
 							++idx;
@@ -237,7 +235,7 @@ public class CommandController implements Runnable
 						
 					case NEWHAND:
 					{
-						m_bridgeHand.evt_startNewHand();
+						m_game.getBridgeHand().evt_startNewHand();
 					}
 					break;
 						
@@ -252,7 +250,7 @@ public class CommandController implements Runnable
 							throw new IllegalArgumentException("Invalid numTricks: " + numTricks);
 						Suit suit = Suit.valueOf(args[++idx].toUpperCase());
 						Contract contract = new Contract(direction, suit, numTricks);
-						m_bridgeHand.evt_setContract(contract);
+						m_game.getBridgeHand().evt_setContract(contract);
 					}
 					break;
 
@@ -260,12 +258,12 @@ public class CommandController implements Runnable
 					{
 						if (args.length != 3)
 							throw new IllegalArgumentException("Wrong number of arguments");
-						if (m_bridgeHand.getNextPlayer() == null)
+						if (m_game.getBridgeHand().getNextPlayer() == null)
 							throw new IllegalArgumentException("Cannot play, no next player");
 						int idx = 0;
 						Direction direction = Direction.fromString(args[++idx]);
 						Card card = new Card(args[++idx]);
-						m_bridgeHand.evt_playCard(direction, card);
+						m_game.getBridgeHand().evt_playCard(direction, card);
 					}
 					break;
 						
@@ -275,7 +273,7 @@ public class CommandController implements Runnable
 							throw new IllegalArgumentException("Wrong number of arguments");
 						int idx = 0;
 						Direction direction = Direction.fromString(args[++idx]);
-						KeyboardController kbdController = m_bridgeHand.getKeyboardControllers().get(direction); 
+						KeyboardController kbdController = m_game.getKeyboardControllers().get(direction); 
 						if (kbdController != null) kbdController.initialize();
 					}
 					break;
@@ -286,7 +284,7 @@ public class CommandController implements Runnable
 							throw new IllegalArgumentException("Wrong number of arguments");
 						int idx = 0;
 						Direction direction = Direction.fromString(args[++idx]);
-						AntennaController antController = m_bridgeHand.getAntennaControllers().get(direction); 
+						AntennaController antController = m_game.getAntennaControllers().get(direction); 
 						if (antController != null) antController.initialize();
 					}
 					break;
@@ -297,7 +295,7 @@ public class CommandController implements Runnable
 							throw new IllegalArgumentException("Wrong number of arguments");
 						int idx = 0;
 						Direction direction = Direction.fromString(args[++idx]);
-						KeyboardController kbdController = m_bridgeHand.getKeyboardControllers().get(direction); 
+						KeyboardController kbdController = m_game.getKeyboardControllers().get(direction); 
 						if (kbdController != null) kbdController.send_simpleMessage(KBD_MESSAGE.START_RELOAD);
 					}
 					break;
@@ -308,7 +306,7 @@ public class CommandController implements Runnable
 							throw new IllegalArgumentException("Wrong number of arguments");
 						int idx = 0;
 						Direction direction = Direction.fromString(args[++idx]);
-						KeyboardController kbdController = m_bridgeHand.getKeyboardControllers().get(direction); 
+						KeyboardController kbdController = m_game.getKeyboardControllers().get(direction); 
 						if (kbdController != null) kbdController.send_simpleMessage(KBD_MESSAGE.FINISH_RELOAD);
 					}
 					break;
@@ -326,7 +324,7 @@ public class CommandController implements Runnable
 							if (testHand < 0 || testHand >=  BridgeHand.m_testHand.length)
 							throw new IllegalArgumentException("Invalid testHand: " + testHand);
 						}
-						m_bridgeHand.evt_scanHandTest(direction, testHand);
+						m_game.getBridgeHand().evt_scanHandTest(direction, testHand);
 					}
 					break;
 						
@@ -334,7 +332,7 @@ public class CommandController implements Runnable
 					{
 						if (args.length != 1)
 							throw new IllegalArgumentException("Wrong number of arguments");
-						m_bridgeHand.evt_scanHandTest(m_bridgeHand.getDummyPosition(), 0);
+						m_game.getBridgeHand().evt_scanHandTest(m_game.getBridgeHand().getDummyPosition(), 0);
 					}
 					break;
 						
@@ -344,7 +342,7 @@ public class CommandController implements Runnable
 							throw new IllegalArgumentException("Wrong number of arguments");
 						int idx = 0;
 						Direction direction = Direction.fromString(args[++idx]);
-						KeyboardController kbdController = m_bridgeHand.getKeyboardControllers().get(direction); 
+						KeyboardController kbdController = m_game.getKeyboardControllers().get(direction); 
 						if (kbdController != null) kbdController.send_pressButton(args[++idx]);
 					}
 					break;
@@ -356,7 +354,7 @@ public class CommandController implements Runnable
 						int idx = 0;
 						Direction direction = Direction.fromString(args[++idx]);
 						Card card = new Card(args[++idx]);
-						AntennaController antController = m_bridgeHand.getAntennaControllers().get(direction); 
+						AntennaController antController = m_game.getAntennaControllers().get(direction); 
 						if (antController != null) p_out.println("Ant[" + direction + "] " + antController.processCardPresentEvent(card));
 					}
 					break;
@@ -375,7 +373,7 @@ public class CommandController implements Runnable
 					{
 						if (args.length != 1)
 							throw new IllegalArgumentException("Wrong number of arguments");
-						p_out.println(m_bridgeHand.toString());
+						p_out.println(m_game.getBridgeHand().toString());
 					}
 					break;
 
@@ -419,8 +417,8 @@ public class CommandController implements Runnable
 	 ***********************************************************************/
 	private void printHand (PrintStream p_out, Direction p_direction)
 	{
-		PlayerHand hand = m_bridgeHand.getHands().get(p_direction);
-		if (hand == null) hand = m_bridgeHand.getTestHands().get(p_direction);
+		PlayerHand hand = m_game.getBridgeHand().getHands().get(p_direction);
+		if (hand == null) hand = m_game.getBridgeHand().getTestHands().get(p_direction);
 		if (hand == null)
 		{
 			p_out.println("no hand for player: " + p_direction);

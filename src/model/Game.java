@@ -8,8 +8,6 @@ import java.util.Iterator;
 import java.util.Set;
 
 import audio.SoundManager;
-import controller.HandAntenna;
-import controller.Handler;
 import controller.TestAntennaHandler;
 
 /**
@@ -48,10 +46,6 @@ public class Game {
 	// who won the last trick
 	private Direction lastWinner;
 
-	// the antenna handler
-	private Handler handler;
-	// private AntennaHandler handler;
-
 	// the current contract that the team winning the bid must make
 	private Contract contract = new Contract();
 
@@ -87,9 +81,9 @@ public class Game {
 	 * @param isTestMode
 	 *            TODO
 	 */
-	public Game(Handler handler, boolean isTestMode) {
+	public Game(boolean isTestMode) {
 
-		this.isTestMode = isTestMode;
+		Game.isTestMode = isTestMode;
 
 		// construct the four hands
 		players = new Player[NUM_PLAYERS];
@@ -97,10 +91,6 @@ public class Game {
 			players[i] = new Player();
 		}
 
-		this.handler = handler;
-
-		handler.setGame(this);
-		
 		//trickStack.push(currentTrick) ;
 
 		// construct the antenna handler
@@ -117,35 +107,9 @@ public class Game {
 	 *             any other I/O problem when establishing the connection
 	 */
 	public void activateAntennas() throws UnknownHostException, IOException {
-
-		System.out.println("Game : activate antennas");
-
-		HandAntenna[] handAntennas = new HandAntenna[NUM_PLAYERS];
-
-		// construct the card identifier
-		// CardIdentifier id = new CardIdentifier(this);
-		handler.connect();
-
-		Direction[] directions = Direction.values();
-		for (int i = 0; i < players.length; i++) {
-			handAntennas[i] = new HandAntenna(directions[i], this);
-		}
-
-		// add the listeners for the antenna handler
-		handler.addHandListener(handAntennas[Direction.NORTH.ordinal()],
-				Direction.NORTH);
-		handler.addHandListener(handAntennas[Direction.EAST.ordinal()],
-				Direction.EAST);
-		handler.addHandListener(handAntennas[Direction.SOUTH.ordinal()],
-				Direction.SOUTH);
-		handler.addHandListener(handAntennas[Direction.WEST.ordinal()],
-				Direction.WEST);
-		// handler.addIdListener(id);
 	}
 	
 	public void closeHandler() throws IOException {
-		System.out.println("Closing handler");
-		handler.disconnect();
 	}
 
 	/**
@@ -164,6 +128,7 @@ public class Game {
 
 		turn = declarer.getNextDirection();
 		//turnStack.push(turn) ;
+		/*
 		try {
 			handler.switchHand(turn);
 		} catch (IOException e) {
@@ -173,9 +138,11 @@ public class Game {
 			System.out.println("Cycling timer interrupted!");
 			e.printStackTrace();
 		}
+		*/
 	}
 
 	private void switchHand(Direction toPlayer) {
+		/*
 		try {
 			handler.switchHand(toPlayer);
 		} catch (IOException e) {
@@ -185,6 +152,7 @@ public class Game {
 			System.out.println("Cycling timer interrupted!");
 			e.printStackTrace();
 		}
+		*/
 	}
 
 	/**
@@ -220,7 +188,7 @@ public class Game {
 	/**
 	 * Reinitializes everything to prepare to play a new hand.
 	 */
-	public void resetGame() {
+	public void evt_startNewHand() {
 
 		System.out.println("Game resetGame");
 
@@ -235,7 +203,7 @@ public class Game {
 		switchHand(blindDirection);
 
 		for (GameListener listener : listeners) {
-			listener.gameReset();
+			listener.sig_gameReset();
 		}
 
 	}
@@ -315,7 +283,7 @@ public class Game {
 
 					for (GameListener listener : listeners) {
 
-						listener.dummyHandScanned();
+						listener.sig_dummyHandScanned();
 					}
 
 					setGameState(GameState.PLAYING);
@@ -396,7 +364,7 @@ public class Game {
 
 				for (GameListener listener : listeners) {
 
-					listener.dummyHandScanned();
+					listener.sig_dummyHandScanned();
 				}
 
 				// Delay going into the playing state so that the last
@@ -431,7 +399,7 @@ public class Game {
 				setGameState(GameState.FIRSTCARD);
 
 				for (GameListener listener : listeners) {
-					listener.blindHandsScanned();
+					listener.sig_blindHandsScanned();
 				}
 
 			}
@@ -440,7 +408,7 @@ public class Game {
 
 	private void debugMsg(String msg) {
 		for (GameListener listener : listeners) {
-			listener.debugMsg(msg);
+			listener.sig_debugMsg(msg);
 		}
 	}
 
@@ -454,7 +422,7 @@ public class Game {
 		//turnStack.push(turn) ;
 		switchHand(turn);
 		for (GameListener listener : listeners) {
-			listener.trickWon(turn);
+			listener.sig_trickWon(turn);
 		}
 	}
 
@@ -482,7 +450,9 @@ public class Game {
 
 			lastBlindCard = card;
 
-			cardIded(lastBlindCard);
+			for (GameListener listener : listeners) {
+				listener.sig_cardScanned(turn, card, false);
+			}
 
 			return false;
 
@@ -584,7 +554,7 @@ public class Game {
 		// System.out.println("Notifying listeners");
 
 		for (GameListener listener : listeners) {
-			listener.cardPlayed(turn, card);
+			listener.sig_cardPlayed(turn, card);
 		}
 
 		// System.out.println("Done notifying listeners");
@@ -634,25 +604,12 @@ public class Game {
 
 		boolean handComplete = players[pos].getHand().getNumCards() == 13;
 		for (GameListener listener : listeners) {
-			listener.cardScanned(dir, card, handComplete);
+			listener.sig_cardScanned(dir, card, handComplete);
 		}
 
 		// int pos = dir.ordinal();
 		players[pos].addCard(card);
 		// System.out.println("Game.scanCardIntoHand returning");
-	}
-
-	/**
-	 * Called when a card is identified on the id antenna. Passes the message on
-	 * to all the listeners of the game using their cardScanned method.
-	 * 
-	 * @param c
-	 *            the card that was identified.
-	 */
-	public void cardIded(Card c) {
-		for (GameListener listener : listeners) {
-			listener.cardScanned(direction, c, null);
-		}
 	}
 
 	/**
@@ -719,7 +676,7 @@ public class Game {
 		//turnStack.push(turn) ;
 
 		players[blindDirection.ordinal()].setBlind(true);
-		handler.setBlindDirection(blindPosition);
+		//handler.setBlindDirection(blindPosition);
 		switchHand(blindPosition);
 	}
 
@@ -822,7 +779,7 @@ public class Game {
 		contract.setTrump(suit);
 
 		for (GameListener listener : listeners) {
-			listener.contractSet(contract);
+			listener.sig_contractSet(contract);
 		}
 
 	}
@@ -830,11 +787,6 @@ public class Game {
 	@SuppressWarnings("javadoc")
 	public Suit getTrumpSuit() {
 		return contract.getTrump();
-	}
-
-	@SuppressWarnings("javadoc")
-	public Handler getHandler() {
-		return handler;
 	}
 
 	@SuppressWarnings("javadoc")
@@ -874,9 +826,11 @@ public class Game {
 	 * Sends the quit message to the server and quits this program.
 	 */
 	public void quit() {
+		/*
 		if (handler != null) {
 			handler.quitServer();
 		}
+		*/
 		System.exit(0);
 	}
 
@@ -1003,11 +957,13 @@ public class Game {
 	 * 
 	 */
 	public void resumeGame() {
+		/*
 		debugMsg("Setting cycling thread");
 		handler.setCyclingThread(null);
 		debugMsg("Switching hand");
 		switchHand(turn);
 		debugMsg("Done switching hand");
+		*/
 	}
 	
 	/**

@@ -43,14 +43,14 @@ public class State_EnterContract extends ControllerState
 	/* (non-Javadoc)
 	 * @see lerner.blindBridge.gameController.ControllerState#onEntry(lerner.blindBridge.gameController.BridgeHand)
 	 */
-	public void onEntry ( BridgeHand p_bridgeHand )
+	public void onEntry ( Game p_game )
 	{
-		m_bridgeHand = p_bridgeHand;
+		m_game = p_game;
 		
 		// notify all listeners we have entered this state
-		for (GameListener gameListener : m_bridgeHand.getGameListeners())
+		for (GameListener gameListener : m_game.getGameListeners())
 		{
-			gameListener.enterContract();
+			gameListener.sig_enterContract();
 		}
 	}
 
@@ -59,27 +59,27 @@ public class State_EnterContract extends ControllerState
 	 */
 	public BridgeHandState checkState()
 	{
-		if (! m_bridgeHand.testContractComplete())
+		if (! m_game.getBridgeHand().testContractComplete())
 			return BridgeHandState.ENTER_CONTRACT;	// continue waiting for contract
 
-		Contract contract = m_bridgeHand.getContract();
+		Contract contract = m_game.getBridgeHand().getContract();
 		
-		for (GameListener gameListener : m_bridgeHand.getGameListeners())
+		for (GameListener gameListener : m_game.getGameListeners())
 		{
-			gameListener.contractSet(contract);
+			gameListener.sig_contractSet(contract);
 		}
 
 		// set first player
 		Direction nextPlayer = contract.getBidWinner().getNextDirection();
 		Direction dummyPosition = nextPlayer.getNextDirection();
 
-		m_bridgeHand.setNextPlayer(nextPlayer);
-		m_bridgeHand.setDummyPosition(dummyPosition);
+		m_game.getBridgeHand().setNextPlayer(nextPlayer);
+		m_game.getBridgeHand().setDummyPosition(dummyPosition);
 		
 		
-		for (GameListener gameListener : m_bridgeHand.getGameListeners())
+		for (GameListener gameListener : m_game.getGameListeners())
 		{
-			gameListener.setDummyPosition(dummyPosition);
+			gameListener.sig_setDummyPosition(dummyPosition);
 		}
 		
 		return BridgeHandState.WAIT_FOR_FIRST_PLAYER;

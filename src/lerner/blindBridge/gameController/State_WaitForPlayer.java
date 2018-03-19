@@ -78,9 +78,9 @@ public class State_WaitForPlayer extends ControllerState
 	/* (non-Javadoc)
 	 * @see lerner.blindBridge.gameController.ControllerState#onEntry(lerner.blindBridge.gameController.BridgeHand)
 	 */
-	public void onEntry ( BridgeHand p_bridgeHand )
+	public void onEntry ( Game p_game )
 	{
-		m_bridgeHand = p_bridgeHand;
+		m_game = p_game;
 
 		//-----------------------------------------------------------
 		// IMPORTANT NOTE: we cannot set m_myState in the constructor
@@ -92,9 +92,9 @@ public class State_WaitForPlayer extends ControllerState
 		else
 			m_myState = BridgeHandState.WAIT_FOR_NEXT_PLAYER;
 
-		for (GameListener gameListener : m_bridgeHand.getGameListeners())
+		for (GameListener gameListener : m_game.getGameListeners())
 		{
-			gameListener.setNextPlayer(m_bridgeHand.getNextPlayer());
+			gameListener.sig_setNextPlayer(m_game.getBridgeHand().getNextPlayer());
 		}
 	}
 
@@ -107,9 +107,9 @@ public class State_WaitForPlayer extends ControllerState
 		// First, see if the trick contains a card played by the next player.
 		// The evt_playCard methods adds cards to the current trick.
 		//--------------------------------------------------
-		List<CardPlay> currentTrick = m_bridgeHand.getCurrentTrick();
+		List<CardPlay> currentTrick = m_game.getBridgeHand().getCurrentTrick();
 		
-		Direction nextPlayer = m_bridgeHand.getNextPlayer();
+		Direction nextPlayer = m_game.getBridgeHand().getNextPlayer();
 		CardPlay cardPlay = null;
 		for (CardPlay cp : currentTrick)
 		{
@@ -128,9 +128,9 @@ public class State_WaitForPlayer extends ControllerState
 		//--------------------------------------------------
 		
 		// notify listeners of new card
-		for (GameListener gameListener : m_bridgeHand.getGameListeners())
+		for (GameListener gameListener : m_game.getGameListeners())
 		{
-			gameListener.cardPlayed(cardPlay.getPlayer(), cardPlay.getCard());
+			gameListener.sig_cardPlayed(cardPlay.getPlayer(), cardPlay.getCard());
 		}
 		
 
@@ -147,16 +147,16 @@ public class State_WaitForPlayer extends ControllerState
 			{
 				// first card of trick played (set current suit)
 				Suit currentSuit = cardPlay.getCard().getSuit();
-				m_bridgeHand.setCurrentSuit(currentSuit);
+				m_game.getBridgeHand().setCurrentSuit(currentSuit);
 				
-				for (GameListener gameListener : m_bridgeHand.getGameListeners())
+				for (GameListener gameListener : m_game.getGameListeners())
 				{
-					gameListener.setCurrentSuit(currentSuit);
+					gameListener.sig_setCurrentSuit(currentSuit);
 				}
 			}
 
 			nextPlayer = cardPlay.getPlayer().getNextDirection();
-			m_bridgeHand.setNextPlayer(nextPlayer);
+			m_game.getBridgeHand().setNextPlayer(nextPlayer);
 			
 			if (currentTrick.size() == 1 && m_waitForFirstPlayer)
 			{
@@ -164,13 +164,9 @@ public class State_WaitForPlayer extends ControllerState
 			}
 			else
 			{
-				// send setNextPlayer since we are not transitioning to a new state
-				// and the onEntry method will not be invoked
-				for (GameListener gameListener : m_bridgeHand.getGameListeners())
-				{
-					gameListener.setNextPlayer(nextPlayer);
-				}
-				return BridgeHandState.WAIT_FOR_NEXT_PLAYER;
+				// use SWITCH_TO_NEXT_PLAYER so state machine will call onEntry for new state
+				// rather than thinking we are in the same state.
+				return BridgeHandState.SWITCH_TO_NEXT_PLAYER;
 			}
 		}
 	}

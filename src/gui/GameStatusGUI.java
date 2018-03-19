@@ -124,13 +124,13 @@ public class GameStatusGUI extends JPanel implements GameListener {
 	}
 
 	@Override
-	public void debugMsg(String string) {
+	public void sig_debugMsg(String string) {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public void gameReset() {
+	public void sig_gameReset() {
 
 		//
 		// //count++ ;
@@ -146,7 +146,7 @@ public class GameStatusGUI extends JPanel implements GameListener {
 	}
 
 	@Override
-	public void cardPlayed(Direction turn, Card card) {
+	public void sig_cardPlayed(Direction turn, Card card) {
 
 		// every time a card is played, current player is updated.
 		currentPlayer++;
@@ -251,13 +251,13 @@ public class GameStatusGUI extends JPanel implements GameListener {
 	}
 
 	@Override
-	public void cardScanned(Direction p_direction, Card p_card, boolean p_handComplete) {
+	public void sig_cardScanned(Direction p_direction, Card p_card, boolean p_handComplete) {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public void trickWon(final Direction winner) {
+	public void sig_trickWon(final Direction winner) {
 
 		System.out.println("game status gui trickWon " + winner);
 
@@ -323,7 +323,7 @@ public class GameStatusGUI extends JPanel implements GameListener {
 	}
 
 	@Override
-	public void contractSet(Contract contract) {
+	public void sig_contractSet(Contract contract) {
 		bidGUI.setBid(contract);
 
 		for (int i = 0; i < playerGUIs.length; i++) {
@@ -337,13 +337,13 @@ public class GameStatusGUI extends JPanel implements GameListener {
 	}
 
 	@Override
-	public void blindHandsScanned() {
+	public void sig_blindHandsScanned() {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public void dummyHandScanned() {
+	public void sig_dummyHandScanned() {
 		// TODO Auto-generated method stub
 
 	}
@@ -442,8 +442,8 @@ public class GameStatusGUI extends JPanel implements GameListener {
 		JFrame testFrame = new JFrame();
 		GameStatusGUI gameStatusGUI = new GameStatusGUI(null, null);
 		testFrame.add(gameStatusGUI, BorderLayout.CENTER);
-		gameStatusGUI.cardPlayed(Direction.SOUTH, new Card(Rank.ACE, Suit.CLUBS));
-		gameStatusGUI.cardPlayed(Direction.WEST, new Card(Rank.TEN, Suit.CLUBS));
+		gameStatusGUI.sig_cardPlayed(Direction.SOUTH, new Card(Rank.ACE, Suit.CLUBS));
+		gameStatusGUI.sig_cardPlayed(Direction.WEST, new Card(Rank.TEN, Suit.CLUBS));
 		testFrame.pack();
 		testFrame.setVisible(true);
 	}

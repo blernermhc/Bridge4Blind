@@ -33,45 +33,45 @@ public class ScanningBlindGUI extends JPanel implements GameListener {
 	}
 
 	@Override
-	public void debugMsg(String string) {
+	public void sig_debugMsg(String string) {
 		// TODO Auto-generated method stub
 		
 	}
 
 	@Override
-	public void gameReset() {
+	public void sig_gameReset() {
 		// TODO Auto-generated method stub
 		
 	}
 
 	@Override
-	public void cardPlayed(Direction turn, Card card) {
+	public void sig_cardPlayed(Direction turn, Card card) {
 		// TODO Auto-generated method stub
 		
 	}
 
 	@Override
-	public void cardScanned(Direction p_direction, Card p_card, boolean p_handComplete) {
+	public void sig_cardScanned(Direction p_direction, Card p_card, boolean p_handComplete) {
 	}
 
 	@Override
-	public void trickWon(Direction winner) {
+	public void sig_trickWon(Direction winner) {
 		// TODO Auto-generated method stub
 		
 	}
 
 	@Override
-	public void contractSet(Contract contract) {
+	public void sig_contractSet(Contract contract) {
 		// TODO Auto-generated method stub
 		
 	}
 	
-	public void blindHandsScanned() {
+	public void sig_blindHandsScanned() {
 		gameGUI.changeFrame();
 	}
 
 	@Override
-	public void dummyHandScanned() {
+	public void sig_dummyHandScanned() {
 		// TODO Auto-generated method stub
 		
 	}

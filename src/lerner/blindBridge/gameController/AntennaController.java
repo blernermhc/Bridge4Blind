@@ -39,7 +39,8 @@ public class AntennaController implements SerialPortEventListener, GameListener
 	// CONFIGURATION MEMBER DATA
 	//--------------------------------------------------
 	
-	BridgeHand	m_bridgeHand;
+	/** The game data */
+	Game		m_game;
 	
 	/** the device this controller uses */
 	String m_device;
@@ -100,13 +101,13 @@ public class AntennaController implements SerialPortEventListener, GameListener
 	
 	/***********************************************************************
 	 * Configures and initializes a Keyboard Controller
-	 * @param p_bridgeHand		The game object managing the hands
+	 * @param p_game		The game object managing the hands
 	 * @param p_direction		The player position of the player using this Keyboard Controller
 	 * @param p_device			The USB serial device of the antenna this controller is listening to 
 	 ***********************************************************************/
-	public AntennaController(BridgeHand p_bridgeHand, Direction p_direction, String p_device)
+	public AntennaController(Game p_game, Direction p_direction, String p_device)
 	{
-		m_bridgeHand = p_bridgeHand;
+		m_game = p_game;
 		m_myPosition = p_direction;
 		m_device = p_device;
 		initialize();
@@ -294,7 +295,7 @@ public class AntennaController implements SerialPortEventListener, GameListener
 			
 			case SCAN_CARDS:
 			{
-				m_bridgeHand.evt_addScannedCard(m_myPosition, p_card);
+				m_game.getBridgeHand().evt_addScannedCard(m_myPosition, p_card);
 				m_currentCard = null;
 				description = "Scanned card: " + p_card;
 			}
@@ -302,7 +303,7 @@ public class AntennaController implements SerialPortEventListener, GameListener
 			
 			case PLAY_CARDS:
 			{
-				boolean accepted = m_bridgeHand.evt_playCard(m_myPosition, p_card);
+				boolean accepted = m_game.getBridgeHand().evt_playCard(m_myPosition, p_card);
 				if (!accepted) m_currentCard = p_card;
 				else m_currentCard = null;
 				description = "Played card: " + p_card;
@@ -352,7 +353,7 @@ public class AntennaController implements SerialPortEventListener, GameListener
 	 * @see model.GameListener#debugMsg(java.lang.String)
 	 */
 	@Override
-	public void debugMsg ( String p_string )
+	public void sig_debugMsg ( String p_string )
 	{
 		// nothing to do
 	}
@@ -361,7 +362,7 @@ public class AntennaController implements SerialPortEventListener, GameListener
 	 * @see model.GameListener#gameReset()
 	 */
 	@Override
-	public void gameReset ()
+	public void sig_gameReset ()
 	{
 		// nothing to do
 	}
@@ -370,14 +371,14 @@ public class AntennaController implements SerialPortEventListener, GameListener
 	 * @see model.GameListener#scanBlindHands()
 	 */
 	@Override
-	public void scanBlindHands ()
+	public void sig_scanBlindHands ()
 	{
-		if (m_bridgeHand.isBlindPlayer(m_myPosition))
+		if (m_game.getBridgeHand().isBlindPlayer(m_myPosition))
 		{
 			m_controllerState = AntennaControllerState.SCAN_CARDS;
 			if (m_currentCard != null)
 			{
-				m_bridgeHand.evt_addScannedCard(m_myPosition, m_currentCard);
+				m_game.getBridgeHand().evt_addScannedCard(m_myPosition, m_currentCard);
 				m_currentCard = null;
 			}
 		}
@@ -387,14 +388,14 @@ public class AntennaController implements SerialPortEventListener, GameListener
 	 * @see model.GameListener#scanDummyHand()
 	 */
 	@Override
-	public void scanDummyHand ()
+	public void sig_scanDummyHand ()
 	{
-		if (m_myPosition == m_bridgeHand.getDummyPosition())
+		if (m_myPosition == m_game.getBridgeHand().getDummyPosition())
 		{
 			m_controllerState = AntennaControllerState.SCAN_CARDS;
 			if (m_currentCard != null)
 			{
-				m_bridgeHand.evt_addScannedCard(m_myPosition, m_currentCard);
+				m_game.getBridgeHand().evt_addScannedCard(m_myPosition, m_currentCard);
 				m_currentCard = null;
 			}
 		}
@@ -404,7 +405,7 @@ public class AntennaController implements SerialPortEventListener, GameListener
 	 * @see model.GameListener#cardScanned(model.Direction, model.Card, boolean)
 	 */
 	@Override
-	public void cardScanned ( Direction p_direction, Card p_card, boolean p_handComplete )
+	public void sig_cardScanned ( Direction p_direction, Card p_card, boolean p_handComplete )
 	{
 		// nothing to do
 	}
@@ -413,9 +414,9 @@ public class AntennaController implements SerialPortEventListener, GameListener
 	 * @see model.GameListener#blindHandsScanned()
 	 */
 	@Override
-	public void blindHandsScanned ()
+	public void sig_blindHandsScanned ()
 	{
-		if (m_bridgeHand.isBlindPlayer(m_myPosition))
+		if (m_game.getBridgeHand().isBlindPlayer(m_myPosition))
 		{
 			m_controllerState = AntennaControllerState.CAPTURE_CARD;
 		}
@@ -425,9 +426,9 @@ public class AntennaController implements SerialPortEventListener, GameListener
 	 * @see model.GameListener#dummyHandScanned()
 	 */
 	@Override
-	public void dummyHandScanned ()
+	public void sig_dummyHandScanned ()
 	{
-		if (m_myPosition == m_bridgeHand.getDummyPosition())
+		if (m_myPosition == m_game.getBridgeHand().getDummyPosition())
 		{
 			m_controllerState = AntennaControllerState.CAPTURE_CARD;
 		}
@@ -437,7 +438,7 @@ public class AntennaController implements SerialPortEventListener, GameListener
 	 * @see model.GameListener#enterContract()
 	 */
 	@Override
-	public void enterContract ()
+	public void sig_enterContract ()
 	{
 		// nothing to do
 	}
@@ -446,7 +447,7 @@ public class AntennaController implements SerialPortEventListener, GameListener
 	 * @see model.GameListener#contractSet(model.Contract)
 	 */
 	@Override
-	public void contractSet ( Contract p_contract )
+	public void sig_contractSet ( Contract p_contract )
 	{
 		// nothing to do
 	}
@@ -455,7 +456,7 @@ public class AntennaController implements SerialPortEventListener, GameListener
 	 * @see model.GameListener#setDummyPosition(model.Direction)
 	 */
 	@Override
-	public void setDummyPosition ( Direction p_direction )
+	public void sig_setDummyPosition ( Direction p_direction )
 	{
 		// nothing to do
 	}
@@ -464,7 +465,7 @@ public class AntennaController implements SerialPortEventListener, GameListener
 	 * @see model.GameListener#setNextPlayer(model.Direction)
 	 */
 	@Override
-	public void setNextPlayer ( Direction p_direction )
+	public void sig_setNextPlayer ( Direction p_direction )
 	{
 		if (s_cat.isDebugEnabled()) s_cat.debug("setNextPlayer: [" + m_myPosition + "] next: "+ p_direction);
 		if (m_myPosition == p_direction)
@@ -472,7 +473,7 @@ public class AntennaController implements SerialPortEventListener, GameListener
 			m_controllerState = AntennaControllerState.PLAY_CARDS;
 			if (m_currentCard != null)
 			{
-				boolean cardPlayed = m_bridgeHand.evt_playCard(m_myPosition, m_currentCard);
+				boolean cardPlayed = m_game.getBridgeHand().evt_playCard(m_myPosition, m_currentCard);
 				if (cardPlayed) m_currentCard = null;
 			}
 		}
@@ -483,7 +484,7 @@ public class AntennaController implements SerialPortEventListener, GameListener
 	 * @see model.GameListener#setCurrentSuit(model.Suit)
 	 */
 	@Override
-	public void setCurrentSuit ( Suit p_suit )
+	public void sig_setCurrentSuit ( Suit p_suit )
 	{
 		// nothing to do
 	}
@@ -492,7 +493,7 @@ public class AntennaController implements SerialPortEventListener, GameListener
 	 * @see model.GameListener#cardPlayed(model.Direction, model.Card)
 	 */
 	@Override
-	public void cardPlayed ( Direction p_direction, Card p_card )
+	public void sig_cardPlayed ( Direction p_direction, Card p_card )
 	{
 		if (m_myPosition == p_direction)
 		{
@@ -504,7 +505,7 @@ public class AntennaController implements SerialPortEventListener, GameListener
 	 * @see model.GameListener#trickWon(model.Direction)
 	 */
 	@Override
-	public void trickWon ( Direction p_winner )
+	public void sig_trickWon ( Direction p_winner )
 	{
 		// nothing to do
 	}
@@ -513,7 +514,7 @@ public class AntennaController implements SerialPortEventListener, GameListener
 	 * @see model.GameListener#handComplete(model.BridgeScore)
 	 */
 	@Override
-	public void handComplete ( BridgeScore p_score )
+	public void sig_handComplete ( BridgeScore p_score )
 	{
 		// nothing to do
 	}
@@ -522,7 +523,7 @@ public class AntennaController implements SerialPortEventListener, GameListener
 	 * @see model.GameListener#announceError(lerner.blindBridge.gameController.ErrorCode, model.Direction, model.Card, model.Suit, int)
 	 */
 	@Override
-	public void announceError (	ErrorCode p_errorCode,
+	public void sig_error (	ErrorCode p_errorCode,
 								Direction p_direction,
 								Card p_card,
 								Suit p_suit,

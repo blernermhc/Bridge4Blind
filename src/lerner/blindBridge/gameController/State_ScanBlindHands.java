@@ -41,14 +41,14 @@ public class State_ScanBlindHands extends ControllerState
 	/* (non-Javadoc)
 	 * @see lerner.blindBridge.gameController.ControllerState#onEntry(lerner.blindBridge.gameController.BridgeHand)
 	 */
-	public void onEntry ( BridgeHand p_bridgeHand )
+	public void onEntry ( Game p_game )
 	{
-		m_bridgeHand = p_bridgeHand;
+		m_game = p_game;
 		
 		// notify all listeners we have entered this state
-		for (GameListener gameListener : m_bridgeHand.getGameListeners())
+		for (GameListener gameListener : m_game.getGameListeners())
 		{
-			gameListener.scanBlindHands();
+			gameListener.sig_scanBlindHands();
 		}
 	}
 
@@ -57,13 +57,13 @@ public class State_ScanBlindHands extends ControllerState
 	 */
 	public BridgeHandState checkState()
 	{
-		if (! m_bridgeHand.testBlindHandsComplete())
+		if (! m_game.getBridgeHand().testBlindHandsComplete())
 			return BridgeHandState.SCAN_BLIND_HANDS; // continue waiting for scanned cards
 		
 		// notify all listeners we have completed this state
-		for (GameListener gameListener : m_bridgeHand.getGameListeners())
+		for (GameListener gameListener : m_game.getGameListeners())
 		{
-			gameListener.blindHandsScanned();
+			gameListener.sig_blindHandsScanned();
 		}
 
 		return BridgeHandState.ENTER_CONTRACT;

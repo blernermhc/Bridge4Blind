@@ -22,7 +22,7 @@ public class AudibleGameListener implements GameListener {
 	 * @param c the card to speak
 	 */
 	@Override
-	public synchronized void cardScanned(Direction p_direction, Card c, boolean p_handComplete){
+	public synchronized void sig_cardScanned(Direction p_direction, Card c, boolean p_handComplete){
 		//System.out.println("AudibleGameListener: Scanned card sound added: " + c);
 		//System.out.println("SoundManager.addSound: Thread " + Thread.currentThread().getName() + " trying to get lock");
 		soundMgr.addSound(c.getSound());
@@ -36,7 +36,7 @@ public class AudibleGameListener implements GameListener {
 	 * @param winner the winner of the trick
 	 */
 	@Override
-	public synchronized void trickWon(Direction winner){
+	public synchronized void sig_trickWon(Direction winner){
 		//System.out.println("SoundManager.addSound: Thread " + Thread.currentThread().getName() + " trying to get lock");
 		soundMgr.addSound("/sounds/warnings/trickover.WAV");
 		switch(winner){
@@ -66,7 +66,7 @@ public class AudibleGameListener implements GameListener {
 	 * @param c The card that was played.
 	 */
 	@Override
-	public synchronized void cardPlayed(Direction direction, Card c){
+	public synchronized void sig_cardPlayed(Direction direction, Card c){
 		//System.out.println("SoundManager.addSound: Thread " + Thread.currentThread().getName() + " trying to get lock");
 		
 		//add the appropriate direction sound
@@ -96,29 +96,29 @@ public class AudibleGameListener implements GameListener {
 	
 	
 	@Override
-	public void gameReset() {
+	public void sig_gameReset() {
 		// Do nothing
 	}
 	
 	@Override
-	public void contractSet(Contract contract) {
+	public void sig_contractSet(Contract contract) {
 		// Do nothing
 	}
 
 
 	@Override
-	public void debugMsg(String msg) {
+	public void sig_debugMsg(String msg) {
 		//System.out.println(msg);
 	}
 
 	@Override
-	public void blindHandsScanned() {
+	public void sig_blindHandsScanned() {
 		// TODO Auto-generated method stub
 		
 	}
 
 	@Override
-	public void dummyHandScanned() {
+	public void sig_dummyHandScanned() {
 		// TODO Auto-generated method stub
 		
 	}
@@ -131,15 +131,15 @@ public class AudibleGameListener implements GameListener {
 		AudibleGameListener listener = new AudibleGameListener();
 		
 		System.out.println("Should say \"North plays Ace of Clubs\"");
-		listener.cardPlayed(Direction.NORTH, new Card(Rank.ACE, Suit.CLUBS));
+		listener.sig_cardPlayed(Direction.NORTH, new Card(Rank.ACE, Suit.CLUBS));
 		listener.soundMgr.pauseSounds();
 		
 		System.out.println("Should say \"King of Diamonds\"");
-		listener.cardScanned(direction, new Card(Rank.KING, Suit.DIAMONDS), null);
+		listener.sig_cardScanned(direction, new Card(Rank.KING, Suit.DIAMONDS), null);
 		listener.soundMgr.pauseSounds();
 		
 		System.out.println("Should say \"Trick is over and won by South\"");
-		listener.trickWon(Direction.SOUTH);
+		listener.sig_trickWon(Direction.SOUTH);
 	}
 
 

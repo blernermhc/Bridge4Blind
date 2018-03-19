@@ -128,7 +128,8 @@ public class KeyboardController implements SerialPortEventListener, GameListener
 	// CONFIGURATION MEMBER DATA
 	//--------------------------------------------------
 	
-	BridgeHand	m_bridgeHand;
+	/** The game data */
+	Game		m_game;
 	
 	/** the device this controller uses */
 	String m_device;
@@ -294,12 +295,12 @@ public class KeyboardController implements SerialPortEventListener, GameListener
 	
 	/***********************************************************************
 	 * Configures and initializes a Keyboard Controller
-	 * @param p_bridgeHand		The object managing the hands
+	 * @param p_game		The object managing the hands
 	 * @param p_direction		The player position of the player using this Keyboard Controller
 	 ***********************************************************************/
-	public KeyboardController(BridgeHand p_bridgeHand, Direction p_direction, String p_device)
+	public KeyboardController(Game p_game, Direction p_direction, String p_device)
 	{
-		m_bridgeHand = p_bridgeHand;
+		m_game = p_game;
 		m_device = p_device;
 		initialize();
 		
@@ -839,13 +840,13 @@ public class KeyboardController implements SerialPortEventListener, GameListener
 		if (opId == 0)
 		{
 			if (s_cat.isDebugEnabled()) s_cat.debug("processIncomingMessage: play card from hand: " + cardId);
-			m_bridgeHand.evt_playCard(getMyPosition(), card);
+			m_game.getBridgeHand().evt_playCard(getMyPosition(), card);
 			return "Play card (" + cardId + "): " + cardAbbrev;
 		}
 		else if (opId == 1)
 		{
 			if (s_cat.isDebugEnabled()) s_cat.debug("processIncomingMessage: play card from parner (dummy): " + cardId);
-			m_bridgeHand.evt_playCard(getMyPartnersPosition(), card);
+			m_game.getBridgeHand().evt_playCard(getMyPartnersPosition(), card);
 			return "Play card (" + cardId + "): " + cardAbbrev;
 		}
 		else if (opId == 2)
@@ -885,8 +886,8 @@ public class KeyboardController implements SerialPortEventListener, GameListener
 				}
 				else if (cardId == 2)
 				{
-					System.out.println("    about to initiate reset: " + (m_bridgeHand == null ? "null" : "notnull"));
-					m_bridgeHand.evt_resetKeyboard(this);
+					System.out.println("    about to initiate reset");
+					m_game.getBridgeHand().evt_resetKeyboard(this);
 					return "Initiate reset";
 				}
 				else
@@ -906,7 +907,7 @@ public class KeyboardController implements SerialPortEventListener, GameListener
 	 * @see model.GameListener#debugMsg(java.lang.String)
 	 */
 	@Override
-	public void debugMsg ( String p_string )
+	public void sig_debugMsg ( String p_string )
 	{
 		// nothing to do
 	}
@@ -915,7 +916,7 @@ public class KeyboardController implements SerialPortEventListener, GameListener
 	 * @see model.GameListener#gameReset()
 	 */
 	@Override
-	public void gameReset ()
+	public void sig_gameReset ()
 	{
 		send_simpleMessage(KBD_MESSAGE.NEW_HAND);
 	}
@@ -924,7 +925,7 @@ public class KeyboardController implements SerialPortEventListener, GameListener
 	 * @see model.GameListener#scanBlindHands()
 	 */
 	@Override
-	public void scanBlindHands ()
+	public void sig_scanBlindHands ()
 	{
 		send_simpleMessage(KBD_MESSAGE.SCAN_HAND);
 	}
@@ -933,7 +934,7 @@ public class KeyboardController implements SerialPortEventListener, GameListener
 	 * @see model.GameListener#scanDummyHand()
 	 */
 	@Override
-	public void scanDummyHand ()
+	public void sig_scanDummyHand ()
 	{
 		send_simpleMessage(KBD_MESSAGE.SCAN_DUMMY);
 	}
@@ -942,7 +943,7 @@ public class KeyboardController implements SerialPortEventListener, GameListener
 	 * @see model.GameListener#cardScanned(model.Direction, model.Card, boolean)
 	 */
 	@Override
-	public void cardScanned ( Direction p_direction, model.Card p_card, boolean p_handComplete )
+	public void sig_cardScanned ( Direction p_direction, model.Card p_card, boolean p_handComplete )
 	{
 		if (p_direction == m_myPosition || p_direction == m_dummyPosition)
 		{
@@ -958,7 +959,7 @@ public class KeyboardController implements SerialPortEventListener, GameListener
 	 * @see model.GameListener#blindHandsScanned()
 	 */
 	@Override
-	public void blindHandsScanned ()
+	public void sig_blindHandsScanned ()
 	{
 		// Nothing to do
 		// cardScanned sends hand complete notification, since this goes to only one listener)
@@ -968,7 +969,7 @@ public class KeyboardController implements SerialPortEventListener, GameListener
 	 * @see model.GameListener#dummyHandScanned()
 	 */
 	@Override
-	public void dummyHandScanned ()
+	public void sig_dummyHandScanned ()
 	{
 		// Nothing to do
 		// cardScanned sends hand complete notification)
@@ -978,7 +979,7 @@ public class KeyboardController implements SerialPortEventListener, GameListener
 	 * @see model.GameListener#enterContract()
 	 */
 	@Override
-	public void enterContract ()
+	public void sig_enterContract ()
 	{
 		send_simpleMessage(KBD_MESSAGE.ENTER_CONTRACT);
 	}
@@ -987,7 +988,7 @@ public class KeyboardController implements SerialPortEventListener, GameListener
 	 * @see model.GameListener#contractSet(model.Contract)
 	 */
 	@Override
-	public void contractSet ( model.Contract p_contract )
+	public void sig_contractSet ( model.Contract p_contract )
 	{
 		send_contract(p_contract);
 	}
@@ -995,7 +996,7 @@ public class KeyboardController implements SerialPortEventListener, GameListener
 	/* (non-Javadoc)
 	 * @see model.GameListener#setDummyPosition(model.Direction)
 	 */
-	public void setDummyPosition ( Direction p_direction )
+	public void sig_setDummyPosition ( Direction p_direction )
 	{
 		m_dummyPosition = p_direction;
 		send_multiByteMessage(MULTIBYTE_MESSAGE.SET_DUMMY, p_direction);
@@ -1004,7 +1005,7 @@ public class KeyboardController implements SerialPortEventListener, GameListener
 	/* (non-Javadoc)
 	 * @see model.GameListener#setNextPlayer(model.Direction)
 	 */
-	public void setNextPlayer ( Direction p_direction )
+	public void sig_setNextPlayer ( Direction p_direction )
 	{
 		send_multiByteMessage(MULTIBYTE_MESSAGE.SET_NEXT_PLAYER, p_direction);
 	}
@@ -1012,7 +1013,7 @@ public class KeyboardController implements SerialPortEventListener, GameListener
 	/* (non-Javadoc)
 	 * @see model.GameListener#setNextPlayer(model.Direction)
 	 */
-	public void setCurrentSuit ( Suit p_suit )
+	public void sig_setCurrentSuit ( Suit p_suit )
 	{
 		// nothing to do (Arduino sets currentSuit set from first trick)
 	}
@@ -1021,7 +1022,7 @@ public class KeyboardController implements SerialPortEventListener, GameListener
 	 * @see model.GameListener#cardPlayed(model.Direction, model.Card)
 	 */
 	@Override
-	public void cardPlayed ( Direction p_direction, Card p_card )
+	public void sig_cardPlayed ( Direction p_direction, Card p_card )
 	{
 		send_multiByteMessage(MULTIBYTE_MESSAGE.PLAY_CARD, p_direction, p_card);
 	}
@@ -1030,7 +1031,7 @@ public class KeyboardController implements SerialPortEventListener, GameListener
 	 * @see model.GameListener#trickWon(model.Direction)
 	 */
 	@Override
-	public void trickWon ( model.Direction p_winner )
+	public void sig_trickWon ( model.Direction p_winner )
 	{
 		send_multiByteMessage(MULTIBYTE_MESSAGE.TRICK_TAKEN, p_winner);
 	}
@@ -1038,7 +1039,7 @@ public class KeyboardController implements SerialPortEventListener, GameListener
 	/* (non-Javadoc)
 	 * @see model.GameListener#gameComplete(model.BridgeScore)
 	 */
-	public void handComplete (BridgeScore p_score )
+	public void sig_handComplete (BridgeScore p_score )
 	{
 		send_simpleMessage(KBD_MESSAGE.HAND_COMPLETE);
 	}
@@ -1047,7 +1048,7 @@ public class KeyboardController implements SerialPortEventListener, GameListener
 	 * @see model.GameListener#announceError(lerner.blindBridge.gameController.ErrorCode, model.Direction, model.Card, model.Suit, int)
 	 */
 	@Override
-	public void announceError (	ErrorCode p_errorCode,
+	public void sig_error (	ErrorCode p_errorCode,
 								Direction p_direction,
 								Card p_card,
 								Suit p_suit,

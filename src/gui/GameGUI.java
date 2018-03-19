@@ -10,21 +10,15 @@ import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
-import java.net.UnknownHostException;
 import java.util.Iterator;
 import java.util.Stack;
-import java.util.Timer;
-import java.util.TimerTask;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 
-import controller.Handler;
 import controller.TestAntennaHandler;
 import main.BridgeActualGame;
 import model.Card;
@@ -35,8 +29,6 @@ import model.GameListener;
 import model.GameState;
 import model.Player;
 import model.Suit;
-import model.Trick;
-import audio.AudibleGameListener;
 
 /**
  * The Game class controls the UI for a game of bridge
@@ -149,11 +141,13 @@ public class GameGUI extends JFrame implements GameListener {
 		this.game = game;
 		addKeyListener(new KeyPad(this, game));
 
+		/* rick
 		if (Game.isTestMode()) {
 
 			addKeyListener(game.getHandler());
 			setFocusable(true);
 		}
+		*/
 
 		// initialize some of the guis before createCards()
 
@@ -497,6 +491,7 @@ public class GameGUI extends JFrame implements GameListener {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
 				// reverse();
+				/* rick
 				if (game != null) {
 					System.out.println("Stopping server");
 					try {
@@ -509,19 +504,21 @@ public class GameGUI extends JFrame implements GameListener {
 						e.printStackTrace();
 					}
 				}
+				*/
 
 				// game.resumeGame();
-				debugMsg ("Starting server");
+				sig_debugMsg ("Starting server");
 				BridgeActualGame.startServer();
 
 				// start the game 15 seconds after starting the C# Server
+				/* rick
 				TimerTask timerTask = new TimerTask() {
 
 					@Override
 					public void run() {
 
 						try {
-							debugMsg("Activating antennas");
+							sig_debugMsg("Activating antennas");
 							game.activateAntennas();
 							Handler handler = game.getHandler();
 							if (handler != null) {
@@ -532,18 +529,18 @@ public class GameGUI extends JFrame implements GameListener {
 						} catch (UnknownHostException e) {
 
 							// TODO Auto-generated catch block
-							debugMsg(e.getMessage());
+							sig_debugMsg(e.getMessage());
 							e.printStackTrace();
 
 						} catch (IOException e) {
 
 							// TODO Auto-generated catch block
-							debugMsg(e.getMessage());
+							sig_debugMsg(e.getMessage());
 							e.printStackTrace();
 						}
-						debugMsg("Resuming game");
+						sig_debugMsg("Resuming game");
 						game.resumeGame();
-						debugMsg("Game resumed");
+						sig_debugMsg("Game resumed");
 					}
 
 				};
@@ -551,6 +548,7 @@ public class GameGUI extends JFrame implements GameListener {
 				// wait 4 seconds after starting the server to start the game
 				Timer timer = new Timer(true);
 				timer.schedule(timerTask, 4000);
+				*/
 
 			}
 
@@ -636,14 +634,16 @@ public class GameGUI extends JFrame implements GameListener {
 			nextHandGUI.refreshDisplay();
 		}
 
-		debugMsg("Switching to screen " + cardNames[currentScreen]);
+		sig_debugMsg("Switching to screen " + cardNames[currentScreen]);
 
 		System.out.println("Switching to screen " + cardNames[currentScreen]);
 
 		// Note : its position/order is important
+		/* rick
 		if (Game.isTestMode()) {
 			determineIfRightGUI();
 		}
+		*/
 
 		layout.show(cardPanel, cardNames[currentScreen]);
 		requestFocusInWindow();
@@ -654,6 +654,7 @@ public class GameGUI extends JFrame implements GameListener {
 		// debugMsg("currentScreen " + currentScreen);
 	}
 
+	/* rick
 	private void determineIfRightGUI() {
 		// figure out if it is the right gui for listening to key press
 		if (currentScreen == VI_PLAYER_GUI || currentScreen == HELP_GUI
@@ -669,12 +670,13 @@ public class GameGUI extends JFrame implements GameListener {
 			((TestAntennaHandler) game.getHandler()).setRightGUI(true);
 		}
 	}
+	*/
 
 	/**
 	 * Adds a message to the debugging panel
 	 */
 	@Override
-	public void debugMsg(String msg) {
+	public void sig_debugMsg(String msg) {
 		debugArea.append(msg + "\n");
 		debugArea.setCaretPosition(debugArea.getText().length() - 1);
 	}
@@ -687,7 +689,7 @@ public class GameGUI extends JFrame implements GameListener {
 			Card c = cardIter.next();
 			if (c.getSuit() == s) {
 				// print its suit and rank
-				debugMsg(c.getRank() + " of " + c.getSuit());
+				sig_debugMsg(c.getRank() + " of " + c.getSuit());
 
 			}
 		}
@@ -700,7 +702,7 @@ public class GameGUI extends JFrame implements GameListener {
 	 *            the new contract
 	 */
 	@Override
-	public void contractSet(Contract contract) {
+	public void sig_contractSet(Contract contract) {
 		// bidLabel.setText(contract.toString());
 		setAntennaLabel(game.getCurrentHand());
 	}
@@ -709,7 +711,7 @@ public class GameGUI extends JFrame implements GameListener {
 	 * Resets the game to start over.
 	 */
 	@Override
-	public void gameReset() {
+	public void sig_gameReset() {
 
 		System.out.println("Game reset");
 
@@ -774,11 +776,15 @@ public class GameGUI extends JFrame implements GameListener {
 			 * So do not scan cards until the position of the blind player has
 			 * been chosen. Not sure what happens if you do.
 			 */
+			/* rick - should not need this anymore
 			game.resetVIPlayer();
+			*/
 
 		}else if (currentScreen == BID_POSITION_GUI) {
-
+			// TODO: implement this
+			/* rick - probably need to implement this
 			game.reverseBidPosition();
+			*/
 
 		}
 
@@ -801,7 +807,9 @@ public class GameGUI extends JFrame implements GameListener {
 
 			layout.show(cardPanel, cardNames[currentScreen]);
 
+			/* rick
 			determineIfRightGUI();
+			*/
 
 			requestFocusInWindow();
 		}
@@ -896,7 +904,7 @@ public class GameGUI extends JFrame implements GameListener {
 	 *            the card just played into the trick
 	 */
 	@Override
-	public void cardPlayed(Direction turn, Card card) {
+	public void sig_cardPlayed(Direction turn, Card card) {
 		setAntennaLabel(turn.getNextDirection().toString());
 		setTrickLabel(game.getCurrentTrick().toString());
 	}
@@ -915,7 +923,7 @@ public class GameGUI extends JFrame implements GameListener {
 	 *            the card just scanned
 	 */
 	@Override
-	public void cardScanned(Direction p_direction, Card p_card, boolean p_handComplete) {
+	public void sig_cardScanned(Direction p_direction, Card p_card, boolean p_handComplete) {
 		// setAntennaLabel(game.getCurrentHand());
 	}
 
@@ -927,7 +935,7 @@ public class GameGUI extends JFrame implements GameListener {
 	 *            the player who won the trick
 	 */
 	@Override
-	public void trickWon(Direction winner) {
+	public void sig_trickWon(Direction winner) {
 		setAntennaLabel(winner.toString());
 		setTrickLabel(game.getCurrentTrick().toString());
 	}
@@ -943,12 +951,12 @@ public class GameGUI extends JFrame implements GameListener {
 
 	}
 
-	public void blindHandsScanned() {
+	public void sig_blindHandsScanned() {
 
 	}
 
 	@Override
-	public void dummyHandScanned() {
+	public void sig_dummyHandScanned() {
 		// TODO Auto-generated method stub
 
 	}
@@ -980,13 +988,14 @@ public class GameGUI extends JFrame implements GameListener {
 
 	public void reverseToScanBlind() {
 
-		game.setGameState(GameState.DEALING);
+		// TODO: implement this in BridgeHand
+		// game.setGameState(GameState.DEALING);
 
 	}
 
 	public void reverseToScanDummy() {
-
-		game.setGameState(GameState.SCANNING_DUMMY);
+		// TODO: implement this in BridgeHand
+		// game.setGameState(GameState.SCANNING_DUMMY);
 
 	}
 

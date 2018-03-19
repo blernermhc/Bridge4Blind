@@ -1,5 +1,7 @@
 package lerner.blindBridge.gameController;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,19 +18,20 @@ import org.apache.log4j.Category;
 import org.apache.logging.log4j.Level;
 
 import model.Direction;
+import model.GameListener;
 
 /**********************************************************************
  * Main program for playing Blind Bridge.
  * Communicates with RFID antennas and the Blind players' Keyboard Controllers.
  * Sends events to the BridgeHand object. 
  *********************************************************************/
-public class BlindBridgeMain
+public class Game
 {
 
 	/**
 	 * Used to collect logging output for this class
 	 */
-	static Category s_cat = Category.getInstance(BlindBridgeMain.class.getName());
+	static Category s_cat = Category.getInstance(Game.class.getName());
 
 	//--------------------------------------------------
 	// CONSTANTS
@@ -43,13 +46,17 @@ public class BlindBridgeMain
 	// INTERNAL MEMBER DATA
 	//--------------------------------------------------
 	
-	BridgeHand m_bridgeHand; 
+	/** the object containing the data for the current hand */
+	private BridgeHand 					m_bridgeHand; 
 	
 	/** internal list to support moving keyboards to new positions */
-	private List<KeyboardController> m_keyboardControllerList = new ArrayList<>();
+	private List<KeyboardController>		m_keyboardControllerList = new ArrayList<>();
 
 	/** internal list to support moving antennas to new positions */
-	private List<AntennaController> m_antennaControllerList = new ArrayList<>();
+	private List<AntennaController>		m_antennaControllerList = new ArrayList<>();
+
+	/** all of the objects that may need to be notified of state changes */
+	private List<GameListener>			m_gameListeners = new ArrayList<>();;
 
 	//--------------------------------------------------
 	// CONSTRUCTORS
@@ -74,7 +81,7 @@ public class BlindBridgeMain
 		//------------------------------
 		// Create the game data object
 		//------------------------------
-		m_bridgeHand = new BridgeHand();
+		m_bridgeHand = new BridgeHand(this);
 		
 		//------------------------------
 		// Process command-line arguments
@@ -206,7 +213,7 @@ public class BlindBridgeMain
 		//------------------------------
 		// Create the command line input controller and start it
 		//------------------------------
-		m_commandController = new CommandController(this, m_bridgeHand, System.in, System.out);
+		m_commandController = new CommandController(this, System.in, System.out);
 		m_commandController.start();
 		
 		//------------------------------
@@ -218,6 +225,19 @@ public class BlindBridgeMain
 	//--------------------------------------------------
 	// METHODS
 	//--------------------------------------------------
+	
+	private Deque<BridgeHand>	m_playedHands = new ArrayDeque<>();
+	
+	/***********************************************************************
+	 * Starts a new hand, pushing previous hand onto the stack of played hands.
+	 * Updates the objects with references to the BridgeHand with the new object. 
+	 ***********************************************************************/
+	public void evt_startNewHand()
+	{
+		m_playedHands.push(m_bridgeHand);
+		m_bridgeHand = new BridgeHand(this);
+		
+	}
 	
 	//--------------------------------------------------
 	// INTERNAL METHODS
@@ -234,10 +254,10 @@ public class BlindBridgeMain
 	 ***********************************************************************/
 	public void addKeyboardController (Direction p_direction, String p_device)
 	{
-		KeyboardController kbdController = new KeyboardController(m_bridgeHand, p_direction, p_device);
+		KeyboardController kbdController = new KeyboardController(this, p_direction, p_device);
 		m_keyboardControllers.put(p_direction, kbdController);
 		m_keyboardControllerList.add(kbdController);
-		m_bridgeHand.addKeyboardController(p_direction, kbdController);
+		m_gameListeners.add(kbdController);
 	}
 	
 	/***********************************************************************
@@ -247,12 +267,47 @@ public class BlindBridgeMain
 	 ***********************************************************************/
 	public void addAntennaController (Direction p_direction, String p_device)
 	{
-		AntennaController antController = new AntennaController(m_bridgeHand, p_direction, p_device);
+		AntennaController antController = new AntennaController(this, p_direction, p_device);
 		m_antennaControllers.put(p_direction, antController);
 		m_antennaControllerList.add(antController);
-		m_bridgeHand.addAntennaController(p_direction, antController);
+		m_gameListeners.add(antController);
 	}
 	
+	/***********************************************************************
+	 * The object containing the data for the current hand.
+	 * @return game hand data
+	 ***********************************************************************/
+	public BridgeHand getBridgeHand ()
+	{
+		return m_bridgeHand;
+	}
+
+	/***********************************************************************
+	 * Get the Keyboard Controller map (Direction, KeyboardController).
+	 * @return keyboard controllers
+	 ***********************************************************************/
+	public Map<Direction, KeyboardController> getKeyboardControllers ()
+	{
+		return m_keyboardControllers;
+	}
+
+	/***********************************************************************
+	 * Get the Antenna Controller map (Direction, AntennaController).
+	 * @return antenna controllers
+	 ***********************************************************************/
+	public Map<Direction, AntennaController> getAntennaControllers ()
+	{
+		return m_antennaControllers;
+	}
+
+	/***********************************************************************
+	 * The objects to be notified of various events.
+	 * @return list of listeners
+	 ***********************************************************************/
+	public List<GameListener> getGameListeners ()
+	{
+		return m_gameListeners;
+	}
 
 	//--------------------------------------------------
 	// MAIN routing
@@ -265,7 +320,7 @@ public class BlindBridgeMain
 	 ***********************************************************************/
 	public static void main(String[] p_args) throws Exception
 	{
-		BlindBridgeMain main = new BlindBridgeMain();
+		Game main = new Game();
 		main.initialize(p_args);
 	}
 }

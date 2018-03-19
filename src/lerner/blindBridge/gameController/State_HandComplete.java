@@ -41,15 +41,15 @@ public class State_HandComplete extends ControllerState
 	/* (non-Javadoc)
 	 * @see lerner.blindBridge.gameController.ControllerState#onEntry(lerner.blindBridge.gameController.BridgeHand)
 	 */
-	public void onEntry ( BridgeHand p_bridgeHand )
+	public void onEntry ( Game p_game )
 	{
-		m_bridgeHand = p_bridgeHand;
+		m_game = p_game;
 		
-		m_bridgeHand.scoreContract();
+		m_game.getBridgeHand().scoreContract();
 
-		for (GameListener gameListener : m_bridgeHand.getGameListeners())
+		for (GameListener gameListener : m_game.getGameListeners())
 		{
-			gameListener.handComplete(m_bridgeHand.getBridgeScore());
+			gameListener.sig_handComplete(m_game.getBridgeHand().getBridgeScore());
 		}
 	}
 	

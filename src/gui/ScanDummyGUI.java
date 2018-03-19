@@ -75,13 +75,13 @@ public class ScanDummyGUI extends JPanel implements GameListener {
 	}
 
 	@Override
-	public void debugMsg(String string) {
+	public void sig_debugMsg(String string) {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public void gameReset() {
+	public void sig_gameReset() {
 
 		clubsScanned.setText("Clubs: ");
 		diamondsScanned.setText("Diamonds: ");
@@ -91,13 +91,13 @@ public class ScanDummyGUI extends JPanel implements GameListener {
 	}
 
 	@Override
-	public void cardPlayed(Direction turn, Card card) {
+	public void sig_cardPlayed(Direction turn, Card card) {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public void cardScanned(Direction p_direction, Card p_card, boolean p_handComplete) {
+	public void sig_cardScanned(Direction p_direction, Card p_card, boolean p_handComplete) {
 		if (game.isScanningDummy()) {
 			switch (p_card.getSuit()) {
 			case CLUBS:
@@ -121,25 +121,25 @@ public class ScanDummyGUI extends JPanel implements GameListener {
 	}
 
 	@Override
-	public void trickWon(Direction winner) {
+	public void sig_trickWon(Direction winner) {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public void contractSet(Contract contract) {
+	public void sig_contractSet(Contract contract) {
 		dummy = game.getDummyPlayer();
 	}
 
 	@Override
-	public void blindHandsScanned() {
+	public void sig_blindHandsScanned() {
 	}
 
 	/**
 	 * Advances to the next GUI frame
 	 */
 	@Override
-	public void dummyHandScanned() {
+	public void sig_dummyHandScanned() {
 
 		// wait 2 seconds before switching screen so that the last dummy card is
 		// visible

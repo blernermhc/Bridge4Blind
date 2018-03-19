@@ -29,8 +29,8 @@ public class BridgeHandStateController
 	// CONFIGURATION MEMBER DATA
 	//--------------------------------------------------
 	
-	/** the game data */
-	BridgeHand m_bridgeHand;
+	/** The game data */
+	Game m_game;
 
 	/** If set, state machine transitions to the indicated state upon wakeup */
 	BridgeHandState		m_forceNewState		= null;
@@ -46,9 +46,9 @@ public class BridgeHandStateController
 	// CONSTRUCTORS
 	//--------------------------------------------------
 	
-	public BridgeHandStateController ( BridgeHand p_bridgeHand )
+	public BridgeHandStateController ( Game p_game )
 	{
-		m_bridgeHand = p_bridgeHand;
+		m_game = p_game;
 	}
 
 	//--------------------------------------------------
@@ -71,7 +71,7 @@ public class BridgeHandStateController
 	{
 		if (m_currentState == null) return;
 
-		m_currentState.getControllerState().onEntry(m_bridgeHand);
+		m_currentState.getControllerState().onEntry(m_game);
 
 		while (true)
 		{
@@ -92,7 +92,7 @@ public class BridgeHandStateController
 				if (s_cat.isDebugEnabled()) s_cat.debug("runStateMachine: transition from "
 														+ m_currentState + " to " + newState);
 				m_currentState = newState;
-				m_currentState.getControllerState().onEntry(m_bridgeHand);
+				m_currentState.getControllerState().onEntry(m_game);
 			}
 			else
 			{

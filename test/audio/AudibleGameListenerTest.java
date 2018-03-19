@@ -18,7 +18,7 @@ public class AudibleGameListenerTest {
 
 	//@Test
 	public void testCardScanned() {
-		audio.cardScanned(direction, new Card (Rank.ACE, Suit.SPADES), null);
+		audio.sig_cardScanned(direction, new Card (Rank.ACE, Suit.SPADES), null);
 		pause(3000);
 	}
 
@@ -37,14 +37,14 @@ public class AudibleGameListenerTest {
 
 	//@Test
 	public void testMultipleCardsScanned() {
-		audio.cardScanned(direction, new Card (Rank.ACE, Suit.SPADES), null);
-		audio.cardScanned(direction, new Card (Rank.KING, Suit.SPADES), null);
+		audio.sig_cardScanned(direction, new Card (Rank.ACE, Suit.SPADES), null);
+		audio.sig_cardScanned(direction, new Card (Rank.KING, Suit.SPADES), null);
 		pause(3000);
 	}
 	
 	//@Test
 	public void testTrickOver() {
-		audio.trickWon(Direction.NORTH);
+		audio.sig_trickWon(Direction.NORTH);
 		pause(4000);
 	}
 	

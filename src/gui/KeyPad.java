@@ -328,7 +328,7 @@ public class KeyPad extends KeyAdapter {
 
 			// ap.stop();
 			soundMgr.requestStop();
-			gameGUI.debugMsg("tutorial stopped");
+			gameGUI.sig_debugMsg("tutorial stopped");
 
 		} else if (tutorialPlayer.isPlaying()) {
 
@@ -684,35 +684,35 @@ public class KeyPad extends KeyAdapter {
 				if (keyCharacter == KeyEvent.VK_PLUS) {
 
 					// read the cards in the current trick
-					gameGUI.debugMsg("Current trick");
+					gameGUI.sig_debugMsg("Current trick");
 					readTrick();
 
 					// if the 1 was pressed
 				} else if (keyCharacter == KeyEvent.VK_1) {
 
 					// read the contract
-					gameGUI.debugMsg("Contract");
+					gameGUI.sig_debugMsg("Contract");
 					playContract(game.getContract());
 
 					// if the 2 was pressed
 				} else if (keyCharacter == KeyEvent.VK_2) {
 
 					// read N/S's current tricks won
-					gameGUI.debugMsg("N/S tricks won");
+					gameGUI.sig_debugMsg("N/S tricks won");
 					playTricksWonNS();
 
 					// if the 3 was pressed
 				} else if (keyCharacter == KeyEvent.VK_3) {
 
 					// read E/W's current tricks won
-					gameGUI.debugMsg("E/W tricks won");
+					gameGUI.sig_debugMsg("E/W tricks won");
 					playTricksWonEW();
 
 					// if the 0 was pressed
 				} else if (keyCharacter == KeyEvent.VK_0) {
 
 					// repeat the last thing said
-					gameGUI.debugMsg("Repeat");
+					gameGUI.sig_debugMsg("Repeat");
 					soundMgr.playLastSound();
 
 					// if the enter key is pressed then play the blid player's
@@ -747,7 +747,7 @@ public class KeyPad extends KeyAdapter {
 		if (keyCharacter == KeyEvent.VK_MINUS) {
 
 			// read the dummy's clubs
-			gameGUI.debugMsg("Dummy spades:");
+			gameGUI.sig_debugMsg("Dummy spades:");
 			
 			
 			// printCards(Suit.CLUBS, dummyPlayer);
@@ -757,7 +757,7 @@ public class KeyPad extends KeyAdapter {
 		} else if (keyCharacter == KeyEvent.VK_9) {
 
 			// read the dummy's diamonds
-			gameGUI.debugMsg("Dummy hearts:");
+			gameGUI.sig_debugMsg("Dummy hearts:");
 			
 			// printCards(Suit.DIAMONDS, dummyPlayer);
 			readDummySuit(Suit.HEARTS, dummyPlayer);
@@ -766,7 +766,7 @@ public class KeyPad extends KeyAdapter {
 		} else if (keyCharacter == KeyEvent.VK_8) {
 
 			// read the dummy's hearts
-			gameGUI.debugMsg("Dummy diamonds:");
+			gameGUI.sig_debugMsg("Dummy diamonds:");
 			
 			// printCards(Suit.HEARTS, dummyPlayer);
 			readDummySuit(Suit.DIAMONDS, dummyPlayer);
@@ -775,7 +775,7 @@ public class KeyPad extends KeyAdapter {
 		} else if (keyCharacter == KeyEvent.VK_7) {
 
 			// read the dummy's spades
-			gameGUI.debugMsg("Dummy clubs:");
+			gameGUI.sig_debugMsg("Dummy clubs:");
 			
 			
 			// printCards(Suit.SPADES, dummyPlayer);
@@ -785,7 +785,7 @@ public class KeyPad extends KeyAdapter {
 		} else if (keyCharacter == KeyEvent.VK_5) {
 
 			// read the dummy's entire hand
-			gameGUI.debugMsg("Dummy hand:");
+			gameGUI.sig_debugMsg("Dummy hand:");
 			
 			readDummyHand(dummyPlayer);
 		}
@@ -801,7 +801,7 @@ public class KeyPad extends KeyAdapter {
 		if (keyCharacter == KeyEvent.VK_BACK_SPACE) {
 
 			// read the visually impaired player's clubs
-			gameGUI.debugMsg("Own spades:");
+			gameGUI.sig_debugMsg("Own spades:");
 			// printCards(Suit.CLUBS, blindPlayer);
 			readBlindSuit(Suit.SPADES, blindPlayer);
 
@@ -818,7 +818,7 @@ public class KeyPad extends KeyAdapter {
 		} else if (keyCharacter == KeyEvent.VK_SLASH) {
 
 			// read the visually impaired player's hearts
-			gameGUI.debugMsg("Own hearts:");
+			gameGUI.sig_debugMsg("Own hearts:");
 			// printCards(Suit.HEARTS, blindPlayer);
 			readBlindSuit(Suit.DIAMONDS, blindPlayer);
 
@@ -826,7 +826,7 @@ public class KeyPad extends KeyAdapter {
 		} else if (keyCharacter == KeyEvent.VK_TAB) {
 
 			// read the visually impaired player's spades
-			gameGUI.debugMsg("Own spades:");
+			gameGUI.sig_debugMsg("Own spades:");
 			// printCards(Suit.SPADES, blindPlayer);
 			readBlindSuit(Suit.CLUBS, blindPlayer);
 
@@ -834,7 +834,7 @@ public class KeyPad extends KeyAdapter {
 		} else if (keyCharacter == KeyEvent.VK_4) {
 
 			// read the VI player's entire hand
-			gameGUI.debugMsg("Own hand:");
+			gameGUI.sig_debugMsg("Own hand:");
 			readBlindHand(blindPlayer);
 		}
 	}

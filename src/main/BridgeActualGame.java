@@ -53,13 +53,13 @@ public class BridgeActualGame implements BridgeMode {
 	public void start() {
 
 		try {
-			Game game = new Game(new AntennaHandler(new CardDatabase()), false);
+			Game game = new Game(false);
 			game.activateAntennas();
 			GameGUI gui = new GameGUI(game);
 			game.addListener(new AudibleGameListener());
 			game.addListener(gui);
 
-			gui.debugMsg("main run");
+			gui.sig_debugMsg("main run");
 
 		} catch (UnknownHostException e) {
 			System.err.println("Could not connect to server.  Host unknown.");

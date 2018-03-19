@@ -41,14 +41,14 @@ public class State_ScanDummy extends ControllerState
 	/* (non-Javadoc)
 	 * @see lerner.blindBridge.gameController.ControllerState#onEntry(lerner.blindBridge.gameController.BridgeHand)
 	 */
-	public void onEntry ( BridgeHand p_bridgeHand )
+	public void onEntry ( Game p_game )
 	{
-		m_bridgeHand = p_bridgeHand;
+		m_game = p_game;
 		
 		// notify all listeners we have entered this state
-		for (GameListener gameListener : m_bridgeHand.getGameListeners())
+		for (GameListener gameListener : m_game.getGameListeners())
 		{
-			gameListener.scanDummyHand();
+			gameListener.sig_scanDummyHand();
 		}
 	}
 
@@ -57,13 +57,13 @@ public class State_ScanDummy extends ControllerState
 	 */
 	public BridgeHandState checkState()
 	{
-		if (! m_bridgeHand.testDummyComplete())
+		if (! m_game.getBridgeHand().testDummyComplete())
 			return BridgeHandState.SCAN_DUMMY; // continue waiting for scanned cards
 
 		// notify all listeners we have completed this state
-		for (GameListener gameListener : m_bridgeHand.getGameListeners())
+		for (GameListener gameListener : m_game.getGameListeners())
 		{
-			gameListener.dummyHandScanned();
+			gameListener.sig_dummyHandScanned();
 		}
 
 		return BridgeHandState.WAIT_FOR_NEXT_PLAYER;

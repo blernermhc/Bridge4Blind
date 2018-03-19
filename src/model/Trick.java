@@ -19,6 +19,7 @@ public class Trick {
 	
 	private int numCards = 0 ;
 
+	public Trick() {}
 	/**
 	 * Checks if the trick is over.
 	 * 

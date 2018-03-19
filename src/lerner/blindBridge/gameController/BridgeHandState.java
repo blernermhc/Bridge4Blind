@@ -41,6 +41,7 @@ public enum BridgeHandState
 	, ENTER_CONTRACT			(new State_EnterContract())
 	, WAIT_FOR_FIRST_PLAYER	(new State_WaitForPlayer(true))
 	, SCAN_DUMMY				(new State_ScanDummy())
+	, SWITCH_TO_NEXT_PLAYER	(new State_SwitchToNextPlayer())
 	, WAIT_FOR_NEXT_PLAYER	(new State_WaitForPlayer(false))
 	, TRICK_COMPLETE			(new State_TrickComplete())
 	, HAND_COMPLETE			(new State_HandComplete())

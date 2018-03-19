@@ -138,7 +138,7 @@ public class NextHandGUI extends JPanel {
 
 				gameGUI.changeFrame();
 
-				game.resetGame();
+				game.evt_startNewHand();
 
 				System.out.println("resetting game in Next Hand GUI");
 

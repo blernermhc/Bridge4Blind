@@ -43,15 +43,15 @@ public class State_TrickComplete extends ControllerState
 	/* (non-Javadoc)
 	 * @see lerner.blindBridge.gameController.ControllerState#onEntry(lerner.blindBridge.gameController.BridgeHand)
 	 */
-	public void onEntry ( BridgeHand p_bridgeHand )
+	public void onEntry ( Game p_game )
 	{
-		m_bridgeHand = p_bridgeHand;
+		m_game = p_game;
 		
-		Direction winner = m_bridgeHand.sc_finishTrick();
+		Direction winner = m_game.getBridgeHand().sc_finishTrick();
 
-		for (GameListener gameListener : m_bridgeHand.getGameListeners())
+		for (GameListener gameListener : m_game.getGameListeners())
 		{
-			gameListener.trickWon(winner);
+			gameListener.sig_trickWon(winner);
 		}
 	}
 	
@@ -60,7 +60,7 @@ public class State_TrickComplete extends ControllerState
 	 */
 	public BridgeHandState checkState()
 	{
-		if (! m_bridgeHand.testHandComplete())
+		if (! m_game.getBridgeHand().testHandComplete())
 			return BridgeHandState.WAIT_FOR_NEXT_PLAYER;
 		else
 			return BridgeHandState.HAND_COMPLETE;

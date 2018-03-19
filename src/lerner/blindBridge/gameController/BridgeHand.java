@@ -89,13 +89,6 @@ public class BridgeHand
 
 	private Direction						m_nextPlayer;
 	
-	private Map<Direction, KeyboardController>		m_keyboardControllers = new HashMap<>();
-
-	private Map<Direction, AntennaController>		m_antennaControllers = new HashMap<>();
-
-	/** all of the objects that may need to be notified of state changes */
-	private List<GameListener>				m_gameListeners = new ArrayList<>();;
-	
 	/** the state controller engine */
 	private BridgeHandStateController		m_bridgeHandStateController;
 	
@@ -104,6 +97,8 @@ public class BridgeHand
 	
 	private Set<Card>						m_cardsPlayed = new HashSet<>();
 
+	/** reference to the top-level object (contains list of listeners, and other non-hand data) */
+	private Game								m_game;
 	//--------------------------------------------------
 	// INTERNAL MEMBER DATA
 	//--------------------------------------------------
@@ -112,9 +107,11 @@ public class BridgeHand
 	// CONSTRUCTORS
 	//--------------------------------------------------
 	
-	public BridgeHand ()
+	public BridgeHand (Game p_game)
 	{
-		m_bridgeHandStateController = new BridgeHandStateController(this);
+		m_game = p_game;
+		
+		m_bridgeHandStateController = new BridgeHandStateController(m_game);
 		
 		resetHand();
 	}
@@ -152,6 +149,7 @@ public class BridgeHand
 		m_tricksTaken.put(Direction.WEST, list);	// E and W use the same list
 		
 		m_bridgeHandStateController.setForceNewState(BridgeHandState.NEW_HAND);
+		m_bridgeHandStateController.notifyStateMachine();
 		
 		if (s_cat.isDebugEnabled()) s_cat.debug("resetHand: finished");
 	}
@@ -211,9 +209,9 @@ public class BridgeHand
 		boolean handComplete = (hand.m_cards.size() == CARDS_IN_HAND);
 		
 		// notify listeners of new card
-		for (GameListener gameListener : m_gameListeners)
+		for (GameListener gameListener : m_game.getGameListeners())
 		{
-			gameListener.cardScanned(p_direction, p_card, handComplete);
+			gameListener.sig_cardScanned(p_direction, p_card, handComplete);
 		}
 		
 		m_bridgeHandStateController.notifyStateMachine();
@@ -281,9 +279,9 @@ public class BridgeHand
 		
 		if (m_cardsPlayed.contains(p_card))
 		{
-			for (GameListener listener : m_gameListeners)
+			for (GameListener listener : m_game.getGameListeners())
 			{
-				listener.announceError(ErrorCode.CANNOT_PLAY_ALREADY_PLAYED, p_direction, p_card, null, 0);
+				listener.sig_error(ErrorCode.CANNOT_PLAY_ALREADY_PLAYED, p_direction, p_card, null, 0);
 			}
 		}
 		
@@ -296,9 +294,9 @@ public class BridgeHand
 			if (! hand.testPlay(p_card, m_currentSuit))
 			{
 				// announce illegal play
-				for (GameListener listener : m_gameListeners)
+				for (GameListener listener : m_game.getGameListeners())
 				{
-					listener.announceError(ErrorCode.CANNOT_PLAY_WRONG_SUIT, p_direction, p_card, m_currentSuit, 0);
+					listener.sig_error(ErrorCode.CANNOT_PLAY_WRONG_SUIT, p_direction, p_card, m_currentSuit, 0);
 				}
 
 				// TODO: move the following code to keyboard controller
@@ -320,9 +318,9 @@ public class BridgeHand
 			if (! hand.useCard(p_card))
 			{
 				// announce illegal play
-				for (GameListener listener : m_gameListeners)
+				for (GameListener listener : m_game.getGameListeners())
 				{
-					listener.announceError(ErrorCode.CANNOT_PLAY_NOT_IN_HAND, p_direction, p_card, null, 0);
+					listener.sig_error(ErrorCode.CANNOT_PLAY_NOT_IN_HAND, p_direction, p_card, null, 0);
 				}
 				return true;
 			}
@@ -470,7 +468,7 @@ public class BridgeHand
 	public boolean testBlindHandsComplete()
 	{
 		// test hands for each direction with a Blind Keyboard Controller
-		for (Direction direction : m_keyboardControllers.keySet())
+		for (Direction direction : m_game.getKeyboardControllers().keySet())
 		{
 			PlayerHand hand = m_hands.get(direction); 
 			if (hand == null || ! hand.isComplete()) return false;
@@ -486,7 +484,7 @@ public class BridgeHand
 	 ***********************************************************************/
 	public boolean isBlindPlayer ( Direction p_direction )
 	{
-		for (Direction direction : m_keyboardControllers.keySet())
+		for (Direction direction : m_game.getKeyboardControllers().keySet())
 		{
 			if (direction == p_direction) return true;
 		}
@@ -615,8 +613,7 @@ public class BridgeHand
 			 , { "2C", "TC", "AC", "2D", "5D", "2H", "5H", "6H", "9H", "QH", "3S", "JS", "KS" }	// west
 		 }
 		};
-	                                       {
-	}
+
 	/***********************************************************************
 	 * Deals a hand for testing
 	 * @param p_testHand if non-negative, index of a predefined test hand.
@@ -732,13 +729,13 @@ public class BridgeHand
 		out.append("\n  Tricks Taken (EW): " + numTricks);
 		
 		out.append("\n\nAntennas");
-		for (AntennaController antController : m_antennaControllers.values())
+		for (AntennaController antController : m_game.getAntennaControllers().values())
 		{
 			out.append("\n  " + antController);
 		}
 
 		out.append("\n\nKeyboards");
-		for (KeyboardController kbdController : m_keyboardControllers.values())
+		for (KeyboardController kbdController : m_game.getKeyboardControllers().values())
 		{
 			out.append("\n  " + kbdController);
 		}
@@ -749,29 +746,6 @@ public class BridgeHand
 	//--------------------------------------------------
 	// ACCESSORS
 	//--------------------------------------------------
-
-	/***********************************************************************
-	 * Adds a keyboard controller to the configuration
-	 * @param p_direction		the position of the controller
-	 * @param p_device		the device path to use (attempts to find one if null)
-	 ***********************************************************************/
-	public void addKeyboardController (Direction p_direction, KeyboardController p_kbdController)
-	{
-		m_keyboardControllers.put(p_direction, p_kbdController);
-		m_gameListeners.add(p_kbdController);
-	}
-	
-	/***********************************************************************
-	 * Adds an antenna controller to the configuration
-	 * @param p_direction		the position of the controller
-	 * @param p_device		the device path to use (attempts to find one if null)
-	 ***********************************************************************/
-	public void addAntennaController (Direction p_direction, AntennaController p_antController)
-	{
-		m_antennaControllers.put(p_direction, p_antController);
-		m_gameListeners.add(p_antController);
-	}
-	
 
 	/***********************************************************************
 	 * Hands as known so far
@@ -881,39 +855,12 @@ public class BridgeHand
 	}
 
 	/***********************************************************************
-	 * The objects to be notified of various events.
-	 * @return list of listeners
-	 ***********************************************************************/
-	public List<GameListener> getGameListeners ()
-	{
-		return m_gameListeners;
-	}
-
-	/***********************************************************************
 	 * The current score of the bridge game
 	 * @return score
 	 ***********************************************************************/
 	public BridgeScore getBridgeScore ()
 	{
 		return m_bridgeScore;
-	}
-
-	/***********************************************************************
-	 * Get the Keyboard Controller map (Direction, KeyboardController).
-	 * @return keyboard controllers
-	 ***********************************************************************/
-	public Map<Direction, KeyboardController> getKeyboardControllers ()
-	{
-		return m_keyboardControllers;
-	}
-
-	/***********************************************************************
-	 * Get the Antenna Controller map (Direction, AntennaController).
-	 * @return antenna controllers
-	 ***********************************************************************/
-	public Map<Direction, AntennaController> getAntennaControllers ()
-	{
-		return m_antennaControllers;
 	}
 
 }

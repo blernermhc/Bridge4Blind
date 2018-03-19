@@ -4,19 +4,19 @@
 
 package lerner.blindBridge.gameController;
 
-import model.GameListener;
-
 /***********************************************************************
- * Initial state of a hand.
- * Notifies listeners then enters SCAN_BLIND_HANDS
+ * Interim state so switching from one player to the next involves a
+ * transition between different states, rather than from WAIT_FOR_NEXT_PLAYER
+ * to the same state.
+ * Simply transitions to WAIT_FOR_NEXT_PLAYER on checkState().
  ***********************************************************************/
-public class State_NewHand extends ControllerState
+public class State_SwitchToNextPlayer extends ControllerState
 {
 
 	/**
 	 * Used to collect logging output for this class
 	 */
-	// private static Category s_cat = Category.getInstance(State_Scan_Blind_Hands.class.getName());
+	// private static Category s_cat = Category.getInstance(State_SwitchToNextPlayer.class.getName());
 
 	//--------------------------------------------------
 	// CONSTANTS
@@ -44,14 +44,6 @@ public class State_NewHand extends ControllerState
 	public void onEntry ( Game p_game )
 	{
 		m_game = p_game;
-		
-		m_game.getBridgeHand().evt_startNewHand();
-		
-		// notify all listeners we have entered this state
-		for (GameListener gameListener : m_game.getGameListeners())
-		{
-			gameListener.sig_gameReset();
-		}
 	}
 
 	/* (non-Javadoc)
@@ -59,7 +51,7 @@ public class State_NewHand extends ControllerState
 	 */
 	public BridgeHandState checkState()
 	{
-		return BridgeHandState.SCAN_BLIND_HANDS;
+		return BridgeHandState.WAIT_FOR_NEXT_PLAYER;
 	}
 
 	//--------------------------------------------------

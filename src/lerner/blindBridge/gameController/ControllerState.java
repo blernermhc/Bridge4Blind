@@ -23,9 +23,9 @@ public abstract class ControllerState
 	// CONFIGURATION MEMBER DATA
 	//--------------------------------------------------
 	
-	/** the game data */
-	BridgeHand m_bridgeHand;
-
+	/** The game object */
+	protected Game m_game;
+	
 	//--------------------------------------------------
 	// INTERNAL MEMBER DATA
 	//--------------------------------------------------
@@ -41,9 +41,11 @@ public abstract class ControllerState
 	/***********************************************************************
 	 * Code to execute when the state machine transitions to this state.
 	 * Some states update game data, send messages to controllers and listeners.
-	 * @param p_bridgeHand game data (save to use in checkState, if necessary)
+	 * Game object cannot be set in constructor, because the sub-classes
+	 * are created at program initialization time in BridgeHandState.
+	 * @param p_game game data (save to use in checkState, if necessary)
 	 ***********************************************************************/
-	public abstract void onEntry( BridgeHand p_bridgeHand );
+	public abstract void onEntry( Game p_game );
 	
 	/***********************************************************************
 	 * Check the game state to determine if it is time to transition to a new state
@@ -60,23 +62,5 @@ public abstract class ControllerState
 	//--------------------------------------------------
 	// ACCESSORS
 	//--------------------------------------------------
-
-	/***********************************************************************
-	 * The BridgeHand managing overall game play
-	 * @return the BridgeHand object
-	 ***********************************************************************/
-	public BridgeHand getBridgeHand ()
-	{
-		return m_bridgeHand;
-	}
-
-	/***********************************************************************
-	 * The BridgeHand managing overall game play
-	 * @param p_bridgeHand the BridgeHand object
-	 ***********************************************************************/
-	public void setBridgeHand ( BridgeHand p_bridgeHand )
-	{
-		m_bridgeHand = p_bridgeHand;
-	}
 	
 }
