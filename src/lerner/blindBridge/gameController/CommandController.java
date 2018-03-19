@@ -235,7 +235,7 @@ public class CommandController implements Runnable
 						
 					case NEWHAND:
 					{
-						m_game.getBridgeHand().evt_startNewHand();
+						m_game.evt_startNewHand();
 					}
 					break;
 						
@@ -377,6 +377,12 @@ public class CommandController implements Runnable
 					}
 					break;
 
+					case HELP:
+					{
+						printHelp(p_out);
+					}
+					break;
+					
 					default:
 						break;
 				}

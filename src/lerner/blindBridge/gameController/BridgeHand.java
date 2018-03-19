@@ -89,9 +89,6 @@ public class BridgeHand
 
 	private Direction						m_nextPlayer;
 	
-	/** the state controller engine */
-	private BridgeHandStateController		m_bridgeHandStateController;
-	
 	/** The current score of the bridge game */
 	private BridgeScore						m_bridgeScore = new BridgeScore();
 	
@@ -107,32 +104,30 @@ public class BridgeHand
 	// CONSTRUCTORS
 	//--------------------------------------------------
 	
+	/***********************************************************************
+	 * Creates the data object for a new hand
+	 * @param p_game		the game controller
+	 ***********************************************************************/
 	public BridgeHand (Game p_game)
 	{
 		m_game = p_game;
 		
-		m_bridgeHandStateController = new BridgeHandStateController(m_game);
-		
-		resetHand();
+		initializeHand();
 	}
 	
 	//--------------------------------------------------
 	// CONFIGURATION METHODS
 	//--------------------------------------------------
-	private void resetTrick ()
-	{
-		m_currentTrick	= new ArrayList<>();
-		m_currentSuit	= null;
-		
-		if (s_cat.isDebugEnabled()) s_cat.debug("resetTrick: finished");
-	}
-	
-	private void resetHand ()
+
+	/***********************************************************************
+	 * Initialize data for a new hand
+	 ***********************************************************************/
+	private void initializeHand ()
 	{
 		resetTrick();
 
 		m_hands			= new HashMap<>();
-		m_testHands			= new HashMap<>();
+		m_testHands		= new HashMap<>();
 		m_currentTrump	= null;
 		m_contract		= null;
 		m_nextPlayer		= null;	
@@ -148,36 +143,23 @@ public class BridgeHand
 		m_tricksTaken.put(Direction.EAST, list);
 		m_tricksTaken.put(Direction.WEST, list);	// E and W use the same list
 		
-		m_bridgeHandStateController.setForceNewState(BridgeHandState.NEW_HAND);
-		m_bridgeHandStateController.notifyStateMachine();
-		
-		if (s_cat.isDebugEnabled()) s_cat.debug("resetHand: finished");
+		if (s_cat.isDebugEnabled()) s_cat.debug("initializeHand: finished");
 	}
 
 	/***********************************************************************
-	 * Starts the state machine
+	 * Prepares for a new round in the hand.
 	 ***********************************************************************/
-	public void startGame()
+	private void resetTrick ()
 	{
-		m_bridgeHandStateController.runStateMachine();
+		m_currentTrick	= new ArrayList<>();
+		m_currentSuit	= null;
+		
+		if (s_cat.isDebugEnabled()) s_cat.debug("resetTrick: finished");
 	}
 	
 	//--------------------------------------------------
 	// EVENT METHODS (PUBLIC)
 	//--------------------------------------------------
-	
-	/***********************************************************************
-	 * Indicates that we are to start a new hand.
-	 * @return true if processed event and false otherwise (always returns true)
-	 ***********************************************************************/
-	public boolean evt_startNewHand ()
-	{
-		if (s_cat.isDebugEnabled()) s_cat.debug("evt_startNewHand: entered.");
-
-		resetHand();
-
-		return true;
-	}
 	
 	/***********************************************************************
 	 * Handles the receipt of a card from an antenna or Keyboard Controller.
@@ -191,7 +173,7 @@ public class BridgeHand
 		if (s_cat.isDebugEnabled()) s_cat.debug("evt_addScannedCard: entered for"
 		                                        + " player: " + p_direction + " card: " + p_card);
 
-		BridgeHandState currentState = m_bridgeHandStateController.getCurrentState();
+		BridgeHandState currentState = m_game.getStateController().getCurrentState();
 		if (currentState != BridgeHandState.SCAN_BLIND_HANDS && currentState != BridgeHandState.SCAN_DUMMY)
 		{
 			s_cat.error("evt_addScannedCard: ignoring event since state is not SCAN_BLIND_HANDS or SCAN_DUMMY.  State: " + currentState);
@@ -214,7 +196,7 @@ public class BridgeHand
 			gameListener.sig_cardScanned(p_direction, p_card, handComplete);
 		}
 		
-		m_bridgeHandStateController.notifyStateMachine();
+		m_game.getStateController().notifyStateMachine();
 
 		if (s_cat.isDebugEnabled()) s_cat.debug("evt_addScannedCard: finished.");
 		
@@ -235,7 +217,7 @@ public class BridgeHand
 		if (s_cat.isDebugEnabled()) s_cat.debug("evt_setContract: entered for "
 		                                        + " contract: " + p_contract);
 
-		BridgeHandState currentState = m_bridgeHandStateController.getCurrentState();
+		BridgeHandState currentState = m_game.getStateController().getCurrentState();
 		if (currentState != BridgeHandState.ENTER_CONTRACT)
 		{
 			s_cat.error("evt_setContract: ignoring event since state is not ENTER_CONTRACT.  State: " + currentState);
@@ -245,7 +227,7 @@ public class BridgeHand
 		m_contract = p_contract;
 		m_currentTrump = p_contract.getTrump();
 		
-		m_bridgeHandStateController.notifyStateMachine();
+		m_game.getStateController().notifyStateMachine();
 		
 		if (s_cat.isDebugEnabled()) s_cat.debug("evt_setContract: finished.");
 
@@ -264,7 +246,7 @@ public class BridgeHand
 		if (s_cat.isDebugEnabled()) s_cat.debug("evt_playCard: entered for"
 		                                        + " player: " + p_direction + " card: " + p_card);
 
-		BridgeHandState currentState = m_bridgeHandStateController.getCurrentState();
+		BridgeHandState currentState = m_game.getStateController().getCurrentState();
 		if (currentState != BridgeHandState.WAIT_FOR_FIRST_PLAYER && currentState != BridgeHandState.WAIT_FOR_NEXT_PLAYER)
 		{
 			s_cat.error("evt_addScannedCard: ignoring event since state is not WAIT_FOR_FIRST_PLAYER or WAIT_FOR_NEXT_PLAYER.  State: " + currentState);
@@ -330,7 +312,7 @@ public class BridgeHand
 		CardPlay cardPlay = new CardPlay(p_direction, p_card);
 		m_currentTrick.add(cardPlay);
 		
-		m_bridgeHandStateController.notifyStateMachine();
+		m_game.getStateController().notifyStateMachine();
 
 		if (s_cat.isDebugEnabled()) s_cat.debug("evt_playCard: finished.");
 
@@ -707,7 +689,7 @@ public class BridgeHand
 		StringBuilder out = new StringBuilder();
 		
 		out.append("BridgeHand:");
-		out.append("\n  Hand State: " + m_bridgeHandStateController.getCurrentState());
+		out.append("\n  Hand State: " + m_game.getStateController().getCurrentState());
 		out.append("\n  Contract: " + m_contract);
 		out.append("\n  Current Suit: " + m_currentSuit);
 		out.append("\n  Current Trump: " + m_currentTrump);

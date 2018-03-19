@@ -45,8 +45,6 @@ public class State_NewHand extends ControllerState
 	{
 		m_game = p_game;
 		
-		m_game.getBridgeHand().evt_startNewHand();
-		
 		// notify all listeners we have entered this state
 		for (GameListener gameListener : m_game.getGameListeners())
 		{

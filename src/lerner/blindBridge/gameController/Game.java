@@ -58,6 +58,12 @@ public class Game
 	/** all of the objects that may need to be notified of state changes */
 	private List<GameListener>			m_gameListeners = new ArrayList<>();;
 
+	/** the state controller engine */
+	private BridgeHandStateController	m_bridgeHandStateController;
+	
+	/** Stack of played hands (used primarily for undo) */
+	private Deque<BridgeHand>	m_playedHands = new ArrayDeque<>();
+	
 	//--------------------------------------------------
 	// CONSTRUCTORS
 	//--------------------------------------------------
@@ -79,9 +85,10 @@ public class Game
 		Logger.initialize(logLevel);
 
 		//------------------------------
-		// Create the game data object
+		// Create the game data object and state machine
 		//------------------------------
 		m_bridgeHand = new BridgeHand(this);
+		m_bridgeHandStateController = new BridgeHandStateController(this);
 		
 		//------------------------------
 		// Process command-line arguments
@@ -219,23 +226,38 @@ public class Game
 		//------------------------------
 		// Start the game
 		//------------------------------
-		m_bridgeHand.startGame();
+		m_bridgeHandStateController.runStateMachine();
 	}
 
 	//--------------------------------------------------
 	// METHODS
 	//--------------------------------------------------
 	
-	private Deque<BridgeHand>	m_playedHands = new ArrayDeque<>();
-	
 	/***********************************************************************
 	 * Starts a new hand, pushing previous hand onto the stack of played hands.
-	 * Updates the objects with references to the BridgeHand with the new object. 
+	 * Since all other objects access BridgeHand with Game.getBridgeHand(), they
+	 * will see the latest version.
+	 * 
+	 * This method is invoked by the state machine at the end of a hand.
 	 ***********************************************************************/
-	public void evt_startNewHand()
+	public void startNewHand()
 	{
 		m_playedHands.push(m_bridgeHand);
 		m_bridgeHand = new BridgeHand(this);
+	}
+
+	/***********************************************************************
+	 * Starts a new hand, pushing previous hand onto the stack of played hands.
+	 * Since all other objects access BridgeHand with Game.getBridgeHand(), they
+	 * will see the latest version.
+	 * 
+	 * This method is invoked by an external entity (thread), such as the command line controller.
+	 ***********************************************************************/
+	public void evt_startNewHand()
+	{
+		startNewHand();
+		m_bridgeHandStateController.setForceNewState(BridgeHandState.NEW_HAND);
+		m_bridgeHandStateController.notifyStateMachine();
 		
 	}
 	
@@ -280,6 +302,15 @@ public class Game
 	public BridgeHand getBridgeHand ()
 	{
 		return m_bridgeHand;
+	}
+
+	/***********************************************************************
+	 * The state machine.
+	 * @return the state machine
+	 ***********************************************************************/
+	public BridgeHandStateController getStateController ()
+	{
+		return m_bridgeHandStateController;
 	}
 
 	/***********************************************************************

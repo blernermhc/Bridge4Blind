@@ -46,6 +46,10 @@ public class BridgeHandStateController
 	// CONSTRUCTORS
 	//--------------------------------------------------
 	
+	/***********************************************************************
+	 * Creates the state machine.  Start the state machine later, after threads have been spawned.
+	 * @param p_game the game controller
+	 ***********************************************************************/
 	public BridgeHandStateController ( Game p_game )
 	{
 		m_game = p_game;

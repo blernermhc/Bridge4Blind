@@ -58,6 +58,7 @@ public class State_HandComplete extends ControllerState
 	 */
 	public BridgeHandState checkState()
 	{
+		m_game.startNewHand();
 		return BridgeHandState.NEW_HAND;
 	}
 
