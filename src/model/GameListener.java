@@ -1,5 +1,7 @@
 package model;
 
+import lerner.blindBridge.gameController.ErrorCode;
+
 /**
  * Interface to implement to be notified of important events during the
  * playing of the game.
@@ -96,5 +98,18 @@ public interface GameListener
 	 * @param p_score score
 	 ***********************************************************************/
 	public void handComplete (BridgeScore p_score );
+	
+	/***********************************************************************
+	 * Notifies listeners of an error that should be made known to some or all players.
+	 * Each listener must determine if the error should be announced or ignored
+	 * (e.g., do not announce a "cannot play card" error from one player to another player).
+	 * 
+	 * @param p_errorCode	The error being reported
+	 * @param p_direction	player position (optional)
+	 * @param p_card			a card (optional)
+	 * @param p_suit			a suit (optional)
+	 * @param p_num			a number (optional)
+	 ***********************************************************************/
+	public void announceError (ErrorCode p_errorCode, Direction p_direction, Card p_card, Suit p_suit, int p_num);
 
 }

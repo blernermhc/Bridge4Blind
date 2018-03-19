@@ -176,6 +176,8 @@ const char SND_SUITWORD[] PROGMEM = "SUIT";
 const char SND_PLAYERWORD[] PROGMEM = "PLAYER";
 const char SND_IS_NOT_SET[] PROGMEM = "ISNOTSET";
 const char SND_MY_POSITION[] PROGMEM = "MYPOS";
+const char SND_CARD_ALREADY_PLAYED[] PROGMEM = "CARDPLYD";
+const char SND_CARD_NOT_IN_HAND[] PROGMEM = "NOTINHND";
 
 //------------------------------------------------------------------------------
 /**

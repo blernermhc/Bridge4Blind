@@ -248,6 +248,8 @@ void processInput1 (uint8_t p_input0, uint8_t p_repeat)
     case 11:	eventList.resetEventList(false); keyboardRestartInitiate(); break;
     case 12:	keyboardRestartComplete(); eventList.addEvent(p_input0, p_repeat); break;
     case 13:	phrases.playMessage(SND_ENTER_CONTRACT, NEW_AUDIO); eventList.addEvent(p_input0, p_repeat); break;
+    case 14:	phrases.playMessage(SND_CARD_ALREADY_PLAYED, NEW_AUDIO); eventList.addEvent(p_input0, p_repeat); break;
+    case 15:	phrases.playMessage(SND_CARD_NOT_IN_HAND, NEW_AUDIO); eventList.addEvent(p_input0, p_repeat); break;
     default:
       phrases.playNumber(SND_UNEXPECTED_OP_1, opId, NEW_AUDIO);
       eventList.addEvent(p_input0, p_repeat);

@@ -7,9 +7,11 @@ package lerner.blindBridge.gameController;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 
 import org.apache.log4j.Category;
 
@@ -99,6 +101,8 @@ public class BridgeHand
 	
 	/** The current score of the bridge game */
 	private BridgeScore						m_bridgeScore = new BridgeScore();
+	
+	private Set<Card>						m_cardsPlayed = new HashSet<>();
 
 	//--------------------------------------------------
 	// INTERNAL MEMBER DATA
@@ -147,7 +151,7 @@ public class BridgeHand
 		m_tricksTaken.put(Direction.EAST, list);
 		m_tricksTaken.put(Direction.WEST, list);	// E and W use the same list
 		
-		m_bridgeHandStateController.setForceNewState(BridgeHandState.SCAN_BLIND_HANDS);
+		m_bridgeHandStateController.setForceNewState(BridgeHandState.NEW_HAND);
 		
 		if (s_cat.isDebugEnabled()) s_cat.debug("resetHand: finished");
 	}
@@ -275,6 +279,14 @@ public class BridgeHand
 			return false;
 		}
 		
+		if (m_cardsPlayed.contains(p_card))
+		{
+			for (GameListener listener : m_gameListeners)
+			{
+				listener.announceError(ErrorCode.CANNOT_PLAY_ALREADY_PLAYED, p_direction, p_card, null, 0);
+			}
+		}
+		
 		PlayerHand hand = m_hands.get(p_direction);
 		if (hand == null) hand = m_testHands.get(p_direction);	// if we have test hands, adjust those for printhand
 
@@ -284,6 +296,13 @@ public class BridgeHand
 			if (! hand.testPlay(p_card, m_currentSuit))
 			{
 				// announce illegal play
+				for (GameListener listener : m_gameListeners)
+				{
+					listener.announceError(ErrorCode.CANNOT_PLAY_WRONG_SUIT, p_direction, p_card, m_currentSuit, 0);
+				}
+
+				// TODO: move the following code to keyboard controller
+				/*
 				for (KeyboardController kbdController : m_keyboardControllers.values())
 				{
 					if ((p_direction != m_dummyPosition && p_direction == kbdController.getMyPosition())
@@ -294,13 +313,17 @@ public class BridgeHand
 						return true;
 					}
 				}
-				announceError("Cannot play card, suit is " + m_currentSuit);
+				*/
 				return true;
 			}
 
 			if (! hand.useCard(p_card))
 			{
-				s_cat.error("evt_playCard: did not play card, not in hand: " + p_card);
+				// announce illegal play
+				for (GameListener listener : m_gameListeners)
+				{
+					listener.announceError(ErrorCode.CANNOT_PLAY_NOT_IN_HAND, p_direction, p_card, null, 0);
+				}
 				return true;
 			}
 			
@@ -330,11 +353,10 @@ public class BridgeHand
 
 		if (s_cat.isDebugEnabled()) s_cat.debug("evt_resetKeyboard: sending newGame");
 		
+		p_kbdController.send_reserveAudioPlaybackTime(false);
 		p_kbdController.send_simpleMessage(KBD_MESSAGE.NEW_GAME);
-		p_kbdController.setMessageReserveMillis(0);
 
 		p_kbdController.setPlayer();
-		p_kbdController.setMessageReserveMillis(0);
 
 		// send hand, if we have it
 		Direction direction = p_kbdController.getMyPosition();
@@ -343,20 +365,17 @@ public class BridgeHand
 
 		// send contract
 		p_kbdController.send_simpleMessage(KBD_MESSAGE.ENTER_CONTRACT);
-		p_kbdController.setMessageReserveMillis(0);
 
 		if (m_contract != null)
 		{
 			if (s_cat.isDebugEnabled()) s_cat.debug("evt_resetKeyboard: sending contract");
 			p_kbdController.send_contract(m_contract);
-			p_kbdController.setMessageReserveMillis(0);
 		}
 
 		if (m_dummyPosition != null)
 		{
 			if (s_cat.isDebugEnabled()) s_cat.debug("evt_resetKeyboard: sending setDummy");
 			p_kbdController.send_multiByteMessage(MULTIBYTE_MESSAGE.SET_DUMMY, m_dummyPosition);
-			p_kbdController.setMessageReserveMillis(0);
 		}
 		
 		// send dummy hand, if we have it
@@ -371,7 +390,6 @@ public class BridgeHand
 			for (CardPlay cardPlay : tricksTaken)
 			{
 				p_kbdController.send_multiByteMessage(MULTIBYTE_MESSAGE.TRICK_TAKEN, cardPlay.getPlayer());
-				p_kbdController.setMessageReserveMillis(0);
 			}
 		}
 
@@ -381,7 +399,6 @@ public class BridgeHand
 			for (CardPlay cardPlay : tricksTaken)
 			{
 				p_kbdController.send_multiByteMessage(MULTIBYTE_MESSAGE.TRICK_TAKEN, cardPlay.getPlayer());
-				p_kbdController.setMessageReserveMillis(0);
 			}
 		}
 
@@ -392,21 +409,18 @@ public class BridgeHand
 			{
 				// set the next player before each play so first card sets current suit
 				p_kbdController.send_multiByteMessage(MULTIBYTE_MESSAGE.SET_NEXT_PLAYER, cardPlay.getPlayer());
-				p_kbdController.setMessageReserveMillis(0);
 
 				p_kbdController.send_multiByteMessage(MULTIBYTE_MESSAGE.PLAY_CARD, cardPlay.getPlayer(), cardPlay.getCard());
-				p_kbdController.setMessageReserveMillis(0);
 			}
 		}
 
 		if (m_nextPlayer != null)
 		{
 			p_kbdController.send_multiByteMessage(MULTIBYTE_MESSAGE.SET_NEXT_PLAYER, m_nextPlayer);
-			p_kbdController.setMessageReserveMillis(0);
 		}
 
 		if (s_cat.isDebugEnabled()) s_cat.debug("evt_resetKeyboard: sending reloadFinished");
-		p_kbdController.setMessageReserveMillis(1000); // ensure at least one second between reset start and finish audio
+		p_kbdController.send_reserveAudioPlaybackTime(true);
 		p_kbdController.send_simpleMessage(KBD_MESSAGE.FINISH_RELOAD);
 		
 		if (s_cat.isDebugEnabled()) s_cat.debug("evt_resetKeyboard: finished.");
@@ -417,10 +431,11 @@ public class BridgeHand
 	 * Simulates the scanning of a hand by a blind player or by the dummy.
 	 * Generates addScannedCard events (which sends the scanned cards to the Keyboard Controller(s)).
 	 * @param p_kbdController	the position to scan
+	 * @param p_testHand 		if non-negative, index of a predefined test hand.
 	 ***********************************************************************/
-	public void evt_scanHandTest (Direction p_direction)
+	public void evt_scanHandTest (Direction p_direction, int p_testHand)
 	{
-		dealHands();		// noop if hands already dealt
+		dealHands(p_testHand);		// noop if hands already dealt
 
 		PlayerHand hand = m_testHands.get(p_direction);
 		if (hand == null)
@@ -590,39 +605,72 @@ public class BridgeHand
 		//TODO: scoring not implemented yet
 	}
 	
+	/** fixed test hands [hand#] [direction] [cardAbbrev] */
+	public static String[][][] m_testHand =
+		{ // hand 0
+		 {
+			   { "5C", "7C", "9C", "JC", "4D", "7D", "9D", "JD", "TH", "2S", "5S", "9S", "QS" }	// north
+			 , { "4C", "6C", "8C", "8D", "QD", "AD", "3H", "4H", "KH", "4S", "6S", "8S", "TS" }	// east
+			 , { "3C", "QC", "KC", "3D", "6D", "TD", "KD", "7H", "8H", "JH", "AH", "7S", "AS" }	// south
+			 , { "2C", "TC", "AC", "2D", "5D", "2H", "5H", "6H", "9H", "QH", "3S", "JS", "KS" }	// west
+		 }
+		};
+	                                       {
+	}
 	/***********************************************************************
 	 * Deals a hand for testing
+	 * @param p_testHand if non-negative, index of a predefined test hand.
 	 ***********************************************************************/
-	private void dealHands()
+	private void dealHands(int p_testHand)
 	{
 		if (m_testHands != null && m_testHands.size() > 0) return;	// already dealt
 		
 		List<Card> deck = new ArrayList<>(52);
 		
-		for (Suit suit : Suit.values())
-		{
-			if (suit != Suit.NOTRUMP)
+		if (p_testHand >= 0)
+		{	// deal a predefined hand
+			for (Direction direction : Direction.values())
 			{
-				for (Rank cardNum : Rank.values())
-					deck.add(new Card(cardNum, suit));
+				PlayerHand hand = new PlayerHand(direction);
+				m_testHands.put(direction, hand);
+				
+				for (int idx = 0; idx < 13; ++idx)
+				{
+					Card card = new Card(m_testHand[p_testHand][direction.ordinal()][idx]);
+					hand.addCard(card);
+				}
+				if (s_cat.isDebugEnabled()) s_cat.debug("dealHand: " + hand.toString());
 			}
+			
 		}
 		
-		Random r = new Random();
-
-		for (Direction direction : Direction.values())
-		{
-			PlayerHand hand = new PlayerHand(direction);
-			m_testHands.put(direction, hand);
+		else
 			
-			for (int idx = 0; idx < 13; ++idx)
+		{	// deal a random hand
+			for (Suit suit : Suit.values())
 			{
-				int rndIndex = r.nextInt(deck.size());
-				hand.addCard(deck.remove(rndIndex));
+				if (suit != Suit.NOTRUMP)
+				{
+					for (Rank cardNum : Rank.values())
+						deck.add(new Card(cardNum, suit));
+				}
 			}
-			if (s_cat.isDebugEnabled()) s_cat.debug("dealHand: " + hand.toString());
+			
+			Random r = new Random();
+	
+			for (Direction direction : Direction.values())
+			{
+				PlayerHand hand = new PlayerHand(direction);
+				m_testHands.put(direction, hand);
+				
+				for (int idx = 0; idx < 13; ++idx)
+				{
+					int rndIndex = r.nextInt(deck.size());
+					hand.addCard(deck.remove(rndIndex));
+				}
+				if (s_cat.isDebugEnabled()) s_cat.debug("dealHand: " + hand.toString());
+			}
 		}
-
 	}
 	
 	
@@ -643,14 +691,12 @@ public class BridgeHand
 		for (Card card : p_hand.m_cards)
 		{
 			p_kbdController.send_multiByteMessage(MULTIBYTE_MESSAGE.ADD_CARD_TO_HAND, p_direction, card);
-			p_kbdController.setMessageReserveMillis(0);
 		}
 		
 		boolean handComplete = (p_hand.m_cards.size() == 13);
 		if (handComplete)
 		{
 			p_kbdController.send_simpleMessage(KBD_MESSAGE.HAND_COMPLETE);
-			p_kbdController.setMessageReserveMillis(0);
 		}
 	}
 
@@ -684,6 +730,18 @@ public class BridgeHand
 		tricksTaken = m_tricksTaken.get(Direction.EAST);
 		numTricks = (tricksTaken == null ? 0 : tricksTaken.size());
 		out.append("\n  Tricks Taken (EW): " + numTricks);
+		
+		out.append("\n\nAntennas");
+		for (AntennaController antController : m_antennaControllers.values())
+		{
+			out.append("\n  " + antController);
+		}
+
+		out.append("\n\nKeyboards");
+		for (KeyboardController kbdController : m_keyboardControllers.values())
+		{
+			out.append("\n  " + kbdController);
+		}
 
 		return out.toString();
 	}
@@ -711,6 +769,7 @@ public class BridgeHand
 	public void addAntennaController (Direction p_direction, AntennaController p_antController)
 	{
 		m_antennaControllers.put(p_direction, p_antController);
+		m_gameListeners.add(p_antController);
 	}
 	
 

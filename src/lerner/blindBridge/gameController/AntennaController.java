@@ -45,11 +45,8 @@ public class AntennaController implements SerialPortEventListener, GameListener
 	String m_device;
 
 
-	/**
-	 * The position of this Keyboard Controller
-	 */
+	/** The position of this Keyboard Controller */
 	Direction m_myPosition;
-
 
 	//--------------------------------------------------
 	// INTERNAL MEMBER DATA
@@ -125,6 +122,8 @@ public class AntennaController implements SerialPortEventListener, GameListener
 	 ***********************************************************************/
 	public boolean initialize()
 	{
+		if (m_device == null) return true;	// simulated controller, no hardware to connect to
+		
 		// the next line is for Raspberry Pi and 
 		// gets us into the while loop and was suggested here was suggested http://www.raspberrypi.org/phpBB3/viewtopic.php?f=81&t=32186
 		//System.setProperty("gnu.io.rxtx.SerialPorts", "/dev/ttyACM0");
@@ -281,7 +280,7 @@ public class AntennaController implements SerialPortEventListener, GameListener
 		return "Ignore card-remove event, as there is no current card";
 	}
 	
-	private String processCardPresentEvent ( Card p_card )
+	public String processCardPresentEvent ( Card p_card )
 	{
 		String description;
 		switch (m_controllerState)
@@ -467,6 +466,7 @@ public class AntennaController implements SerialPortEventListener, GameListener
 	@Override
 	public void setNextPlayer ( Direction p_direction )
 	{
+		if (s_cat.isDebugEnabled()) s_cat.debug("setNextPlayer: [" + m_myPosition + "] next: "+ p_direction);
 		if (m_myPosition == p_direction)
 		{
 			m_controllerState = AntennaControllerState.PLAY_CARDS;
@@ -476,6 +476,7 @@ public class AntennaController implements SerialPortEventListener, GameListener
 				if (cardPlayed) m_currentCard = null;
 			}
 		}
+		if (s_cat.isDebugEnabled()) s_cat.debug("setNextPlayer(out): " + this.toString());
 	}
 
 	/* (non-Javadoc)
@@ -515,6 +516,33 @@ public class AntennaController implements SerialPortEventListener, GameListener
 	public void handComplete ( BridgeScore p_score )
 	{
 		// nothing to do
+	}
+	
+	/* (non-Javadoc)
+	 * @see model.GameListener#announceError(lerner.blindBridge.gameController.ErrorCode, model.Direction, model.Card, model.Suit, int)
+	 */
+	@Override
+	public void announceError (	ErrorCode p_errorCode,
+								Direction p_direction,
+								Card p_card,
+								Suit p_suit,
+								int p_num )
+	{
+		// nothing to do
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	public String toString()
+	{
+		StringBuilder out = new StringBuilder();
+		
+		out.append("Antenna[" + m_myPosition + "]");
+		out.append(" state: " + m_controllerState);
+		out.append(" curCard: " + m_currentCard);
+		
+		return out.toString();
 	}
 	
 	//--------------------------------------------------

@@ -33,10 +33,11 @@ public class CommandController implements Runnable
 	 * Commands that can be entered in the command interpreter.
 	 ***********************************************************************/
 	public enum BridgeCommand {
-		  NEWHAND("Starts a new hand")
+		  HELP("Lists valid commands")
+		, NEWHAND("Starts a new hand")
 		, CONTRACT("Set contract: position numTricks suit")
-		, PLAY("Play card (simulates RFID scan from sighted player next to play): cardAbbrev (e.g., QH)")
-		, SCANHAND("Simulates scanning keyboard hand for testing: kbdPosition")
+		, PLAY("Play card (simulates RFID scan from sighted player next to play): position cardAbbrev (e.g., QH)")
+		, SCANHAND("Simulates scanning keyboard hand for testing: kbdPosition [predefined hand #]")
 		, SCANDUMMY("Simulates scanning the dummy's hand for teasting")
 		, B("Simulates pressing a keyboard controller button for testing: kbdPosition buttonName")
 		, REOPEN("Reopens connection to keyboard controller: kbdPosition")
@@ -49,6 +50,7 @@ public class CommandController implements Runnable
 		, KBDPOS("Move a keyboard to a new position: idx (from SHOWKBDS) newPosition)")
 		, SHOWANTS("Print a list of the known antennas with an index for use in changing the antenna's position")
 		, ANTPOS("Move an antenna to a new position: idx (from SHOWANTS) newPosition)")
+		, S("Simulates RFID scan of a card: position cardAbbrev (e.g., QH)")
 		;
 		
 		private String m_description;
@@ -146,6 +148,10 @@ public class CommandController implements Runnable
 			{
 				s_cat.error("commandLine: read failed", e);
 			}
+			
+			if (line.trim().equals("")) continue;	// skip empty input
+			
+			if (line.trim().equals("?")) line = "help";
 
 			CommandController.BridgeCommand cmd = null;
 			try
@@ -154,6 +160,12 @@ public class CommandController implements Runnable
 				if (line.matches("^b[nNeEsSwW] .*"))
 				{
 					line = "b " + line.substring(1);
+				}
+
+				// special case for s (add space after s, if missing)
+				if (line.matches("^s[nNeEsSwW] .*"))
+				{
+					line = "s " + line.substring(1);
 				}
 
 				String[] args = line.split(" ");
@@ -246,13 +258,14 @@ public class CommandController implements Runnable
 
 					case PLAY:
 					{
-						if (args.length != 2)
+						if (args.length != 3)
 							throw new IllegalArgumentException("Wrong number of arguments");
 						if (m_bridgeHand.getNextPlayer() == null)
 							throw new IllegalArgumentException("Cannot play, no next player");
 						int idx = 0;
+						Direction direction = Direction.fromString(args[++idx]);
 						Card card = new Card(args[++idx]);
-						m_bridgeHand.evt_playCard(m_bridgeHand.getNextPlayer(), card);
+						m_bridgeHand.evt_playCard(direction, card);
 					}
 					break;
 						
@@ -302,11 +315,18 @@ public class CommandController implements Runnable
 						
 					case SCANHAND:
 					{
-						if (args.length != 2)
+						if (args.length != 2 && args.length != 3)
 							throw new IllegalArgumentException("Wrong number of arguments");
 						int idx = 0;
 						Direction direction = Direction.fromString(args[++idx]);
-						m_bridgeHand.evt_scanHandTest(direction);
+						int testHand = -1;
+						if (args.length == 3)
+						{
+							testHand = Integer.parseInt(args[++idx]);
+							if (testHand < 0 || testHand >=  BridgeHand.m_testHand.length)
+							throw new IllegalArgumentException("Invalid testHand: " + testHand);
+						}
+						m_bridgeHand.evt_scanHandTest(direction, testHand);
 					}
 					break;
 						
@@ -314,7 +334,7 @@ public class CommandController implements Runnable
 					{
 						if (args.length != 1)
 							throw new IllegalArgumentException("Wrong number of arguments");
-						m_bridgeHand.evt_scanHandTest(m_bridgeHand.getDummyPosition());
+						m_bridgeHand.evt_scanHandTest(m_bridgeHand.getDummyPosition(), 0);
 					}
 					break;
 						
@@ -326,6 +346,18 @@ public class CommandController implements Runnable
 						Direction direction = Direction.fromString(args[++idx]);
 						KeyboardController kbdController = m_bridgeHand.getKeyboardControllers().get(direction); 
 						if (kbdController != null) kbdController.send_pressButton(args[++idx]);
+					}
+					break;
+						
+					case S:
+					{
+						if (args.length != 3)
+							throw new IllegalArgumentException("Wrong number of arguments");
+						int idx = 0;
+						Direction direction = Direction.fromString(args[++idx]);
+						Card card = new Card(args[++idx]);
+						AntennaController antController = m_bridgeHand.getAntennaControllers().get(direction); 
+						if (antController != null) p_out.println("Ant[" + direction + "] " + antController.processCardPresentEvent(card));
 					}
 					break;
 						
@@ -357,14 +389,30 @@ public class CommandController implements Runnable
 				p_out.println(e.getMessage());
 				e.printStackTrace(p_out);
 				if (cmd != null) p_out.println(cmd.getDescription());
+				else printHelp(p_out);
 			}
 		}
 	}
 
+	
 	//--------------------------------------------------
 	// INTERNAL METHODS
 	//--------------------------------------------------
 
+	/***********************************************************************
+	 * Prints a hand, if known, for testing
+	 * @param p_direction	the play to print
+	 ***********************************************************************/
+	private void printHelp (PrintStream p_out)
+	{
+		p_out.println("Available commands:");
+		for (BridgeCommand cmd : BridgeCommand.values())
+		{
+			p_out.println(cmd + ": " + cmd.getDescription());
+		}
+		p_out.println();
+	}	
+	
 	/***********************************************************************
 	 * Prints a hand, if known, for testing
 	 * @param p_direction	the play to print

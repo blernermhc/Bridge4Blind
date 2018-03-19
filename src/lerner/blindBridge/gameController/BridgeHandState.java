@@ -36,7 +36,8 @@ package lerner.blindBridge.gameController;
  ***********************************************************************/
 public enum BridgeHandState
 {
-	SCAN_BLIND_HANDS			(new State_ScanBlindHands())
+	  NEW_HAND				(new State_NewHand())
+	, SCAN_BLIND_HANDS		(new State_ScanBlindHands())
 	, ENTER_CONTRACT			(new State_EnterContract())
 	, WAIT_FOR_FIRST_PLAYER	(new State_WaitForPlayer(true))
 	, SCAN_DUMMY				(new State_ScanDummy())

@@ -8,7 +8,7 @@ import model.GameListener;
 
 /***********************************************************************
  * Entered when the last trick of a hand has been played.
- * When complete next state is {@link BridgeHandState#SCAN_BLIND_HANDS}.
+ * When complete next state is {@link BridgeHandState#NEW_HAND}.
  ***********************************************************************/
 public class State_HandComplete extends ControllerState
 {
@@ -58,7 +58,7 @@ public class State_HandComplete extends ControllerState
 	 */
 	public BridgeHandState checkState()
 	{
-		return BridgeHandState.SCAN_BLIND_HANDS;
+		return BridgeHandState.NEW_HAND;
 	}
 
 	//--------------------------------------------------

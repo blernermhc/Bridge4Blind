@@ -1,5 +1,4 @@
 package lerner.blindBridge.gameController;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -16,7 +15,6 @@ import org.apache.commons.cli.ParseException;
 import org.apache.log4j.Category;
 import org.apache.logging.log4j.Level;
 
-import model.Card;
 import model.Direction;
 
 /**********************************************************************
@@ -30,7 +28,7 @@ public class BlindBridgeMain
 	/**
 	 * Used to collect logging output for this class
 	 */
-	private static Category s_cat = Category.getInstance(BlindBridgeMain.class.getName());
+	static Category s_cat = Category.getInstance(BlindBridgeMain.class.getName());
 
 	//--------------------------------------------------
 	// CONSTANTS
@@ -45,7 +43,7 @@ public class BlindBridgeMain
 	// INTERNAL MEMBER DATA
 	//--------------------------------------------------
 	
-	private BridgeHand m_bridgeHand; 
+	BridgeHand m_bridgeHand; 
 	
 	/** internal list to support moving keyboards to new positions */
 	private List<KeyboardController> m_keyboardControllerList = new ArrayList<>();
@@ -181,23 +179,16 @@ public class BlindBridgeMain
 			}
 			
 		    //------------------------------
-			// Add antennas
+			// Add antennas (add simulated antennas, if real ones not defined)
 			//------------------------------
-			if ( line.hasOption( "antenna" ) )
+			Properties props = line.getOptionProperties( "antenna" );
+			String device;
+			for (Direction position : Direction.values())
 			{
-				Properties props = line.getOptionProperties( "antenna" );
-				String device;
-				for (Direction position : Direction.values())
-				{
-					device = (String)props.get(position.name());
-					if (device != null) 
-					{
-						if (s_cat.isDebugEnabled())
-							s_cat.debug("initialize: adding Antenna for postion: " + position
-							            + " using device: " + device);
-						addAntennaController(position, device);
-					}
-				}
+				device = (props == null ? null : (String)props.get(position.name()));
+				if (s_cat.isDebugEnabled()) s_cat.debug("initialize: adding Antenna for postion: " + position
+				                                        + " using device: " + device);
+				addAntennaController(position, device);
 			}
 	    }
 	    catch( ParseException exp )
@@ -231,85 +222,6 @@ public class BlindBridgeMain
 	//--------------------------------------------------
 	// INTERNAL METHODS
 	//--------------------------------------------------
-
-	/***********************************************************************
-	 * Main handler for messages from the Keyboard Controllers.
-	 * @param p_controller	the keyboard controller sending the message
-	 * @param p_msg			the message (only the low 8 bits are considered)
-	 * 						using an int rather than byte to avoid sign issues
-	 * @return a description of the message
-	 * @throws IOException if there are communication problems
-	 ***********************************************************************/
-	public String processIncomingMessage (KeyboardController p_controller, int p_msg)
-		throws IOException
-	{
-		int opId = (p_msg >> 6);
-		int cardId = (p_msg & 0b00111111);
-		Card card = (cardId < 52 ? new Card(cardId) : null);
-		
-		String cardAbbrev = (card == null ? "" : card.abbreviation());
-		
-		if (opId == 0)
-		{
-			if (s_cat.isDebugEnabled()) s_cat.debug("processIncomingMessage: play card from hand: " + cardId);
-			m_bridgeHand.evt_playCard(p_controller.getMyPosition(), card);
-			return "Play card (" + cardId + "): " + cardAbbrev;
-		}
-		else if (opId == 1)
-		{
-			if (s_cat.isDebugEnabled()) s_cat.debug("processIncomingMessage: play card from parner (dummy): " + cardId);
-			m_bridgeHand.evt_playCard(p_controller.getMyPartnersPosition(), card);
-			return "Play card (" + cardId + "): " + cardAbbrev;
-		}
-		else if (opId == 2)
-		{
-			if (cardId == 0)
-			{
-				if (s_cat.isDebugEnabled()) s_cat.debug("processIncomingMessage: undo play card");
-				//TODO: m_bridgeHand.evt_undoPlayCard(p_controller.getMyPosition());
-				return "Undo Play card (" + cardId + "): " + cardAbbrev;
-			}
-			else
-			{
-				if (s_cat.isDebugEnabled()) s_cat.debug("processIncomingMessage: undo play card");
-				//TODO: m_bridgeHand.evt_masterUndo();
-				return "Master Undo";
-			}
-		}
-		else if (opId == 3)
-		{
-			if ((cardId & 0b00100000) != 0)
-			{
-				int id = (cardId & 0b1111);
-				return "Incomplete message: opId: " + Integer.toBinaryString(id) + " (" + id + ")";
-			}
-			else
-			{
-				if (cardId == 0)
-				{
-					p_controller.setReadOneLineEventMode(true);
-					// return "Read line:";
-					return null;
-				}
-				else if (cardId == 1)
-				{
-					p_controller.setReadLineEventMode(true);
-					return "Restarting";
-				}
-				else if (cardId == 2)
-				{
-					System.out.println("    about to initiate reset: " + (m_bridgeHand == null ? "null" : "notnull"));
-					m_bridgeHand.evt_resetKeyboard(p_controller);
-					return "Initiate reset";
-				}
-				else
-				{
-					return "unknown code: " + cardId;
-				}
-			}
-		}
-		return "no code";
-	}
 	
 	//--------------------------------------------------
 	// ACCESSORS
@@ -322,7 +234,7 @@ public class BlindBridgeMain
 	 ***********************************************************************/
 	public void addKeyboardController (Direction p_direction, String p_device)
 	{
-		KeyboardController kbdController = new KeyboardController(this, p_direction, p_device);
+		KeyboardController kbdController = new KeyboardController(m_bridgeHand, p_direction, p_device);
 		m_keyboardControllers.put(p_direction, kbdController);
 		m_keyboardControllerList.add(kbdController);
 		m_bridgeHand.addKeyboardController(p_direction, kbdController);

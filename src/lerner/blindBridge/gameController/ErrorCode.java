@@ -4,21 +4,20 @@
 
 package lerner.blindBridge.gameController;
 
-import model.Direction;
-import model.GameListener;
-
 /***********************************************************************
- * Entered when the last card of a trick has been played.
- * When complete next state is either {@link BridgeHandState#HAND_COMPLETE}
- * or {@link BridgeHandState#WAIT_FOR_NEXT_PLAYER}.
+ * Represents errors that should be made known to some or all of the players
  ***********************************************************************/
-public class State_TrickComplete extends ControllerState
+public enum ErrorCode
 {
-
+	CANNOT_PLAY_WRONG_SUIT			("Signaled if a card is played that is not the current suit, when the hand is known to have a card in the suit (i.e., dummy or blind hand)")
+	, CANNOT_PLAY_NOT_IN_HAND		("Signaled if a card is played (scanned) that is known not to be in the player's hand being played")		
+	, CANNOT_PLAY_ALREADY_PLAYED		("Signaled if a card is played that has already been played")
+	;
+	
 	/**
 	 * Used to collect logging output for this class
 	 */
-	// private static Category s_cat = Category.getInstance(State_TrickComplete.class.getName());
+	// private static Category s_cat = Category.getInstance(ErrorCode.class.getName());
 
 	//--------------------------------------------------
 	// CONSTANTS
@@ -27,6 +26,8 @@ public class State_TrickComplete extends ControllerState
 	//--------------------------------------------------
 	// CONFIGURATION MEMBER DATA
 	//--------------------------------------------------
+	
+	private String m_description;
 
 	//--------------------------------------------------
 	// INTERNAL MEMBER DATA
@@ -35,36 +36,15 @@ public class State_TrickComplete extends ControllerState
 	//--------------------------------------------------
 	// CONSTRUCTORS
 	//--------------------------------------------------
+	
+	private ErrorCode (String p_description)
+	{
+		m_description = p_description;
+	}
 
 	//--------------------------------------------------
 	// METHODS
 	//--------------------------------------------------
-	
-	/* (non-Javadoc)
-	 * @see lerner.blindBridge.gameController.ControllerState#onEntry(lerner.blindBridge.gameController.BridgeHand)
-	 */
-	public void onEntry ( BridgeHand p_bridgeHand )
-	{
-		m_bridgeHand = p_bridgeHand;
-		
-		Direction winner = m_bridgeHand.sc_finishTrick();
-
-		for (GameListener gameListener : m_bridgeHand.getGameListeners())
-		{
-			gameListener.trickWon(winner);
-		}
-	}
-	
-	/* (non-Javadoc)
-	 * @see lerner.blindBridge.gameController.ControllerState#checkState()
-	 */
-	public BridgeHandState checkState()
-	{
-		if (! m_bridgeHand.testHandComplete())
-			return BridgeHandState.WAIT_FOR_NEXT_PLAYER;
-		else
-			return BridgeHandState.HAND_COMPLETE;
-	}
 
 	//--------------------------------------------------
 	// HELPER METHODS
@@ -74,4 +54,14 @@ public class State_TrickComplete extends ControllerState
 	// ACCESSORS
 	//--------------------------------------------------
 	
+	/***********************************************************************
+	 * A description of the error. 
+	 * @return error description
+	 ***********************************************************************/
+	public String getDescription ()
+	{
+		return m_description;
+	}
+
+
 }

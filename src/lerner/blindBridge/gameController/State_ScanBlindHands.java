@@ -7,7 +7,6 @@ package lerner.blindBridge.gameController;
 import model.GameListener;
 
 /***********************************************************************
- * Initial state of a hand.
  * Waits for all of the blind players to scan their hands.
  * When complete next state is Enter_Contract
  ***********************************************************************/
@@ -46,14 +45,6 @@ public class State_ScanBlindHands extends ControllerState
 	{
 		m_bridgeHand = p_bridgeHand;
 		
-		m_bridgeHand.evt_startNewHand();
-		
-		// notify all listeners we have entered this state
-		for (GameListener gameListener : m_bridgeHand.getGameListeners())
-		{
-			gameListener.gameReset();
-		}
-
 		// notify all listeners we have entered this state
 		for (GameListener gameListener : m_bridgeHand.getGameListeners())
 		{

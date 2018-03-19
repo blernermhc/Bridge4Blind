@@ -6,8 +6,6 @@ package lerner.blindBridge.gameController;
 
 import java.util.List;
 
-import org.apache.log4j.Category;
-
 import model.Direction;
 import model.GameListener;
 import model.Suit;
@@ -27,7 +25,7 @@ public class State_WaitForPlayer extends ControllerState
 	/**
 	 * Used to collect logging output for this class
 	 */
-	private static Category s_cat = Category.getInstance(State_WaitForPlayer.class.getName());
+	// private static Category s_cat = Category.getInstance(State_WaitForPlayer.class.getName());
 
 	//--------------------------------------------------
 	// CONSTANTS
@@ -94,7 +92,10 @@ public class State_WaitForPlayer extends ControllerState
 		else
 			m_myState = BridgeHandState.WAIT_FOR_NEXT_PLAYER;
 
-		if (s_cat.isDebugEnabled()) s_cat.debug("onEntry(out): m_myState: " + m_myState);
+		for (GameListener gameListener : m_bridgeHand.getGameListeners())
+		{
+			gameListener.setNextPlayer(m_bridgeHand.getNextPlayer());
+		}
 	}
 
 	/* (non-Javadoc)
@@ -157,15 +158,20 @@ public class State_WaitForPlayer extends ControllerState
 			nextPlayer = cardPlay.getPlayer().getNextDirection();
 			m_bridgeHand.setNextPlayer(nextPlayer);
 			
-			for (GameListener gameListener : m_bridgeHand.getGameListeners())
-			{
-				gameListener.setNextPlayer(nextPlayer);
-			}
-
 			if (currentTrick.size() == 1 && m_waitForFirstPlayer)
+			{
 				return BridgeHandState.SCAN_DUMMY;
+			}
 			else
+			{
+				// send setNextPlayer since we are not transitioning to a new state
+				// and the onEntry method will not be invoked
+				for (GameListener gameListener : m_bridgeHand.getGameListeners())
+				{
+					gameListener.setNextPlayer(nextPlayer);
+				}
 				return BridgeHandState.WAIT_FOR_NEXT_PLAYER;
+			}
 		}
 	}
 

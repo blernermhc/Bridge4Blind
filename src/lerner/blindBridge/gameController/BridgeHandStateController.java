@@ -40,7 +40,7 @@ public class BridgeHandStateController
 	//--------------------------------------------------
 
 	/** The current state.  Default is the initial game state: SCAN_BLIND_HANDS */
-	BridgeHandState		m_currentState		= BridgeHandState.SCAN_BLIND_HANDS;
+	BridgeHandState		m_currentState		= BridgeHandState.NEW_HAND;
 
 	//--------------------------------------------------
 	// CONSTRUCTORS
@@ -75,7 +75,12 @@ public class BridgeHandStateController
 
 		while (true)
 		{
-			BridgeHandState newState = m_currentState.getControllerState().checkState();
+			BridgeHandState newState = getForceNewState();
+			if (newState == null)
+			{
+				newState = m_currentState.getControllerState().checkState();
+			}
+			
 			if (newState == null)
 			{
 				if (s_cat.isDebugEnabled())
@@ -127,18 +132,22 @@ public class BridgeHandStateController
 
 	/***********************************************************************
 	 * If set, state machine transitions to the indicated state upon wakeup.
+	 * Cleared when read.
 	 * @return the new state
 	 ***********************************************************************/
-	public BridgeHandState getForceNewState ()
+	public synchronized BridgeHandState getForceNewState ()
 	{
-		return m_forceNewState;
+		BridgeHandState state = m_forceNewState;
+		m_forceNewState = null;
+		return state;
 	}
 
 	/***********************************************************************
 	 * If set, state machine transitions to the indicated state upon wakeup.
+	 * Cleared when read.
 	 * @param p_forceNewState the new state
 	 ***********************************************************************/
-	public void setForceNewState ( BridgeHandState p_forceNewState )
+	public synchronized void setForceNewState ( BridgeHandState p_forceNewState )
 	{
 		m_forceNewState = p_forceNewState;
 	}

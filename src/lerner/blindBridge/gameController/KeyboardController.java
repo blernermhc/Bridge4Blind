@@ -64,7 +64,8 @@ public class KeyboardController implements SerialPortEventListener, GameListener
 		, START_RELOAD		(11, 1000)
 		, FINISH_RELOAD		(12, 1500)
 		, ENTER_CONTRACT		(13, 1500)
-		, CANNOT_PLAY		(14, 1500)
+		, CANNOT_PLAY_ALREADY_PLAYED		(14, 1500)
+		, CANNOT_PLAY_NOT_IN_HAND		(15, 1500)
 		;
 		
 		private int m_msgId;
@@ -100,7 +101,7 @@ public class KeyboardController implements SerialPortEventListener, GameListener
 		, PLAY_CARD			(6, 3000)
 		, UNPLAY_CARD		(7, 3000)
 		, TRICK_TAKEN		(8, 1500)
-		, CANNOT_PLAY		(9, 4000)
+		, CANNOT_PLAY_WRONG_SUIT		(9, 4000)
 		;
 		
 		private int m_msgId;
@@ -127,7 +128,7 @@ public class KeyboardController implements SerialPortEventListener, GameListener
 	// CONFIGURATION MEMBER DATA
 	//--------------------------------------------------
 	
-	BlindBridgeMain	m_gameController;
+	BridgeHand	m_bridgeHand;
 	
 	/** the device this controller uses */
 	String m_device;
@@ -155,6 +156,12 @@ public class KeyboardController implements SerialPortEventListener, GameListener
 	/** The position of the dummy */
 	Direction m_dummyPosition;
 	
+	/**
+	 * If true, enable delays between messages to Arduino to allow audio to complete.
+	 * IMPORTANT NOTE: this member is set/read only within the message queue sending thread.
+	 */
+	private boolean m_reserveAudioPlaybackTime = true;
+	
 	//--------------------------------------------------
 	// INTERNAL MEMBER DATA
 	//--------------------------------------------------
@@ -163,7 +170,33 @@ public class KeyboardController implements SerialPortEventListener, GameListener
 	 * Represents a message to be sent to the hardware.  Used to queue messages
 	 * so a single thread serializes the message.
 	 ***********************************************************************/
-	class KbdMsg
+	class KbdMsg {};
+	
+	/***********************************************************************
+	 * Subclass of KbdMsg that contains queue control messages.
+	 * For example, to enable and disable delays between messages.
+	 ***********************************************************************/
+	class KbdMsg_control extends KbdMsg
+	{
+		boolean reserveAudioPlaybackTime;
+		
+		public KbdMsg_control ( boolean p_enable ) { reserveAudioPlaybackTime = p_enable; }
+		
+		public String toString()
+		{
+			StringBuilder out = new StringBuilder();
+			out.append("KbdMsg_control:");
+			out.append("\n  reserveAudioPlaybackTime: " + reserveAudioPlaybackTime);
+			out.append("\n");
+			
+			return out.toString();
+		}
+	};
+	
+	/***********************************************************************
+	 * Subclass of KbdMsg that contains data to be sent to the hardware.
+	 ***********************************************************************/
+	class KbdMsg_data extends KbdMsg
 	{
 		int byte0;
 		int byte1;
@@ -171,7 +204,7 @@ public class KeyboardController implements SerialPortEventListener, GameListener
 		int reserve;
 		String description;
 		
-		public KbdMsg (int p_byte0, int p_reserve, String p_description)
+		public KbdMsg_data (int p_byte0, int p_reserve, String p_description)
 		{
 			numBytes = 1;
 			byte0 = p_byte0;
@@ -179,7 +212,7 @@ public class KeyboardController implements SerialPortEventListener, GameListener
 			description = p_description;
 		}
 		
-		public KbdMsg (int p_byte0, int p_byte1, int p_reserve, String p_description)
+		public KbdMsg_data (int p_byte0, int p_byte1, int p_reserve, String p_description)
 		{
 			numBytes = 2;
 			byte0 = p_byte0;
@@ -191,7 +224,7 @@ public class KeyboardController implements SerialPortEventListener, GameListener
 		public String toString()
 		{
 			StringBuilder out = new StringBuilder();
-			out.append("KbdMsg:");
+			out.append("KbdMsg_data:");
 			out.append("\n  description: " + description);
 			out.append("\n  numBytes: " + numBytes);
 			out.append("\n  byte0: " + byte0 + " (" + Integer.toBinaryString(byte0) + ")");
@@ -248,6 +281,7 @@ public class KeyboardController implements SerialPortEventListener, GameListener
 	
 	/**
 	 * The amount of time to reserve to ensure that the next message can be heard
+	 * IMPORTANT NOTE: this member is set/read only within the message queue sending thread.
 	 */
 	private long m_messageReserveMillis = 0;
 	
@@ -260,12 +294,12 @@ public class KeyboardController implements SerialPortEventListener, GameListener
 	
 	/***********************************************************************
 	 * Configures and initializes a Keyboard Controller
-	 * @param p_gameController	The gameController managing the hands
-	 * @param p_direction			The player position of the player using this Keyboard Controller
+	 * @param p_bridgeHand		The object managing the hands
+	 * @param p_direction		The player position of the player using this Keyboard Controller
 	 ***********************************************************************/
-	public KeyboardController(BlindBridgeMain p_gameController, Direction p_direction, String p_device)
+	public KeyboardController(BridgeHand p_bridgeHand, Direction p_direction, String p_device)
 	{
-		m_gameController = p_gameController;
+		m_bridgeHand = p_bridgeHand;
 		m_device = p_device;
 		initialize();
 		
@@ -356,16 +390,31 @@ public class KeyboardController implements SerialPortEventListener, GameListener
 			if (msg != null)
 			{
 				if (s_cat.isDebugEnabled()) s_cat.debug("sendQueuedMessages: dequeued message: " + msg);
-
-				ensureMessageReserve(msg.reserve);
-				try
+				
+				if (msg instanceof KbdMsg_control)
 				{
-					if (msg.numBytes >= 1) output.write((byte)msg.byte0);	
-					if (msg.numBytes >= 2) output.write((byte)msg.byte1);
+					// process control messages locally
+					m_reserveAudioPlaybackTime = ((KbdMsg_control)msg).reserveAudioPlaybackTime;
 				}
-				catch (Exception e)
+				else if (msg instanceof KbdMsg_data)
 				{
-					s_cat.error("sendQueuedMessages: failed to send message: " + msg, e);
+					KbdMsg_data dmsg = (KbdMsg_data)msg;
+					// send data messages to Arduino
+					
+					if (m_reserveAudioPlaybackTime)
+					{
+						ensureMessageReserve(dmsg.reserve);
+					}
+
+					try
+					{
+						if (dmsg.numBytes >= 1) output.write((byte)dmsg.byte0);	
+						if (dmsg.numBytes >= 2) output.write((byte)dmsg.byte1);
+					}
+					catch (Exception e)
+					{
+						s_cat.error("sendQueuedMessages: failed to send message: " + msg, e);
+					}
 				}
 			}
 			
@@ -400,6 +449,17 @@ public class KeyboardController implements SerialPortEventListener, GameListener
 	//--------------------------------------------------
 	
 	/***********************************************************************
+	 * Queues a message to the m_sendMessageQueue to enable or disable
+	 * delays to allow audio announcement to complete before starting the
+	 * next message.
+	 * @param p_enable	true to enable delays, false to disable (e.g., during reset)
+	 ***********************************************************************/
+	public void send_reserveAudioPlaybackTime ( boolean p_enable )
+	{
+		queueMessage(new KbdMsg_control(p_enable));
+	}
+	
+	/***********************************************************************
 	 * Sends a parameter-less message to the Keyboard Controller
 	 * Logs an error if the message fails.
 	 * @param p_msg	the message to send
@@ -413,7 +473,7 @@ public class KeyboardController implements SerialPortEventListener, GameListener
 		int msg			= p_msg.getMsgId();
 		int reserve		= p_msg.getReserveInMillis();
 		
-		queueMessage(new KbdMsg(msg, reserve, p_msg.toString()));
+		queueMessage(new KbdMsg_data(msg, reserve, p_msg.toString()));
 
 		return status;
 	}
@@ -487,20 +547,21 @@ public class KeyboardController implements SerialPortEventListener, GameListener
 	 * card cannot be played.  The suit does not match the current suit and the
 	 * hand contains a card with the necessary suit.
 	 * Logs an error if the message fails.
+	 * @param p_direction	player playing card
 	 * @param p_card			card played
 	 * @param p_currentSuit	current suit
 	 * @return true if sent, false if failed
 	 ***********************************************************************/
-	public boolean send_cannotPlay (Card p_card, Suit p_currentSuit)
+	public boolean send_cannotPlay (Direction p_direction, Card p_card, Suit p_currentSuit)
 	{
 		if (s_cat.isDebugEnabled()) s_cat.debug("send_cannotPlay: entered"
 												+ " card: " + p_card
 												+ " curSuit: " + p_currentSuit
 												);
 
-		boolean status = send_multiByteMessage( MULTIBYTE_MESSAGE.CANNOT_PLAY
+		boolean status = send_multiByteMessage( MULTIBYTE_MESSAGE.CANNOT_PLAY_WRONG_SUIT
 		                                        , p_currentSuit.ordinal()
-		                                        , 0
+		                                        , p_direction.ordinal()
 		                                        , 0
                 								  );
 
@@ -529,7 +590,7 @@ public class KeyboardController implements SerialPortEventListener, GameListener
 		int opId			= p_msg.getMsgId();
 		int reserve		= p_msg.getReserveInMillis();
 
-		queueMessage(new KbdMsg( ((0b10000000) | ((opId & 0b1111) << 3) | (p_suit & 0b111))
+		queueMessage(new KbdMsg_data( ((0b10000000) | ((opId & 0b1111) << 3) | (p_suit & 0b111))
 		                         , (((p_player & 0b1111) << 4) | (p_cardNumber & 0b1111))
 		                         , reserve
 		                         , p_msg.toString()));
@@ -551,7 +612,7 @@ public class KeyboardController implements SerialPortEventListener, GameListener
 		{
 			Button button = Button.valueOf(p_buttonName.toUpperCase());
 			
-			queueMessage(new KbdMsg( (0b01000000 | button.ordinal()), 0, button.toString())); // resulting audio can be interrupted, so no reserve
+			queueMessage(new KbdMsg_data( (0b01000000 | button.ordinal()), 0, button.toString())); // resulting audio can be interrupted, so no reserve
 		}
 		catch (Exception e)
 		{
@@ -745,7 +806,7 @@ public class KeyboardController implements SerialPortEventListener, GameListener
 						int msg = input.read();
 						if (msg != 192)
 							System.out.println("From Keyboard: " + binaryMsgToString(msg));
-						String messageDescription = m_gameController.processIncomingMessage(this, msg);
+						String messageDescription = processIncomingMessage(msg);
 						if (messageDescription != null)
 							System.out.println("    Operation: " + messageDescription);
 					}
@@ -757,6 +818,84 @@ public class KeyboardController implements SerialPortEventListener, GameListener
 			}
 		}
 		// Ignore all the other eventTypes, but you should consider the other ones.
+	}
+
+	/***********************************************************************
+	 * Main handler for messages from the Keyboard Controllers.
+	 * @param p_msg			the message (only the low 8 bits are considered)
+	 * 						using an int rather than byte to avoid sign issues
+	 * @return a description of the message
+	 * @throws IOException if there are communication problems
+	 ***********************************************************************/
+	public String processIncomingMessage (int p_msg)
+		throws IOException
+	{
+		int opId = (p_msg >> 6);
+		int cardId = (p_msg & 0b00111111);
+		Card card = (cardId < 52 ? new Card(cardId) : null);
+		
+		String cardAbbrev = (card == null ? "" : card.abbreviation());
+		
+		if (opId == 0)
+		{
+			if (s_cat.isDebugEnabled()) s_cat.debug("processIncomingMessage: play card from hand: " + cardId);
+			m_bridgeHand.evt_playCard(getMyPosition(), card);
+			return "Play card (" + cardId + "): " + cardAbbrev;
+		}
+		else if (opId == 1)
+		{
+			if (s_cat.isDebugEnabled()) s_cat.debug("processIncomingMessage: play card from parner (dummy): " + cardId);
+			m_bridgeHand.evt_playCard(getMyPartnersPosition(), card);
+			return "Play card (" + cardId + "): " + cardAbbrev;
+		}
+		else if (opId == 2)
+		{
+			if (cardId == 0)
+			{
+				if (s_cat.isDebugEnabled()) s_cat.debug("processIncomingMessage: undo play card");
+				//TODO: m_bridgeHand.evt_undoPlayCard(p_controller.getMyPosition());
+				return "Undo Play card (" + cardId + "): " + cardAbbrev;
+			}
+			else
+			{
+				if (s_cat.isDebugEnabled()) s_cat.debug("processIncomingMessage: undo play card");
+				//TODO: m_bridgeHand.evt_masterUndo();
+				return "Master Undo";
+			}
+		}
+		else if (opId == 3)
+		{
+			if ((cardId & 0b00100000) != 0)
+			{
+				int id = (cardId & 0b1111);
+				return "Incomplete message: opId: " + Integer.toBinaryString(id) + " (" + id + ")";
+			}
+			else
+			{
+				if (cardId == 0)
+				{
+					setReadOneLineEventMode(true);
+					// return "Read line:";
+					return null;
+				}
+				else if (cardId == 1)
+				{
+					setReadLineEventMode(true);
+					return "Restarting";
+				}
+				else if (cardId == 2)
+				{
+					System.out.println("    about to initiate reset: " + (m_bridgeHand == null ? "null" : "notnull"));
+					m_bridgeHand.evt_resetKeyboard(this);
+					return "Initiate reset";
+				}
+				else
+				{
+					return "unknown code: " + cardId;
+				}
+			}
+		}
+		return "no code";
 	}
 
 	//--------------------------------------------------
@@ -904,6 +1043,56 @@ public class KeyboardController implements SerialPortEventListener, GameListener
 		send_simpleMessage(KBD_MESSAGE.HAND_COMPLETE);
 	}
 	
+	/* (non-Javadoc)
+	 * @see model.GameListener#announceError(lerner.blindBridge.gameController.ErrorCode, model.Direction, model.Card, model.Suit, int)
+	 */
+	@Override
+	public void announceError (	ErrorCode p_errorCode,
+								Direction p_direction,
+								Card p_card,
+								Suit p_suit,
+								int p_num )
+	{
+		switch (p_errorCode)
+		{
+			case CANNOT_PLAY_ALREADY_PLAYED:
+				send_simpleMessage(KBD_MESSAGE.CANNOT_PLAY_ALREADY_PLAYED);
+				break;
+
+			case CANNOT_PLAY_NOT_IN_HAND:
+				send_simpleMessage(KBD_MESSAGE.CANNOT_PLAY_NOT_IN_HAND);
+				break;
+
+			case CANNOT_PLAY_WRONG_SUIT:
+			{
+				if ((p_direction != m_dummyPosition && p_direction == m_myPosition)
+						||
+					(p_direction == m_dummyPosition && p_direction == m_myPartnersPosition))
+				{
+					send_cannotPlay(p_direction, p_card, p_suit);
+				}
+			}
+			break;
+
+			default:
+				s_cat.error("announceError: Unexpected error");
+				break;
+		}
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	public String toString()
+	{
+		StringBuilder out = new StringBuilder();
+		
+		out.append("Kbd[" + m_myPosition + "]");
+		out.append(" dummy: " + m_dummyPosition);
+		
+		return out.toString();
+	}
+	
 	//--------------------------------------------------
 	// ACCESSORS
 	//--------------------------------------------------
@@ -972,26 +1161,6 @@ public class KeyboardController implements SerialPortEventListener, GameListener
 	public Direction getMyPartnersPosition ()
 	{
 		return m_myPartnersPosition;
-	}
-
-	/***********************************************************************
-	 * The amount of time to reserve to ensure that the next message can be heard.
-	 * Set this to zero during reset, to avoid unnecessary delays.
-	 * @return time in milliseconds
-	 ***********************************************************************/
-	public long getMessageReserveMillis ()
-	{
-		return m_messageReserveMillis;
-	}
-
-	/***********************************************************************
-	 * The amount of time to reserve to ensure that the next message can be heard
-	 * Set this to zero during reset, to avoid unnecessary delays.
-	 * @param p_messageReserveMillis time in milliseconds
-	 ***********************************************************************/
-	public void setMessageReserveMillis ( long p_messageReserveMillis )
-	{
-		m_messageReserveMillis = p_messageReserveMillis;
 	}
 
 }

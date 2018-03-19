@@ -4,15 +4,13 @@
 
 package lerner.blindBridge.gameController;
 
-import model.Contract;
-import model.Direction;
 import model.GameListener;
 
 /***********************************************************************
- * Waits for the contract to be set.
- * When complete next state is WAIT_FOR_FIRST_PLAYER
+ * Initial state of a hand.
+ * Notifies listeners then enters SCAN_BLIND_HANDS
  ***********************************************************************/
-public class State_EnterContract extends ControllerState
+public class State_NewHand extends ControllerState
 {
 
 	/**
@@ -47,10 +45,12 @@ public class State_EnterContract extends ControllerState
 	{
 		m_bridgeHand = p_bridgeHand;
 		
+		m_bridgeHand.evt_startNewHand();
+		
 		// notify all listeners we have entered this state
 		for (GameListener gameListener : m_bridgeHand.getGameListeners())
 		{
-			gameListener.enterContract();
+			gameListener.gameReset();
 		}
 	}
 
@@ -59,30 +59,7 @@ public class State_EnterContract extends ControllerState
 	 */
 	public BridgeHandState checkState()
 	{
-		if (! m_bridgeHand.testContractComplete())
-			return BridgeHandState.ENTER_CONTRACT;	// continue waiting for contract
-
-		Contract contract = m_bridgeHand.getContract();
-		
-		for (GameListener gameListener : m_bridgeHand.getGameListeners())
-		{
-			gameListener.contractSet(contract);
-		}
-
-		// set first player
-		Direction nextPlayer = contract.getBidWinner().getNextDirection();
-		Direction dummyPosition = nextPlayer.getNextDirection();
-
-		m_bridgeHand.setNextPlayer(nextPlayer);
-		m_bridgeHand.setDummyPosition(dummyPosition);
-		
-		
-		for (GameListener gameListener : m_bridgeHand.getGameListeners())
-		{
-			gameListener.setDummyPosition(dummyPosition);
-		}
-		
-		return BridgeHandState.WAIT_FOR_FIRST_PLAYER;
+		return BridgeHandState.SCAN_BLIND_HANDS;
 	}
 
 	//--------------------------------------------------
