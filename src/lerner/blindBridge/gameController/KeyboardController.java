@@ -61,7 +61,7 @@ public class KeyboardController implements SerialPortEventListener, GameListener
 		, PRESS_TO_CONFIRM	(8, 2000)
 		, NEW_GAME			(9, 0)
 		, NEW_HAND			(10, 0)
-		, START_RELOAD		(11, 1000)
+		, START_RELOAD		(11, 1500)
 		, FINISH_RELOAD		(12, 1500)
 		, ENTER_CONTRACT		(13, 1500)
 		, CANNOT_PLAY_ALREADY_PLAYED		(14, 1500)
@@ -121,7 +121,7 @@ public class KeyboardController implements SerialPortEventListener, GameListener
 	// CONSTANTS
 	//--------------------------------------------------
 
-	/** Final message sent by the Keyboard Controller during boot-up */
+	/** Final message sent by the Keyboard Hardware during boot-up */
 	static final String READY_MSG = "Ready!";
 
 	//--------------------------------------------------
@@ -133,6 +133,9 @@ public class KeyboardController implements SerialPortEventListener, GameListener
 	
 	/** the device this controller uses */
 	String m_device;
+
+	/** Indicates if the device has completed initialization or reset */
+	private boolean m_deviceReady = false;
 
 	/** 
 	 * If true, read ASCII newline-terminated messages from
@@ -369,7 +372,7 @@ public class KeyboardController implements SerialPortEventListener, GameListener
 		synchronized (m_sendMessageQueue)
 		{
 			m_sendMessageQueue.add(p_msg);
-			if (s_cat.isDebugEnabled()) s_cat.debug("queueMessage: queued message: " + p_msg);
+			if (s_cat.isDebugEnabled()) s_cat.debug("queueMessage: (" + m_messageReserveMillis + ") queued message: " + p_msg);
 			m_sendMessageQueue.notify();
 		}
 	}
@@ -390,7 +393,7 @@ public class KeyboardController implements SerialPortEventListener, GameListener
 
 			if (msg != null)
 			{
-				if (s_cat.isDebugEnabled()) s_cat.debug("sendQueuedMessages: dequeued message: " + msg);
+				if (s_cat.isDebugEnabled()) s_cat.debug("sendQueuedMessages: (" + m_messageReserveMillis + ") dequeued message: " + msg);
 				
 				if (msg instanceof KbdMsg_control)
 				{
@@ -458,6 +461,15 @@ public class KeyboardController implements SerialPortEventListener, GameListener
 	public void send_reserveAudioPlaybackTime ( boolean p_enable )
 	{
 		queueMessage(new KbdMsg_control(p_enable));
+	}
+	
+	/***********************************************************************
+	 * Sends the reload finished message and marks the device as ready.
+	 ***********************************************************************/
+	public void send_reloadFinished ()
+	{
+		m_deviceReady = true;
+		send_simpleMessage(KBD_MESSAGE.FINISH_RELOAD);
 	}
 	
 	/***********************************************************************
@@ -887,6 +899,9 @@ public class KeyboardController implements SerialPortEventListener, GameListener
 				else if (cardId == 2)
 				{
 					System.out.println("    about to initiate reset");
+					m_deviceReady = false;
+					m_timeOfLastMessage = System.currentTimeMillis();	// Hardware announces reset start
+					m_messageReserveMillis = 1500;
 					m_game.getBridgeHand().evt_resetKeyboard(this);
 					return "Initiate reset";
 				}
@@ -913,12 +928,21 @@ public class KeyboardController implements SerialPortEventListener, GameListener
 	}
 
 	/* (non-Javadoc)
+	 * @see model.GameListener#sig_initializing()
+	 */
+	public void sig_initializing ()
+	{
+		// nothing to do
+	}
+	
+	/* (non-Javadoc)
 	 * @see model.GameListener#gameReset()
 	 */
 	@Override
 	public void sig_gameReset ()
 	{
 		send_simpleMessage(KBD_MESSAGE.NEW_HAND);
+		setPlayer();
 	}
 
 	/* (non-Javadoc)
@@ -1162,6 +1186,15 @@ public class KeyboardController implements SerialPortEventListener, GameListener
 	public Direction getMyPartnersPosition ()
 	{
 		return m_myPartnersPosition;
+	}
+
+	/***********************************************************************
+	 * Indicates if the device has completed initialization or reset
+	 * @return true if ready, false otherwise
+	 ***********************************************************************/
+	public boolean isDeviceReady ()
+	{
+		return m_deviceReady;
 	}
 
 }

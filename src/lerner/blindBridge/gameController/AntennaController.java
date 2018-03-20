@@ -32,7 +32,16 @@ public class AntennaController implements SerialPortEventListener, GameListener
 	// CONSTANTS
 	//--------------------------------------------------
 
+	/** Message sent by the Antenna Hardware at start of boot-up or firmware reset */
+	private static final String RESET_MSG = "Resetting Antenna";
+
+	/** Final message sent by the Antenna Hardware during boot-up or firmware reset */
+	private static final String READY_MSG = "Reset Complete";
+
+	/** Card present messages begin with this string */
 	private static String s_cardPresentPrefix = "CARD: ";
+
+	/** Card removed messages begin with this string */
 	private static String s_cardRemovedPrefix = "CARD REMOVED";
 	
 	//--------------------------------------------------
@@ -42,9 +51,11 @@ public class AntennaController implements SerialPortEventListener, GameListener
 	/** The game data */
 	Game		m_game;
 	
-	/** the device this controller uses */
+	/** The device this controller uses */
 	String m_device;
 
+	/** Indicates if the device has completed initialization or reset */
+	private boolean m_deviceReady = false;
 
 	/** The position of this Keyboard Controller */
 	Direction m_myPosition;
@@ -123,7 +134,11 @@ public class AntennaController implements SerialPortEventListener, GameListener
 	 ***********************************************************************/
 	public boolean initialize()
 	{
-		if (m_device == null) return true;	// simulated controller, no hardware to connect to
+		if (m_device == null)
+		{	// simulated controller, no hardware to connect to
+			m_deviceReady = true;
+			return true;
+		}
 		
 		// the next line is for Raspberry Pi and 
 		// gets us into the while loop and was suggested here was suggested http://www.raspberrypi.org/phpBB3/viewtopic.php?f=81&t=32186
@@ -242,6 +257,18 @@ public class AntennaController implements SerialPortEventListener, GameListener
 	 ***********************************************************************/
 	private String processLine (String p_line)
 	{
+		if (p_line.equals(RESET_MSG))
+		{
+			m_deviceReady = false;
+			return p_line;
+		}
+		
+		if (p_line.equals(READY_MSG))
+		{
+			m_deviceReady = true;
+			return p_line;
+		}
+		
 		if (p_line.startsWith(s_cardRemovedPrefix))
 		{
 			return processCardRemovedEvent();
@@ -358,6 +385,14 @@ public class AntennaController implements SerialPortEventListener, GameListener
 		// nothing to do
 	}
 
+	/* (non-Javadoc)
+	 * @see model.GameListener#sig_initializing()
+	 */
+	public void sig_initializing ()
+	{
+		// nothing to do
+	}
+	
 	/* (non-Javadoc)
 	 * @see model.GameListener#gameReset()
 	 */
@@ -566,6 +601,15 @@ public class AntennaController implements SerialPortEventListener, GameListener
 	public synchronized Card getCurrentCard ()
 	{
 		return m_currentCard;
+	}
+
+	/***********************************************************************
+	 * Indicates if the device has completed initialization or reset
+	 * @return true if ready, false otherwise
+	 ***********************************************************************/
+	public boolean isDeviceReady ()
+	{
+		return m_deviceReady;
 	}
 
 }

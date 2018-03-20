@@ -9,7 +9,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.IOException;
 import java.util.Iterator;
 import java.util.Stack;
 
@@ -20,13 +19,12 @@ import javax.swing.JPanel;
 import javax.swing.JTextArea;
 
 import controller.TestAntennaHandler;
+import lerner.blindBridge.gameController.Game;
 import main.BridgeActualGame;
 import model.Card;
 import model.Contract;
 import model.Direction;
-import model.Game;
 import model.GameListener;
-import model.GameState;
 import model.Player;
 import model.Suit;
 
@@ -37,101 +35,107 @@ import model.Suit;
  * @version March 12, 2015
  **/
 
-public class GameGUI extends JFrame implements GameListener {
+public class GameGUI extends JFrame implements GameListener
+{
 
 	// number of GUIs in the relevant to the play. Exclude the HelpGUI
-	private static final int NUM_GUIS = 9;
+	private static final int	NUM_GUIS					= 9;
 
-	private static final int HELP_GUI = 8;
+	private static final int	HELP_GUI					= 8;
 
-	private static final int GAME_STATUS_GUI = 5;
+	private static final int	GAME_STATUS_GUI			= 5;
 
-	private static final int SCAN_DUMMY_GUI = 6;
+	private static final int	SCAN_DUMMY_GUI			= 6;
 
-	private static final int NEXT_HAND_GUI = 7;
+	private static final int	NEXT_HAND_GUI			= 7;
 
-	private static final int TRUMP_SUIT_GUI = 4;
+	private static final int	TRUMP_SUIT_GUI			= 4;
 
-	private static final int BID_NUMBER_GUI = 3;
+	private static final int	BID_NUMBER_GUI			= 3;
 
-	private static final int BID_POSITION_GUI = 2;
+	private static final int	BID_POSITION_GUI			= 2;
 
-	private static final int SCANNING_BLIND_GUI = 1;
+	private static final int	SCANNING_BLIND_GUI		= 1;
 
-	private static final int VI_PLAYER_GUI = 0;
+	private static final int	VI_PLAYER_GUI			= 0;
 
 	// GameStatusGUI should switch to the following three screens
-	protected static final int NONE = 11;
+	protected static final int	NONE						= 11;
 
-	protected static final int SWITCH_TO_SCAN_DUMMY = 12;
+	protected static final int	SWITCH_TO_SCAN_DUMMY		= 12;
 
-	protected static final int SWITCH_TO_NEXT_HAND = 13;
+	protected static final int	SWITCH_TO_NEXT_HAND		= 13;
 
 	// protected static final int SWITCH_TO_SCANNING_BLIND = 13;
 
 	// remembers to which screen should be displayed if GameStatusGUI invokes
 	// changeFrame()
-	private int switchFromGameStatusGUI = NONE;
+	private int					switchFromGameStatusGUI	= NONE;
 
 	// the CardLayout controlling the display of GUIS
-	private CardLayout layout;
+	private CardLayout			layout;
 
 	// the Game object associated with this GUI
-	private final Game game;
+	private final Game			game;
 
 	// the currently visible GUI
-	private static int currentScreen;
+	private static int			currentScreen;
 
 	// The history of screens viewed, used for the back button
-	private Stack<Integer> screensViewed = new Stack<Integer>();
+	private Stack<Integer>		screensViewed			= new Stack<Integer>();
 
 	// game status giu
-	private GameStatusGUI gameStatusGUI;
+	private GameStatusGUI		gameStatusGUI;
 
 	// bid position gui
-	private BidPositionGUI bidPositionGUI;
+	private BidPositionGUI		bidPositionGUI;
 
 	// bid number gui
-	private BidNumberGUI bidNumberGUI;
+	private BidNumberGUI			bidNumberGUI;
 
 	// trump suit gui
-	private TrumpSuitGUI trumpSuitGUI;
+	private TrumpSuitGUI			trumpSuitGUI;
 
 	// next hand gui
-	private NextHandGUI nextHandGUI;
+	private NextHandGUI			nextHandGUI;
 
 	// VIPlayerGUI
-	private VIPlayerGUI viPlayerGUI;
+	private VIPlayerGUI			viPlayerGUI;
 
 	// Scan blind cards gui
-	private ScanningBlindGUI scanningBlindGUI;
+	private ScanningBlindGUI		scanningBlindGUI;
 
 	// Scan dummy cards gui
-	private ScanDummyGUI scanDummyGUI;
+	private ScanDummyGUI			scanDummyGUI;
 
 	// buttons
-	private JButton resumeButton;
-	private JButton undoButton;
-	private JButton helpButton;
-	private JButton quitButton;
-	private JButton backButton;
+	private JButton				resumeButton;
+
+	private JButton				undoButton;
+
+	private JButton				helpButton;
+
+	private JButton				quitButton;
+
+	private JButton				backButton;
 
 	/** Font used to display messages on the main screen */
-	public static final Font INFO_FONT = new Font("Verdana", Font.BOLD, 30);
+	public static final Font	INFO_FONT				= new Font("Verdana", Font.BOLD, 30);
 
-	private String[] cardNames;
+	private String[]			cardNames;
 
 	// Where debugging information shows up
-	private JTextArea debugArea = new JTextArea(10, 80);
+	private JTextArea			debugArea				= new JTextArea(10, 80);
 
-	private JPanel cardPanel;
+	private JPanel				cardPanel;
 
 	/**
 	 * Constructor; constructs a new GameGUI with the specified listener
 	 * 
 	 * @param game
 	 */
-	public GameGUI(Game game) {
+	public GameGUI ( Game game )
+	{
 		// Maximize the window
 		// this.setExtendedState(JFrame.MAXIMIZED_BOTH);
 
@@ -139,15 +143,12 @@ public class GameGUI extends JFrame implements GameListener {
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
 		this.game = game;
-		addKeyListener(new KeyPad(this, game));
 
-		/* rick
-		if (Game.isTestMode()) {
-
-			addKeyListener(game.getHandler());
-			setFocusable(true);
-		}
-		*/
+		/*
+		 * rick if (Game.isTestMode()) {
+		 * 
+		 * addKeyListener(game.getHandler()); setFocusable(true); }
+		 */
 
 		// initialize some of the guis before createCards()
 
@@ -187,7 +188,7 @@ public class GameGUI extends JFrame implements GameListener {
 		add(mainPanel, BorderLayout.CENTER);
 
 		// add the area for debugging messages
-		//add(new JScrollPane(debugArea), BorderLayout.SOUTH);
+		// add(new JScrollPane(debugArea), BorderLayout.SOUTH);
 
 		// turn off focus traversal keys so that the tab key can be used as game
 		// input
@@ -208,27 +209,32 @@ public class GameGUI extends JFrame implements GameListener {
 	}
 
 	/**
-	 * When the user tries to close the game, it displays a pop-up that asks the
-	 * user if the user is sure about closing the window. If the user presses
-	 * yes, it should quit the game and close the SkyeTekReader window.
+	 * When the user tries to close the game, it displays a pop-up that asks the user if the user is
+	 * sure about closing the window. If the user presses yes, it should quit the game and close the
+	 * SkyeTekReader window.
 	 */
-	private void detectGUIClosed() {
+	private void detectGUIClosed ()
+	{
 
 		// code from :
 		// http://stackoverflow.com/questions/9093448/do-something-when-the-close-button-is-clicked-on-a-jframe
-		this.addWindowListener(new WindowAdapter() {
+		this.addWindowListener(new WindowAdapter()
+		{
 
 			@Override
-			public void windowClosing(WindowEvent windowEvent) {
+			public void windowClosing ( WindowEvent windowEvent )
+			{
 
-				JOptionPane.showMessageDialog(GameGUI.this,
-						"Press on the Quit button to close this application");
+				JOptionPane
+						.showMessageDialog(	GameGUI.this,
+											"Press on the Quit button to close this application");
 			}
 
 		});
 	}
 
-	private JPanel createButtonPanel() {
+	private JPanel createButtonPanel ()
+	{
 		JPanel southPanel = new JPanel(new GridLayout(1, 0));
 		southPanel.add(createResumeButtonPanel());
 		southPanel.add(createBackButtonPanel());
@@ -239,7 +245,8 @@ public class GameGUI extends JFrame implements GameListener {
 	}
 
 	@SuppressWarnings("boxing")
-	private void createCards() {
+	private void createCards ()
+	{
 		cardPanel = new JPanel();
 		layout = new CardLayout();
 		cardPanel.setLayout(layout);
@@ -294,7 +301,8 @@ public class GameGUI extends JFrame implements GameListener {
 	 * 
 	 * @return a JPanel displaying the bid, current antenna and trick
 	 */
-	protected JPanel createInfoPanel() {
+	protected JPanel createInfoPanel ()
+	{
 		JPanel infoPanel = new JPanel(new GridLayout(1, 0));
 		infoPanel.add(createBidPanel());
 		infoPanel.add(createAntennaPanel());
@@ -307,13 +315,16 @@ public class GameGUI extends JFrame implements GameListener {
 	 * 
 	 * @return the panel created
 	 */
-	protected JPanel createQuitPanel() {
+	protected JPanel createQuitPanel ()
+	{
 
 		quitButton = GUIUtilities.createButton("Quit");
-		quitButton.addActionListener(new ActionListener() {
+		quitButton.addActionListener(new ActionListener()
+		{
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void actionPerformed ( ActionEvent e )
+			{
 
 				// a pop-up that asks the user if the user is sure about closing
 				// the window. If the user presses yes, it should quit the game
@@ -322,16 +333,12 @@ public class GameGUI extends JFrame implements GameListener {
 				// code from :
 				// http://stackoverflow.com/questions/9093448/do-something-when-the-close-button-is-clicked-on-a-jframe
 
-				if (JOptionPane.showConfirmDialog(GameGUI.this,
-						"Are you sure you want to close this window?",
-						"Confirm Exit", JOptionPane.YES_NO_OPTION,
-						JOptionPane.QUESTION_MESSAGE) == JOptionPane.YES_OPTION) {
-
-					// close the SkyeTex window when playing the actual game
-					if (!Game.isTestMode()) {
-
-						BridgeActualGame.closeServerWindow();
-					}
+				if (JOptionPane
+						.showConfirmDialog(	GameGUI.this,
+											"Are you sure you want to close this window?",
+											"Confirm Exit", JOptionPane.YES_NO_OPTION,
+											JOptionPane.QUESTION_MESSAGE) == JOptionPane.YES_OPTION)
+				{
 
 					game.quit();
 
@@ -341,8 +348,7 @@ public class GameGUI extends JFrame implements GameListener {
 
 		});
 
-		JPanel quitPanel = GUIUtilities.packageButton(quitButton,
-				FlowLayout.CENTER);
+		JPanel quitPanel = GUIUtilities.packageButton(quitButton, FlowLayout.CENTER);
 		return quitPanel;
 
 	}
@@ -352,7 +358,8 @@ public class GameGUI extends JFrame implements GameListener {
 	 * 
 	 * @return a JPanel with a JLabel that displays the bid
 	 */
-	protected JPanel createBidPanel() {
+	protected JPanel createBidPanel ()
+	{
 
 		JPanel bidPanel = new JPanel(new FlowLayout());
 		// JLabel bid = new JLabel("Bid: ");
@@ -370,7 +377,8 @@ public class GameGUI extends JFrame implements GameListener {
 	 * 
 	 * @return a JPanel with a JLabel displaying the current antenna
 	 */
-	protected JPanel createAntennaPanel() {
+	protected JPanel createAntennaPanel ()
+	{
 
 		JPanel antennaPanel = new JPanel(new FlowLayout());
 		// JLabel antenna = new JLabel("Next player: ");
@@ -388,7 +396,8 @@ public class GameGUI extends JFrame implements GameListener {
 	 * 
 	 * @return a JPanel with a JLabel displaying the current trick
 	 */
-	protected JPanel createTrickPanel() {
+	protected JPanel createTrickPanel ()
+	{
 
 		JPanel trickPanel = new JPanel(new FlowLayout());
 		// JLabel trick = new JLabel("Trick: ");
@@ -406,14 +415,17 @@ public class GameGUI extends JFrame implements GameListener {
 	 * 
 	 * @return A JPanel containing a single, right-oriented "Undo" button.
 	 */
-	protected JPanel createUndoButtonPanel() {
+	protected JPanel createUndoButtonPanel ()
+	{
 
 		// create a new JPanel with a FlowLayout
 		undoButton = GUIUtilities.createButton("Undo");
-		undoButton.addActionListener(new ActionListener() {
+		undoButton.addActionListener(new ActionListener()
+		{
 
 			@Override
-			public void actionPerformed(ActionEvent evt) {
+			public void actionPerformed ( ActionEvent evt )
+			{
 
 				undo();
 			}
@@ -431,14 +443,17 @@ public class GameGUI extends JFrame implements GameListener {
 	 * 
 	 * @return A JPanel containing a single, right-oriented "Back" button.
 	 */
-	protected JPanel createBackButtonPanel() {
+	protected JPanel createBackButtonPanel ()
+	{
 
 		// create a new JPanel with a FlowLayout
 		backButton = GUIUtilities.createButton("Back");
-		backButton.addActionListener(new ActionListener() {
+		backButton.addActionListener(new ActionListener()
+		{
 
 			@Override
-			public void actionPerformed(ActionEvent evt) {
+			public void actionPerformed ( ActionEvent evt )
+			{
 				// showResetGUI();
 
 				reverse();
@@ -457,15 +472,18 @@ public class GameGUI extends JFrame implements GameListener {
 	 * 
 	 * @return A JPanel containing a single, center-oriented "help" button.
 	 */
-	protected JPanel createHelpButtonPanel() {
+	protected JPanel createHelpButtonPanel ()
+	{
 
 		JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 5));
 		helpButton = GUIUtilities.createButton("Help");
 
-		helpButton.addActionListener(new ActionListener() {
+		helpButton.addActionListener(new ActionListener()
+		{
 
 			@Override
-			public void actionPerformed(ActionEvent arg0) {
+			public void actionPerformed ( ActionEvent arg0 )
+			{
 				showHelp();
 			}
 
@@ -481,80 +499,65 @@ public class GameGUI extends JFrame implements GameListener {
 	 * 
 	 * @return A JPanel containing a single, left-oriented "Resume" button.
 	 */
-	protected JPanel createResumeButtonPanel() {
+	protected JPanel createResumeButtonPanel ()
+	{
 
 		// create a new JPanel with a FlowLayout
 		JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 5));
 		resumeButton = GUIUtilities.createButton("Resume");
-		resumeButton.addActionListener(new ActionListener() {
+		resumeButton.addActionListener(new ActionListener()
+		{
 
 			@Override
-			public void actionPerformed(ActionEvent arg0) {
+			public void actionPerformed ( ActionEvent arg0 )
+			{
 				// reverse();
-				/* rick
-				if (game != null) {
-					System.out.println("Stopping server");
-					try {
-						game.closeHandler();
-						//BridgeActualGame.closeServerWindow();
-
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						System.out.println("Unable to close connection");
-						e.printStackTrace();
-					}
-				}
-				*/
+				/*
+				 * rick if (game != null) { System.out.println("Stopping server"); try {
+				 * game.closeHandler(); //BridgeActualGame.closeServerWindow();
+				 * 
+				 * } catch (IOException e) { // TODO Auto-generated catch block
+				 * System.out.println("Unable to close connection"); e.printStackTrace(); } }
+				 */
 
 				// game.resumeGame();
-				sig_debugMsg ("Starting server");
+				sig_debugMsg("Starting server");
 				BridgeActualGame.startServer();
 
 				// start the game 15 seconds after starting the C# Server
-				/* rick
-				TimerTask timerTask = new TimerTask() {
-
-					@Override
-					public void run() {
-
-						try {
-							sig_debugMsg("Activating antennas");
-							game.activateAntennas();
-							Handler handler = game.getHandler();
-							if (handler != null) {
-								new Thread(handler, "Antenna handler").start() ;
-							}
-
-
-						} catch (UnknownHostException e) {
-
-							// TODO Auto-generated catch block
-							sig_debugMsg(e.getMessage());
-							e.printStackTrace();
-
-						} catch (IOException e) {
-
-							// TODO Auto-generated catch block
-							sig_debugMsg(e.getMessage());
-							e.printStackTrace();
-						}
-						sig_debugMsg("Resuming game");
-						game.resumeGame();
-						sig_debugMsg("Game resumed");
-					}
-
-				};
-
-				// wait 4 seconds after starting the server to start the game
-				Timer timer = new Timer(true);
-				timer.schedule(timerTask, 4000);
-				*/
+				/*
+				 * rick TimerTask timerTask = new TimerTask() {
+				 * 
+				 * @Override public void run() {
+				 * 
+				 * try { sig_debugMsg("Activating antennas"); game.activateAntennas(); Handler
+				 * handler = game.getHandler(); if (handler != null) { new Thread(handler,
+				 * "Antenna handler").start() ; }
+				 * 
+				 * 
+				 * } catch (UnknownHostException e) {
+				 * 
+				 * // TODO Auto-generated catch block sig_debugMsg(e.getMessage());
+				 * e.printStackTrace();
+				 * 
+				 * } catch (IOException e) {
+				 * 
+				 * // TODO Auto-generated catch block sig_debugMsg(e.getMessage());
+				 * e.printStackTrace(); } sig_debugMsg("Resuming game"); game.resumeGame();
+				 * sig_debugMsg("Game resumed"); }
+				 * 
+				 * };
+				 * 
+				 * // wait 4 seconds after starting the server to start the game Timer timer = new
+				 * Timer(true); timer.schedule(timerTask, 4000);
+				 */
 
 			}
 
 		});
 
-		if (Game.isTestMode()) {
+		if (Game.isTestMode())
+		{
 
 			resumeButton.setEnabled(false);
 		}
@@ -563,20 +566,22 @@ public class GameGUI extends JFrame implements GameListener {
 		return panel;
 	}
 
-	private void setAntennaLabel(String text) {
+	private void setAntennaLabel ( String text )
+	{
 		// antennaLabel.setText(text);
 	}
 
-	private void setTrickLabel(String text) {
+	private void setTrickLabel ( String text )
+	{
 		// trickLabel.setText(text);
 	}
 
 	/** Advances to the next GUI in line. */
 	@SuppressWarnings("boxing")
-	protected void changeFrame() {
+	protected void changeFrame ()
+	{
 
-		System.out.println("change frame current screen "
-				+ cardNames[currentScreen]);
+		System.out.println("change frame current screen " + cardNames[currentScreen]);
 
 		// System.out.println("before change frame currentScreen " +
 		// currentScreen);
@@ -587,11 +592,14 @@ public class GameGUI extends JFrame implements GameListener {
 		// If the current gui is the scan dummy gui, then change frame to the
 		// game status gui. Otherwise, increment value of current screen
 		// by 1
-		if (currentScreen == SCAN_DUMMY_GUI) {
+		if (currentScreen == SCAN_DUMMY_GUI)
+		{
 
 			currentScreen = GAME_STATUS_GUI;
 
-		} else if (currentScreen == GAME_STATUS_GUI) {
+		}
+		else if (currentScreen == GAME_STATUS_GUI)
+		{
 
 			// System.out.println("current screen is game status gui");
 
@@ -601,11 +609,14 @@ public class GameGUI extends JFrame implements GameListener {
 			// switch
 			// from GameStatusGUI to SCAN_DUMMY_GUI.
 
-			if (switchFromGameStatusGUI == SWITCH_TO_SCAN_DUMMY) {
+			if (switchFromGameStatusGUI == SWITCH_TO_SCAN_DUMMY)
+			{
 
 				currentScreen = SCAN_DUMMY_GUI;
 
-			} else if (switchFromGameStatusGUI == SWITCH_TO_NEXT_HAND) {
+			}
+			else if (switchFromGameStatusGUI == SWITCH_TO_NEXT_HAND)
+			{
 
 				System.out.println("switching to Next Hand GUI");
 
@@ -619,17 +630,22 @@ public class GameGUI extends JFrame implements GameListener {
 
 			// else, do nothing
 
-		} else if (currentScreen == NEXT_HAND_GUI) {
+		}
+		else if (currentScreen == NEXT_HAND_GUI)
+		{
 
 			currentScreen = SCANNING_BLIND_GUI;
 
-		} else {
+		}
+		else
+		{
 
 			currentScreen++;
 		}
 
 		// update text on refresh display
-		if (currentScreen == NEXT_HAND_GUI) {
+		if (currentScreen == NEXT_HAND_GUI)
+		{
 
 			nextHandGUI.refreshDisplay();
 		}
@@ -639,11 +655,9 @@ public class GameGUI extends JFrame implements GameListener {
 		System.out.println("Switching to screen " + cardNames[currentScreen]);
 
 		// Note : its position/order is important
-		/* rick
-		if (Game.isTestMode()) {
-			determineIfRightGUI();
-		}
-		*/
+		/*
+		 * rick if (Game.isTestMode()) { determineIfRightGUI(); }
+		 */
 
 		layout.show(cardPanel, cardNames[currentScreen]);
 		requestFocusInWindow();
@@ -654,40 +668,39 @@ public class GameGUI extends JFrame implements GameListener {
 		// debugMsg("currentScreen " + currentScreen);
 	}
 
-	/* rick
-	private void determineIfRightGUI() {
-		// figure out if it is the right gui for listening to key press
-		if (currentScreen == VI_PLAYER_GUI || currentScreen == HELP_GUI
-				|| currentScreen == TRUMP_SUIT_GUI
-				|| currentScreen == BID_NUMBER_GUI
-				|| currentScreen == BID_POSITION_GUI
-				|| currentScreen == NEXT_HAND_GUI) {
-
-			((TestAntennaHandler) game.getHandler()).setRightGUI(false);
-
-		} else {
-
-			((TestAntennaHandler) game.getHandler()).setRightGUI(true);
-		}
-	}
-	*/
+	/*
+	 * rick private void determineIfRightGUI() { // figure out if it is the right gui for listening
+	 * to key press if (currentScreen == VI_PLAYER_GUI || currentScreen == HELP_GUI || currentScreen
+	 * == TRUMP_SUIT_GUI || currentScreen == BID_NUMBER_GUI || currentScreen == BID_POSITION_GUI ||
+	 * currentScreen == NEXT_HAND_GUI) {
+	 * 
+	 * ((TestAntennaHandler) game.getHandler()).setRightGUI(false);
+	 * 
+	 * } else {
+	 * 
+	 * ((TestAntennaHandler) game.getHandler()).setRightGUI(true); } }
+	 */
 
 	/**
 	 * Adds a message to the debugging panel
 	 */
 	@Override
-	public void sig_debugMsg(String msg) {
+	public void sig_debugMsg ( String msg )
+	{
 		debugArea.append(msg + "\n");
 		debugArea.setCaretPosition(debugArea.getText().length() - 1);
 	}
 
 	// Prints out a list of cards in the suit and hand specified.
 	@SuppressWarnings("unused")
-	private void printCards(Suit s, Player players) {
+	private void printCards ( Suit s, Player players )
+	{
 		Iterator<Card> cardIter = players.cards();
-		while (cardIter.hasNext()) {
+		while (cardIter.hasNext())
+		{
 			Card c = cardIter.next();
-			if (c.getSuit() == s) {
+			if (c.getSuit() == s)
+			{
 				// print its suit and rank
 				sig_debugMsg(c.getRank() + " of " + c.getSuit());
 
@@ -702,7 +715,8 @@ public class GameGUI extends JFrame implements GameListener {
 	 *            the new contract
 	 */
 	@Override
-	public void sig_contractSet(Contract contract) {
+	public void sig_contractSet ( Contract contract )
+	{
 		// bidLabel.setText(contract.toString());
 		setAntennaLabel(game.getCurrentHand());
 	}
@@ -711,7 +725,8 @@ public class GameGUI extends JFrame implements GameListener {
 	 * Resets the game to start over.
 	 */
 	@Override
-	public void sig_gameReset() {
+	public void sig_gameReset ()
+	{
 
 		System.out.println("Game reset");
 
@@ -738,7 +753,8 @@ public class GameGUI extends JFrame implements GameListener {
 
 		// gameStatusGUI.setFirstCardPlayed(false);
 
-		if (Game.isTestMode()) {
+		if (Game.isTestMode())
+		{
 
 			trumpSuitGUI.setHandNum(2);
 			bidNumberGUI.setHandNum(2);
@@ -747,8 +763,7 @@ public class GameGUI extends JFrame implements GameListener {
 
 		layout.show(cardPanel, cardNames[currentScreen]);
 
-		System.out.println("should show " + cardNames[currentScreen] + " "
-				+ currentScreen);
+		System.out.println("should show " + cardNames[currentScreen] + " " + currentScreen);
 
 		this.repaint();
 
@@ -759,7 +774,8 @@ public class GameGUI extends JFrame implements GameListener {
 
 	/** Returns to the last card viewed. */
 	@SuppressWarnings("boxing")
-	public void reverse() {
+	public void reverse ()
+	{
 
 		System.out.println("GameGUI undo");
 
@@ -768,33 +784,37 @@ public class GameGUI extends JFrame implements GameListener {
 
 		// if the user wants to change position of blind player by goinf from
 		// scanning blind cards gui to choose VI position gui
-		if (currentScreen == SCANNING_BLIND_GUI) {
+		if (currentScreen == SCANNING_BLIND_GUI)
+		{
 
 			/**
-			 * IMPORTANT : When "Back" is pressed and screen changes from
-			 * SCANNING_BLIND_GUI to VI_PLAYER_GUI, the handler is still active.
-			 * So do not scan cards until the position of the blind player has
-			 * been chosen. Not sure what happens if you do.
+			 * IMPORTANT : When "Back" is pressed and screen changes from SCANNING_BLIND_GUI to
+			 * VI_PLAYER_GUI, the handler is still active. So do not scan cards until the position
+			 * of the blind player has been chosen. Not sure what happens if you do.
 			 */
-			/* rick - should not need this anymore
-			game.resetVIPlayer();
-			*/
+			/*
+			 * rick - should not need this anymore game.resetVIPlayer();
+			 */
 
-		}else if (currentScreen == BID_POSITION_GUI) {
+		}
+		else if (currentScreen == BID_POSITION_GUI)
+		{
 			// TODO: implement this
-			/* rick - probably need to implement this
-			game.reverseBidPosition();
-			*/
+			/*
+			 * rick - probably need to implement this game.reverseBidPosition();
+			 */
 
 		}
 
-		if (!screensViewed.isEmpty()) {
+		if (!screensViewed.isEmpty())
+		{
 			currentScreen = screensViewed.pop();
 
 			System.out.println("current screen is " + currentScreen);
 
 			// something extra is needed to revert to SCAN_DUMMY_GUI
-			if (currentScreen == SCAN_DUMMY_GUI) {
+			if (currentScreen == SCAN_DUMMY_GUI)
+			{
 
 				reverseToScanDummy();
 
@@ -807,9 +827,9 @@ public class GameGUI extends JFrame implements GameListener {
 
 			layout.show(cardPanel, cardNames[currentScreen]);
 
-			/* rick
-			determineIfRightGUI();
-			*/
+			/*
+			 * rick determineIfRightGUI();
+			 */
 
 			requestFocusInWindow();
 		}
@@ -818,76 +838,97 @@ public class GameGUI extends JFrame implements GameListener {
 	/**
 	 * Resets the last move
 	 */
-	public void undo() {
+	public void undo ()
+	{
 
 		// if the user wants to change position of blind player
-		if (currentScreen == SCANNING_BLIND_GUI && game.blindPayerHasNoCard()) {
+		if (currentScreen == SCANNING_BLIND_GUI && game.blindPayerHasNoCard())
+		{
 
 			reverse();
 
-		} else if (currentScreen == SCANNING_BLIND_GUI) {
+		}
+		else if (currentScreen == SCANNING_BLIND_GUI)
+		{
 
 			// This is when user wants to remove the most recent cards blind
 			// player' cards during dealing stage
 
 			game.undoBlindPlayerCard();
 
-			if (Game.isTestMode()) {
+			if (Game.isTestMode())
+			{
 
 				TestAntennaHandler.undo();
 			}
 
-		} else if (currentScreen == SCAN_DUMMY_GUI) {
+		}
+		else if (currentScreen == SCAN_DUMMY_GUI)
+		{
 
 			Card toRemove = game.undoDummyPlayerCard();
 
-			if (toRemove == null) {
+			if (toRemove == null)
+			{
 
 				// allow the user to change gui
 				reverse();
 
-			} else {
+			}
+			else
+			{
 
 				// remove the most recent card scanned for the dummy player
 				scanDummyGUI.undo(toRemove);
 
-				if (Game.isTestMode()) {
+				if (Game.isTestMode())
+				{
 
 					TestAntennaHandler.undo();
 				}
 			}
 
-		} else if (currentScreen == GAME_STATUS_GUI) {
+		}
+		else if (currentScreen == GAME_STATUS_GUI)
+		{
 
 			Direction undoTurn = game.getTurn();
 
 			Direction currentTurn = game.undo();
 
-			if (currentTurn != null) {
+			if (currentTurn != null)
+			{
 
-				gameStatusGUI.undoCardPlayed(currentTurn.ordinal(),
-						undoTurn.ordinal());
+				gameStatusGUI.undoCardPlayed(currentTurn.ordinal(), undoTurn.ordinal());
 
-				if (Game.isTestMode()) {
+				if (Game.isTestMode())
+				{
 
 					TestAntennaHandler.undo();
 				}
 
-				if (game.getCurrentTrick().getTrickSize() == 0) {
+				if (game.getCurrentTrick().getTrickSize() == 0)
+				{
 
 					undoButtonSetEnabled(false);
 
-				} else {
+				}
+				else
+				{
 
 					undoButtonSetEnabled(true);
 				}
 
-			} else {
+			}
+			else
+			{
 
 				undoButtonSetEnabled(false);
 			}
 
-		} else {
+		}
+		else
+		{
 
 			reverse();
 		}
@@ -895,8 +936,7 @@ public class GameGUI extends JFrame implements GameListener {
 	}
 
 	/**
-	 * Updates the GUI to show whose turn it is and adds the card to the current
-	 * trick
+	 * Updates the GUI to show whose turn it is and adds the card to the current trick
 	 * 
 	 * @param turn
 	 *            the next player
@@ -904,13 +944,15 @@ public class GameGUI extends JFrame implements GameListener {
 	 *            the card just played into the trick
 	 */
 	@Override
-	public void sig_cardPlayed(Direction turn, Card card) {
+	public void sig_cardPlayed ( Direction turn, Card card )
+	{
 		setAntennaLabel(turn.getNextDirection().toString());
 		setTrickLabel(game.getCurrentTrick().toString());
 	}
 
 	@SuppressWarnings("boxing")
-	private void showResetGUI() {
+	private void showResetGUI ()
+	{
 		screensViewed.push(currentScreen);
 		layout.show(cardPanel, "resetGUI");
 		currentScreen = 7;
@@ -919,23 +961,25 @@ public class GameGUI extends JFrame implements GameListener {
 
 	/**
 	 * Updates the antenna label after a card is scanned
+	 * 
 	 * @param p_card
 	 *            the card just scanned
 	 */
 	@Override
-	public void sig_cardScanned(Direction p_direction, Card p_card, boolean p_handComplete) {
+	public void sig_cardScanned ( Direction p_direction, Card p_card, boolean p_handComplete )
+	{
 		// setAntennaLabel(game.getCurrentHand());
 	}
 
 	/**
-	 * Updates the display based on the trick being won. Updates the current
-	 * player and the trick.
+	 * Updates the display based on the trick being won. Updates the current player and the trick.
 	 * 
 	 * @param winner
 	 *            the player who won the trick
 	 */
 	@Override
-	public void sig_trickWon(Direction winner) {
+	public void sig_trickWon ( Direction winner )
+	{
 		setAntennaLabel(winner.toString());
 		setTrickLabel(game.getCurrentTrick().toString());
 	}
@@ -944,62 +988,71 @@ public class GameGUI extends JFrame implements GameListener {
 	 * Display a help message
 	 */
 	@SuppressWarnings("boxing")
-	public void showHelp() {
+	public void showHelp ()
+	{
 		screensViewed.push(currentScreen);
 		layout.show(cardPanel, "help");
 		currentScreen = 6;
 
 	}
 
-	public void sig_blindHandsScanned() {
+	public void sig_blindHandsScanned ()
+	{
 
 	}
 
 	@Override
-	public void sig_dummyHandScanned() {
+	public void sig_dummyHandScanned ()
+	{
 		// TODO Auto-generated method stub
 
 	}
 
-	public void setSwitchFromGameStatusGUI(int switchFromGameStatusGUI) {
+	public void setSwitchFromGameStatusGUI ( int switchFromGameStatusGUI )
+	{
 
 		this.switchFromGameStatusGUI = switchFromGameStatusGUI;
 
-		System.out
-				.println("switchFromGameStatusGUI " + switchFromGameStatusGUI);
+		System.out.println("switchFromGameStatusGUI " + switchFromGameStatusGUI);
 	}
 
-	public static boolean isScanBlindGUI() {
+	public static boolean isScanBlindGUI ()
+	{
 
 		return currentScreen == SCANNING_BLIND_GUI;
 	}
 
-	public void undoButtonSetEnabled(boolean enabled) {
+	public void undoButtonSetEnabled ( boolean enabled )
+	{
 
 		undoButton.setEnabled(enabled);
 		repaint();
 	}
 
-	public void backButtonSetEnabled(boolean enabled) {
+	public void backButtonSetEnabled ( boolean enabled )
+	{
 
 		backButton.setEnabled(enabled);
 		repaint();
 	}
 
-	public void reverseToScanBlind() {
+	public void reverseToScanBlind ()
+	{
 
 		// TODO: implement this in BridgeHand
 		// game.setGameState(GameState.DEALING);
 
 	}
 
-	public void reverseToScanDummy() {
+	public void reverseToScanDummy ()
+	{
 		// TODO: implement this in BridgeHand
 		// game.setGameState(GameState.SCANNING_DUMMY);
 
 	}
 
-	public Game getGame() {
+	public Game getGame ()
+	{
 
 		return game;
 	}

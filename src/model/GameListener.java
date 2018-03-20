@@ -19,6 +19,12 @@ public interface GameListener
 	public void sig_debugMsg(String string);
 
 	/**
+	 * Called at first startup to indicate we are waiting
+	 * for hardware to finish initialization.
+	 */
+	public void sig_initializing();
+	
+	/**
 	 * Called when beginning a new hand
 	 */
 	public void sig_gameReset();

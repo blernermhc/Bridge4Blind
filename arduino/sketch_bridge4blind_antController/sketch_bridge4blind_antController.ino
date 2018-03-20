@@ -71,7 +71,7 @@ void setup(void)
     while (!Serial); // for Leonardo/Micro/Zero
   #endif
   Serial.begin(115200);
-  Serial.println("Hello Barbara!");
+  Serial.println("Resetting Antenna");
 
   nfc.begin();
 
@@ -98,6 +98,7 @@ void setup(void)
   nfc.SAMConfig();
   
   Serial.println("Waiting for an ISO14443A card");
+  Serial.println("Reset Complete");
 }
 
 #define CHAR_BUFFER_SIZE 15

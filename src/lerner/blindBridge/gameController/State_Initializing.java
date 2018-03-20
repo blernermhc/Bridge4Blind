@@ -4,19 +4,17 @@
 
 package lerner.blindBridge.gameController;
 
-import model.GameListener;
-
 /***********************************************************************
- * Initial state of a hand.
- * Notifies listeners then enters SCAN_BLIND_HANDS
+ * Initial state on startup.  Waits for devices to initialize.
+ * When hardware is ready, enters NEW_HAND state.
  ***********************************************************************/
-public class State_NewHand extends ControllerState
+public class State_Initializing extends ControllerState
 {
 
 	/**
 	 * Used to collect logging output for this class
 	 */
-	// private static Category s_cat = Category.getInstance(State_NewHand.class.getName());
+	// private static Category s_cat = Category.getInstance(State_Initializing.class.getName());
 
 	//--------------------------------------------------
 	// CONSTANTS
@@ -44,12 +42,6 @@ public class State_NewHand extends ControllerState
 	public void onEntry ( Game p_game )
 	{
 		m_game = p_game;
-		
-		// notify all listeners we have entered this state
-		for (GameListener gameListener : m_game.getGameListeners())
-		{
-			gameListener.sig_gameReset();
-		}
 	}
 
 	/* (non-Javadoc)
@@ -57,7 +49,36 @@ public class State_NewHand extends ControllerState
 	 */
 	public BridgeHandState checkState()
 	{
-		return BridgeHandState.SCAN_BLIND_HANDS;
+		boolean ready = true;
+		
+		if (ready)
+		{
+			for (AntennaController antController : m_game.getAntennaControllers().values())
+			{
+				if (! antController.isDeviceReady())
+				{
+					ready = false;
+					break;
+				}
+			}
+		}
+		
+		if (ready)
+		{
+			for (KeyboardController kbdController : m_game.getKeyboardControllers().values())
+			{
+				if (! kbdController.isDeviceReady())
+				{
+					ready = false;
+					break;
+				}
+			}
+		}
+		
+		if (ready)
+			return BridgeHandState.NEW_HAND;
+		else
+			return BridgeHandState.INITIALIZING;
 	}
 
 	//--------------------------------------------------

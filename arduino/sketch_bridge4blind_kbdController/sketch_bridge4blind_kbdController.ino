@@ -39,8 +39,8 @@ uint8_t s_options = 0;
 uint8_t s_selectedSuitId = SUITID_NOT_SET;
 uint8_t s_selectedCardId = CARDID_NOT_SET;  // 13: void; 0: two; 1: three, etc.
 
-volatile uint8_t   Button    = 0;                      // Required for 64 Button Shield (SPI Only)
-volatile uint8_t m_lastButtonId = 0;		       // Used to detect pressing same button twice (e.g., State)
+volatile uint8_t		Button    = 0;			// Required for 64 Button Shield (SPI Only)
+volatile uint8_t		m_previousButtonId = 0;	// Used to detect pressing same button twice (e.g., State)
 
 
 #define DEBOUNCE 100  // button debouncer
@@ -314,13 +314,13 @@ void processInputButton (uint8_t p_input0, uint8_t p_repeat)
     case 11:	btn_up(); break;
     case 12:	btn_down(); break;
     case 13:	btn_repeat(); break;
-    case 14:	btn_state(buttonId == m_lastButtonId); break;
+    case 14:	btn_state(buttonId == m_previousButtonId); break;
     case 15:	btn_undo(); break;
     case 16:	btn_masterUndo(); break;
     default:
       phrases.playNumber(SND_UNEXPECTED_BUTTON, buttonId, NEW_AUDIO);
-  }    
-  m_lastButtonId = buttonId;
+  }
+  m_previousButtonId = buttonId;
 }
 
 void processInput()
@@ -360,59 +360,9 @@ void setOptions (uint8_t p_input0, uint8_t p_input1, uint8_t p_repeat)
 	s_options = p_input1;
 }
 
-byte check_switches()
-{
-  static byte previous[6];
-  static long time[6];
-  byte reading;
-  byte pressed;
-  byte index;
-  pressed = 0;
-
-  for (byte index = 0; index < 6; ++index) {
-    reading = digitalRead(14 + index);
-    if (reading == LOW && previous[index] == HIGH && millis() - time[index] > DEBOUNCE)
-    {
-      // switch pressed
-      time[index] = millis();
-      pressed = index + 1;
-      break;
-    }
-    previous[index] = reading;
-  }
-  // return switch number (1 - 6)
-  return (pressed);
-}
-
-
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
-/*
-NOTE: add TRICK.WAV ("trick" singular)
-NOTE: change "bid" to "contract" BIDIS.WAV, AGAINBID.WAV ENTERBID.WAV
-NOTE: change DUMMY.WAV to DUMMYS.WAV ("dummy" -> "dummy's")
-NOTE: fix VOID.WAV, NONE.WAVE, NOTRUMP.WAV
-----------------------------------------------------------------------
-*/
-
-
-//----------------------------------------------------------------------
-//----------------------------------------------------------------------
-//----------------------------------------------------------------------
-
-/*
-     Buttons:
-
-     *UP   *D1  *D2  *D3  *D4
-     *DN   *H1  *H2  *H3  *H4  PLAY
-     Repeat  *HC  *DC
-     State
-
-     UNDO
-     MASTER_UNDO
- */
-
 
 //----------------------------------------------------------------------
 // 0: two; 1: three; ... 12: ace; 13: void
@@ -707,57 +657,80 @@ void resetKeyboard(uint8_t p_playerId)
 }
 
 
+/*******************************************************************
+     Button IDs:
+     
+     40    48    56    64  |  25    17    09    01
+     39    47    55    63  |  26    18    10    02
+     38    46    54    62  |  27    19    11    03
+     37    45    53    61  |  28    20    12    04
+
+     Buttons Bindings:
+
+     UP   --     D1    D2  |  D3    D4    --    --
+     DN          H1    H2  |  H3    H4    --    PLAY
+     --   --     HC    DC  |  --    --    --    PLAY
+     RPT  State  --    RST |  UNDO  --    --    PLAY
+********************************************************************/
+
+
 // -------------------------------------------------------------------------------------------------------------
-// Button 64 Shield Code
+// Button 64 Shield Button Handler
+// Processes button presses, but ignores buttons pressed before previous button has been released.
+//   NOTE: The debounce code in the scanner can cause missed button release events, if the button is released quickly
+//   NOTE: Holding down a button only generates one pressed event.
+//   NOTE: This procedure must set Button to zero or we will keep seeing the button press or release
 // -------------------------------------------------------------------------------------------------------------
 void checkButton()
 {
-  if(Button > 0 && Button != m_lastButtonId)  // If Button is > 0, then it was pressed or released (SPI only), ignore repeats
-  {
+	//if(Button > 0 && Button != m_lastButtonId)  // If Button is > 0, then it was pressed or released (SPI only), ignore repeats
+	
+	if (Button == 0) return;					// no button pressed or released
+
+	if (Button <= 128)						// Released button 
+    {
+		Serial.write(START_SEND_MSG);
+		putstring("Button: ");
+		Serial.print(Button, DEC);
+		putstring_nl(" - Released");
+		Button = 0;
+		return;
+    }
+    
+    // pressed button
+	Button = Button - 128;              // A pressd button is the button number + 128
+    
     Serial.write(START_SEND_MSG);
     putstring("Button: ");
-    if(Button > 128)                          // Example of how to decode the button press
-    {
-      Button = Button - 128;                    // A pressd button is the button number + 128
-      Serial.print(Button, DEC);
-      putstring_nl(" - Pressed");
-    }
-    else
-    {
-      Serial.print(Button, DEC);                // A released button is from 1 to 64
-      putstring_nl(" - Released");
-      m_lastButtonId = 0;
-      Button = 0;
-    }
+    Serial.print(Button, DEC);
+    putstring_nl(" - Pressed");
 
     switch (Button)
     {
-      case 1:	btn_play(); break;
-      case 47:	btn_H1(); break;
-      case 55:	btn_H2(); break;
-      case 63:	btn_H3(); break;
-      case 26:	btn_H4(); break;
-      case 46:	btn_HC(); break;
-      case 48:	btn_D1(); break;
-      case 56:	btn_D2(); break;
-      case 64:	btn_D3(); break;
-      case 25:	btn_D4(); break;
-      case 54:	btn_DC(); break;
+      case 2:	btn_play(); break;	// Play button spans three buttons
+      case 3:	btn_play(); break;
+      case 4:	btn_play(); break;
+      case 55:	btn_H1(); break;
+      case 63:	btn_H2(); break;
+      case 26:	btn_H3(); break;
+      case 18:	btn_H4(); break;
+      case 54:	btn_HC(); break;
+      case 56:	btn_D1(); break;
+      case 64:	btn_D2(); break;
+      case 25:	btn_D3(); break;
+      case 17:	btn_D4(); break;
+      case 62:	btn_DC(); break;
       case 40:	btn_up(); break;
       case 39:	btn_down(); break;
       case 37:	btn_repeat(); break;
-      case 45:	btn_state(Button == m_lastButtonId); break;
-      case 4:	btn_undo(); break;
-      case 12:	btn_masterUndo(); break;
+      case 45:	btn_state(Button == m_previousButtonId); break;
+      case 28:	btn_undo(); break;
       case 61:  keyboardRestartInitiate(); break;
-      default:
-	phrases.playNumber(SND_UNEXPECTED_BUTTON, Button, NEW_AUDIO);
+      default:	phrases.playNumber(SND_UNEXPECTED_BUTTON, Button, NEW_AUDIO);
     }    
     
-    m_lastButtonId = Button;
-    Button = 0;
-  }
-  
+    m_previousButtonId = Button;		// remember button to detect 2nd push (e.g., to stop state audio)
+    Button = 0;						// clear current button info
 }
 
 //*******************************************************************************************************************

@@ -401,7 +401,7 @@ public class BridgeHand
 
 		if (s_cat.isDebugEnabled()) s_cat.debug("evt_resetKeyboard: sending reloadFinished");
 		p_kbdController.send_reserveAudioPlaybackTime(true);
-		p_kbdController.send_simpleMessage(KBD_MESSAGE.FINISH_RELOAD);
+		p_kbdController.send_reloadFinished();
 		
 		if (s_cat.isDebugEnabled()) s_cat.debug("evt_resetKeyboard: finished.");
 	}

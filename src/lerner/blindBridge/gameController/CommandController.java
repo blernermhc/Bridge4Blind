@@ -307,7 +307,7 @@ public class CommandController implements Runnable
 						int idx = 0;
 						Direction direction = Direction.fromString(args[++idx]);
 						KeyboardController kbdController = m_game.getKeyboardControllers().get(direction); 
-						if (kbdController != null) kbdController.send_simpleMessage(KBD_MESSAGE.FINISH_RELOAD);
+						if (kbdController != null) kbdController.send_reloadFinished();
 					}
 					break;
 						

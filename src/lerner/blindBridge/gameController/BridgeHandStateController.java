@@ -40,7 +40,7 @@ public class BridgeHandStateController
 	//--------------------------------------------------
 
 	/** The current state.  Default is the initial game state: SCAN_BLIND_HANDS */
-	BridgeHandState		m_currentState		= BridgeHandState.NEW_HAND;
+	BridgeHandState		m_currentState		= BridgeHandState.INITIALIZING;
 
 	//--------------------------------------------------
 	// CONSTRUCTORS
