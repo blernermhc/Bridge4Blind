@@ -19,14 +19,14 @@ import javax.swing.JPanel;
 import javax.swing.JTextArea;
 
 import controller.TestAntennaHandler;
-import lerner.blindBridge.gameController.Game;
+import lerner.blindBridge.main.Game;
+import lerner.blindBridge.model.Card;
+import lerner.blindBridge.model.Contract;
+import lerner.blindBridge.model.Direction;
+import lerner.blindBridge.model.GameListener;
+import lerner.blindBridge.model.Suit;
 import main.BridgeActualGame;
-import model.Card;
-import model.Contract;
-import model.Direction;
-import model.GameListener;
 import model.Player;
-import model.Suit;
 
 /**
  * The Game class controls the UI for a game of bridge

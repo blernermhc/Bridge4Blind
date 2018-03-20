@@ -13,14 +13,14 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import controller.TestAntennaHandler;
-import model.Card;
-import model.Contract;
-import model.Direction;
+import lerner.blindBridge.model.Card;
+import lerner.blindBridge.model.Contract;
+import lerner.blindBridge.model.Direction;
+import lerner.blindBridge.model.GameListener;
+import lerner.blindBridge.model.Rank;
+import lerner.blindBridge.model.Suit;
 import model.Game;
-import model.GameListener;
 import model.GameState;
-import model.Rank;
-import model.Suit;
 
 /**
  * This class visually represents what the visually impaired person hears.

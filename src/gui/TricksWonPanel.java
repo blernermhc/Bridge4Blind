@@ -8,10 +8,10 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
-import model.Card;
-import model.Contract;
-import model.Direction;
-import model.GameListener;
+import lerner.blindBridge.model.Card;
+import lerner.blindBridge.model.Contract;
+import lerner.blindBridge.model.Direction;
+import lerner.blindBridge.model.GameListener;
 
 public class TricksWonPanel extends JPanel implements GameListener {
 	private static final Font TRICK_FONT = GameStatusGUI.STATUS_FONT.deriveFont(24f);

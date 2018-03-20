@@ -1,5 +1,9 @@
 package model;
 
+import lerner.blindBridge.model.Card;
+import lerner.blindBridge.model.Rank;
+import lerner.blindBridge.model.Suit;
+
 /**
  * The cards for the first two hands are hardcoded. This class provides the DummyHandler with the next card.
  * @author Humaira Orchee

@@ -5,7 +5,7 @@ import java.awt.event.ActionEvent;
 
 import controller.Handler;
 import controller.TestAntennaHandler;
-import model.Direction;
+import lerner.blindBridge.model.Direction;
 import model.Game;
 
 /**The VIPlayerGUI allows the sighted players to specify what position 

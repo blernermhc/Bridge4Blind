@@ -9,6 +9,10 @@ import java.util.Iterator;
 import org.junit.Before;
 import org.junit.Test;
 
+import lerner.blindBridge.model.Card;
+import lerner.blindBridge.model.Rank;
+import lerner.blindBridge.model.Suit;
+
 public class HandTest {
 	private Hand h;
 	private Hand fullSpadesHand;

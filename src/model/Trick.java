@@ -3,6 +3,9 @@ package model;
 import java.util.ArrayList;
 import java.util.Iterator;
 
+import lerner.blindBridge.model.Card;
+import lerner.blindBridge.model.Suit;
+
 /**
  * Keeps track of the cards that are played into a trick and the suit that was led.
  * 

@@ -5,6 +5,9 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Stack;
 
+import lerner.blindBridge.model.Card;
+import lerner.blindBridge.model.Suit;
+
 /**The Hand class represents a hand in the bridge game.
 *
 * @author Allison DeJordy

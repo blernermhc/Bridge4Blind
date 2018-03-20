@@ -2,14 +2,14 @@ package demo;
 
 import java.io.IOException;
 
-import model.Card;
 import model.CardDatabase;
-import model.Direction;
 import model.Game;
 import audio.AudioPlayer;
 import controller.AntennaHandler;
 import controller.CardIdentifier;
 import controller.Handler;
+import lerner.blindBridge.model.Card;
+import lerner.blindBridge.model.Direction;
 
 /**The ThesisDemo class is a small demonstration for my thesis defense.
 * @author Allison DeJordy

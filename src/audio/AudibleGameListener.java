@@ -1,11 +1,11 @@
 package audio;
 
-import model.Card;
-import model.Contract;
-import model.Direction;
-import model.GameListener;
-import model.Rank;
-import model.Suit;
+import lerner.blindBridge.model.Card;
+import lerner.blindBridge.model.Contract;
+import lerner.blindBridge.model.Direction;
+import lerner.blindBridge.model.GameListener;
+import lerner.blindBridge.model.Rank;
+import lerner.blindBridge.model.Suit;
 
 /**
  * Listens to game events and says thing out loud in response.

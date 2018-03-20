@@ -1,8 +1,8 @@
 package demo;
 
-import model.Card;
-import model.Rank;
-import model.Suit;
+import lerner.blindBridge.model.Card;
+import lerner.blindBridge.model.Rank;
+import lerner.blindBridge.model.Suit;
 
 /*
  * Copyright (c) 1995, 2008, Oracle and/or its affiliates. All rights reserved.

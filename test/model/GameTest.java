@@ -10,6 +10,10 @@ import org.junit.Before;
 import org.junit.Test;
 
 import controller.AntennaHandler;
+import lerner.blindBridge.model.Card;
+import lerner.blindBridge.model.Direction;
+import lerner.blindBridge.model.Rank;
+import lerner.blindBridge.model.Suit;
 
 public class GameTest {
 	private static final Direction DUMMY_DIRECTION = Direction.SOUTH;

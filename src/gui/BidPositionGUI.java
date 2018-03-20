@@ -3,7 +3,7 @@ package gui;
 import java.awt.Graphics;
 import java.awt.event.ActionEvent;
 
-import model.Direction;
+import lerner.blindBridge.model.Direction;
 import model.Game;
 import model.GameState;
 

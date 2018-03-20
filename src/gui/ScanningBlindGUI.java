@@ -7,11 +7,11 @@ import javax.swing.BoxLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
-import model.Card;
-import model.Contract;
-import model.Direction;
+import lerner.blindBridge.model.Card;
+import lerner.blindBridge.model.Contract;
+import lerner.blindBridge.model.Direction;
+import lerner.blindBridge.model.GameListener;
 import model.Game;
-import model.GameListener;
 
 public class ScanningBlindGUI extends JPanel implements GameListener {
 	private GameGUI gameGUI;

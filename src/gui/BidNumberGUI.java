@@ -14,7 +14,7 @@ import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
-import model.Contract;
+import lerner.blindBridge.model.Contract;
 import model.Game;
 
 /**

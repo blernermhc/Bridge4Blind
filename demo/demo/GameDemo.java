@@ -12,12 +12,12 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import controller.AntennaHandler;
-import model.Card;
+import lerner.blindBridge.model.Card;
+import lerner.blindBridge.model.Direction;
+import lerner.blindBridge.model.Suit;
 import model.CardDatabase;
-import model.Direction;
 import model.Game;
 import model.Player;
-import model.Suit;
 import audio.AudioPlayer;
 
 public class GameDemo extends JFrame{

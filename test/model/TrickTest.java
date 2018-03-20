@@ -9,6 +9,10 @@ import java.util.ArrayList;
 import org.junit.Before;
 import org.junit.Test;
 
+import lerner.blindBridge.model.Card;
+import lerner.blindBridge.model.Rank;
+import lerner.blindBridge.model.Suit;
+
 public class TrickTest {
 	private Trick emptyTrick = new Trick();
 	private Trick fullTrick = new Trick();

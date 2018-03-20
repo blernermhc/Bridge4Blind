@@ -16,8 +16,8 @@ import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.border.Border;
 
-import model.Card;
-import model.Direction;
+import lerner.blindBridge.model.Card;
+import lerner.blindBridge.model.Direction;
 
 /**
  * This class displays the rank and suit of the current card of the players in

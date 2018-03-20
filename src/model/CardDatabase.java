@@ -5,6 +5,10 @@ import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.StringTokenizer;
 
+import lerner.blindBridge.model.Card;
+import lerner.blindBridge.model.Rank;
+import lerner.blindBridge.model.Suit;
+
 /**
  * This CardDatabase class keeps track of a Hashtable of Cards by using the id numbers
  * as Keys

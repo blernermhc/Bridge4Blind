@@ -13,8 +13,8 @@ import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 
+import lerner.blindBridge.model.Suit;
 import model.Game;
-import model.Suit;
 
 /**
  * The TrumpSuitGUI allows the sighted players to specify the trump suit.

@@ -5,6 +5,10 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
+import lerner.blindBridge.model.Card;
+import lerner.blindBridge.model.Rank;
+import lerner.blindBridge.model.Suit;
+
 public class CardTest {
 	private Card aceSpades = new Card(Rank.ACE, Suit.SPADES);
 	private Card kingSpades = new Card(Rank.KING, Suit.SPADES);

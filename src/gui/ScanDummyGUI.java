@@ -11,14 +11,14 @@ import javax.swing.BoxLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
-import model.Card;
-import model.Contract;
-import model.Direction;
+import lerner.blindBridge.model.Card;
+import lerner.blindBridge.model.Contract;
+import lerner.blindBridge.model.Direction;
+import lerner.blindBridge.model.GameListener;
+import lerner.blindBridge.model.Rank;
+import lerner.blindBridge.model.Suit;
 import model.Game;
-import model.GameListener;
 import model.Player;
-import model.Rank;
-import model.Suit;
 
 /**
  * The GUI that is displayed while the dummy's cards are being scanned in.

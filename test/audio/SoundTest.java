@@ -1,8 +1,8 @@
 package audio;
 
-import model.Card;
-import model.Rank;
-import model.Suit;
+import lerner.blindBridge.model.Card;
+import lerner.blindBridge.model.Rank;
+import lerner.blindBridge.model.Suit;
 
 public class SoundTest {
 	

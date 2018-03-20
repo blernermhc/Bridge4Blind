@@ -8,9 +8,9 @@ import java.awt.Graphics2D;
 
 import javax.swing.JComponent;
 
-import model.Contract;
-import model.Direction;
-import model.Suit;
+import lerner.blindBridge.model.Contract;
+import lerner.blindBridge.model.Direction;
+import lerner.blindBridge.model.Suit;
 
 /**
  * CLASS HAS NOT BEEN USED

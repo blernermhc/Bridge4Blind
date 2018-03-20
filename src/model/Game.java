@@ -9,6 +9,11 @@ import java.util.Set;
 
 import audio.SoundManager;
 import controller.TestAntennaHandler;
+import lerner.blindBridge.model.Card;
+import lerner.blindBridge.model.Contract;
+import lerner.blindBridge.model.Direction;
+import lerner.blindBridge.model.GameListener;
+import lerner.blindBridge.model.Suit;
 
 /**
  * The Game class controls the logic for a game of bridge.

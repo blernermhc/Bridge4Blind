@@ -1,12 +1,12 @@
 package audio;
 
-import model.Card;
-import model.Direction;
-import model.Rank;
-import model.Suit;
-
 import org.junit.Before;
 import org.junit.Test;
+
+import lerner.blindBridge.model.Card;
+import lerner.blindBridge.model.Direction;
+import lerner.blindBridge.model.Rank;
+import lerner.blindBridge.model.Suit;
 
 public class AudibleGameListenerTest {
 	private AudibleGameListener audio = new AudibleGameListener();

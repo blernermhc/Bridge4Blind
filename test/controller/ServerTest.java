@@ -2,11 +2,11 @@ package controller;
 
 import java.io.IOException;
 
-import model.Card;
 import model.CardDatabase;
-import model.Direction;
 import controller.AntennaHandler;
 import controller.CardListener;
+import lerner.blindBridge.model.Card;
+import lerner.blindBridge.model.Direction;
 
 public class ServerTest extends AntennaHandler {
 	public ServerTest(CardDatabase cardDatabase) {

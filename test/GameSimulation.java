@@ -6,13 +6,13 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 
 import model.CardDatabase;
-import model.Direction;
 import model.Game;
-import model.Suit;
 import server.StubCSharpServer;
 import audio.AudibleGameListener;
 import controller.AntennaHandler;
 import controller.Handler;
+import lerner.blindBridge.model.Direction;
+import lerner.blindBridge.model.Suit;
 
 
 public class GameSimulation implements Runnable {

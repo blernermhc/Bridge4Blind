@@ -2,6 +2,9 @@ package model;
 
 import java.util.Iterator;
 
+import lerner.blindBridge.model.Card;
+import lerner.blindBridge.model.Suit;
+
 public class Player {
 	private Hand hand = new Hand();
 	private int tricksWon;

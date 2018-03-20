@@ -4,9 +4,9 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.io.IOException;
 
-import model.Card;
+import lerner.blindBridge.model.Card;
+import lerner.blindBridge.model.Direction;
 import model.CardDatabase;
-import model.Direction;
 import model.TestCards;
 
 /**
