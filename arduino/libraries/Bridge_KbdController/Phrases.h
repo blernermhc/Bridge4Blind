@@ -126,6 +126,26 @@ const char* const SND_PLAYERS[] PROGMEM = { SND_NORTH
               , SND_DUMMY
               };
 
+const char SND_MODE_PLAY[]   PROGMEM = "MODEPLAY";
+const char SND_MODE_SET_POSITION[]   PROGMEM = "MODEPOS";
+const char SND_MODE_ENTER_CONTRACT[]   PROGMEM = "MODECONT";
+
+#define NUMMODES 3
+const char* const SND_MODES[] PROGMEM = { SND_MODE_PLAY
+              , SND_MODE_SET_POSITION
+              , SND_MODE_ENTER_CONTRACT
+              };
+
+const char SND_MODE_ENTER_CONTRACT_WINNER[]   PROGMEM = "CONTWIN";
+const char SND_MODE_ENTER_CONTRACT_TRICKS[]   PROGMEM = "CONTTRKS";
+const char SND_MODE_ENTER_CONTRACT_SUIT[]     PROGMEM = "CONTSUIT";
+
+#define NUMCONTRACTMODES 3
+const char* const SND_CONTRACTMODES[] PROGMEM = { SND_MODE_ENTER_CONTRACT_WINNER
+              , SND_MODE_ENTER_CONTRACT_TRICKS
+              , SND_MODE_ENTER_CONTRACT_SUIT
+              };
+
 const char SND_TRICK[]    PROGMEM = "TRICK";
 const char SND_TRICKS[]   PROGMEM = "TRICKS";
 
@@ -178,6 +198,8 @@ const char SND_IS_NOT_SET[] PROGMEM = "ISNOTSET";
 const char SND_MY_POSITION[] PROGMEM = "MYPOS";
 const char SND_CARD_ALREADY_PLAYED[] PROGMEM = "CARDPLYD";
 const char SND_CARD_NOT_IN_HAND[] PROGMEM = "NOTINHND";
+const char SND_MODEWORD[] PROGMEM = "MODE";
+const char SND_CONTRACTMODEWORD[] PROGMEM = "CONTMODE";
 
 //------------------------------------------------------------------------------
 /**
@@ -208,7 +230,7 @@ class Phrases
 	void playNext ();
 	void playPause ();
 	void playNumber (PGM_P p_input, uint8_t p_opId, uint8_t p_appendAudio);
-	void playSuit (uint8_t p_playerId, uint8_t p_suitId, uint16_t p_handBitmap, uint8_t p_appendAudio);
+	void playHandSuit (uint8_t p_playerId, uint8_t p_suitId, uint16_t p_handBitmap, uint8_t p_appendAudio);
 	void playTricks (uint8_t p_playerId1, uint8_t p_playerId2, uint8_t p_numTricks, uint8_t p_appendAudio);
 	void playNextPlayer (uint8_t p_playerId, uint8_t p_appendAudio);
 	void playMessage (PGM_P p_msg, uint8_t p_appendAudio);
@@ -226,6 +248,10 @@ class Phrases
 	void playHandComplete (uint8_t p_playerId, uint8_t p_appendAudio);
 	void playTrickTaken(uint8_t p_playerId, uint8_t p_appendAudio);
 	void playTricksWon(PGM_P p_players, uint8_t p_numTricks, uint8_t p_appendAudio);
+	void playMode (uint8_t p_modeId, uint8_t p_appendAudio);
+	void playContractMode (uint8_t p_contractModeId, uint8_t p_appendAudio);
+	void playPosition (uint8_t p_playerId, uint8_t p_appendAudio);
+	void playSuit (uint8_t p_suitId, uint8_t p_singular, uint8_t p_appendAudio);
 };
 
 #endif //Phrases_h

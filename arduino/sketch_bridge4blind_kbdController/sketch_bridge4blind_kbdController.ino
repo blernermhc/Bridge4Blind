@@ -42,6 +42,25 @@ uint8_t s_selectedCardId = CARDID_NOT_SET;  // 13: void; 0: two; 1: three, etc.
 volatile uint8_t		Button    = 0;			// Required for 64 Button Shield (SPI Only)
 volatile uint8_t		m_previousButtonId = 0;	// Used to detect pressing same button twice (e.g., State)
 
+// Function button cycle
+#define MODE_PLAY_HAND 0
+#define MODE_SET_POSITION 1
+#define MODE_ENTER_CONTRACT 2
+// #define MODE_DEAL_HANDS 3
+// #define MODE_SET_OPTIONS 4
+
+#define SUBMODE_ENTER_CONTRACT_WINNER 0
+#define SUBMODE_ENTER_CONTRACT_TRICKS 1
+#define SUBMODE_ENTER_CONTRACT_SUIT 2
+
+uint8_t s_mode = MODE_PLAY_HAND;
+uint8_t s_setPosition_playerId;
+
+uint8_t s_contract_mode = SUBMODE_ENTER_CONTRACT_WINNER;
+uint8_t s_contract_winner;
+uint8_t s_contract_tricks;
+uint8_t s_contract_suit;
+
 
 #define DEBOUNCE 100  // button debouncer
 
@@ -74,9 +93,10 @@ void setup() {
   // set up serial port
   Serial.begin(9600);
   Serial.write(RESTARTING_MSG);	// tell Game Controller we are restarting
-  putstring_nl("Keyboard 002");
+  putstring_nl("Keyboard: Resetting");
+  putstring_nl("Keyboard: v1.2");
   
-   putstring("Free RAM: ");       // This can help with debugging, running out of RAM is bad
+   putstring("Keyboard: Free RAM: ");       // This can help with debugging, running out of RAM is bad
   Serial.println(freeRam());      // if this is under 150 bytes it may spell trouble!
   
   // Set the output pins for the DAC control. This pins are defined in the library
@@ -105,7 +125,7 @@ void setup() {
  
   //  if (!card.init(true)) { //play with 4 MHz spi if 8MHz isn't working for you
   if (!card.init()) {         //play with 8 MHz spi (default faster!)  
-    putstring_nl("Card init. failed!");  // Something went wrong, lets print out why
+    putstring_nl("Keyboard: Card init. failed!");  // Something went wrong, lets print out why
     sdErrorCheck();
     while(1);                            // then 'halt' - do nothing!
   }
@@ -120,13 +140,13 @@ void setup() {
       break;                             // we found one, lets bail
   }
   if (part == 5) {                       // if we ended up not finding one  :(
-    putstring_nl("No valid FAT partition!");
+    putstring_nl("Keyboard: No valid FAT partition!");
     sdErrorCheck();      // Something went wrong, lets print out why
     while(1);                            // then 'halt' - do nothing!
   }
   
   // Lets tell the user about what we found
-  putstring("Using partition ");
+  putstring("Keyboard: Using partition ");
   Serial.print(part, DEC);
   putstring(", type is FAT");
   Serial.println(vol.fatType(),DEC);     // FAT16 or FAT32?
@@ -134,7 +154,7 @@ void setup() {
   // Try to open the root directory
   if (!root.openRoot(vol))
   {
-    putstring_nl("Can't open root dir!"); // Something went wrong,
+    putstring_nl("Keyboard: Cannot open root dir!"); // Something went wrong,
     while(1);                             // then 'halt' - do nothing!
   }
   
@@ -143,7 +163,7 @@ void setup() {
   bridgeHand.setPhrases(&phrases);
   
   // Whew! We got past the tough parts.
-  putstring_nl("Ready!");
+  putstring_nl("Keyboard: Ready!");
 
   //------------------------------------
   // Setup Button64 Shield
@@ -438,6 +458,14 @@ void btn_up()
     Serial.print(bridgeHand.m_dummyPlayerId);
     putstring_nl("");
 
+    if (s_mode == MODE_ENTER_CONTRACT && s_contract_mode == SUBMODE_ENTER_CONTRACT_TRICKS)
+    {
+    		s_contract_tricks = s_contract_tricks + 1;
+    		if (s_contract_tricks > 7) s_contract_tricks = 7;
+    		phrases.playNumber(0, s_contract_tricks, NEW_AUDIO);
+    		return;
+    }
+    
   if (bridgeHand.m_myPlayerId == bridgeHand.m_dummyPlayerId)
   {
 	phrases.playMessage(SND_YOU_ARE_DUMMY, NEW_AUDIO);
@@ -479,6 +507,14 @@ void btn_down()
     Serial.print(bridgeHand.m_dummyPlayerId);
     putstring_nl("");
 
+    if (s_mode == MODE_ENTER_CONTRACT && s_contract_mode == SUBMODE_ENTER_CONTRACT_TRICKS)
+    {
+    		s_contract_tricks = s_contract_tricks - 1;
+    		if (s_contract_tricks < 1) s_contract_tricks = 1;
+    		phrases.playNumber(0, s_contract_tricks, NEW_AUDIO);
+    		return;
+    }
+    
   if (bridgeHand.m_myPlayerId == bridgeHand.m_dummyPlayerId)
   {
 	phrases.playMessage(SND_YOU_ARE_DUMMY, NEW_AUDIO);
@@ -582,6 +618,41 @@ void btn_masterUndo()
 //----------------------------------------------------------------------
 void btn_play()
 {
+	if (s_mode == MODE_SET_POSITION)
+	{
+		  Serial.write(START_SEND_MSG);  // tell Game Controller to read to next newline
+		  putstring("CMD: KBDPOS ");
+		  Serial.print(s_setPosition_playerId);
+		  putstring_nl("");
+
+		  s_mode = MODE_PLAY_HAND;
+		  return;
+	}
+
+	if (s_mode == MODE_ENTER_CONTRACT)
+	{
+		s_contract_mode = s_contract_mode + 1;
+		if (s_contract_mode >= NUMCONTRACTMODES)
+		{
+			  Serial.write(START_SEND_MSG);  // tell Game Controller to read to next newline
+			  putstring("CMD: CONTRACT ");
+			  Serial.print(s_contract_winner);
+			  putstring(" ");
+			  Serial.print(s_contract_tricks);
+			  putstring(" ");
+			  Serial.print(s_contract_suit);
+			  putstring_nl("");
+
+			  s_contract_mode = 0;
+			  s_mode = MODE_PLAY_HAND;
+		}
+		else
+		{
+			phrases.playContractMode(s_contract_mode, NEW_AUDIO);
+		}
+		return;
+	}
+
   if (bridgeHand.m_myPlayerId == bridgeHand.m_dummyPlayerId)
   {
 	phrases.playMessage(SND_YOU_ARE_DUMMY, NEW_AUDIO);
@@ -594,8 +665,18 @@ void btn_play()
 	  return;
   }
 
-  uint8_t msg = (13 * s_selectedSuitId) + s_selectedCardId;	// 0-51, 0: two; 1: three; ... 12: ace; repeat
-  Serial.write(msg);
+  // uint8_t msg = (13 * s_selectedSuitId) + s_selectedCardId;	// 0-51, 0: two; 1: three; ... 12: ace; repeat
+  // Serial.write(msg);
+
+  Serial.write(START_SEND_MSG);  // tell Game Controller to read to next newline
+  putstring("CMD: PLAY ");
+  Serial.write(bridgeHand.m_currentHandId);
+  putstring(" ");
+  Serial.print(s_selectedCardId);
+  putstring(" ");
+  Serial.print(s_selectedSuitId);
+  putstring_nl("");
+
   s_cardPlayedMsg = UNDO_FLAG | bridgeHand.encodeCard(s_selectedCardId, s_selectedSuitId);	// leading 1 indicates undo has not been pressed yet
 }  
 
@@ -603,6 +684,36 @@ void btn_play()
 //----------------------------------------------------------------------
 void btn_announceHand (uint8_t p_playerId, uint8_t p_buttonId)
 {
+  if (s_mode == MODE_SET_POSITION)
+  {
+    if (p_buttonId <= 3)
+    {
+      s_setPosition_playerId = p_buttonId;
+      phrases.playPosition(s_setPosition_playerId, NEW_AUDIO);
+    }
+    return;
+  }
+
+  if (s_mode == MODE_ENTER_CONTRACT && s_contract_mode == SUBMODE_ENTER_CONTRACT_WINNER)
+  {
+    if (p_buttonId <= 3)
+    {
+      s_contract_winner = p_buttonId;
+      phrases.playPosition(s_contract_winner, NEW_AUDIO);
+    }
+    return;
+  }
+
+  if (s_mode == MODE_ENTER_CONTRACT && s_contract_mode == SUBMODE_ENTER_CONTRACT_SUIT)
+  {
+    if (p_buttonId <= 3)
+    {
+      s_contract_suit = p_buttonId;
+      phrases.playSuit(s_contract_suit, true, NEW_AUDIO);
+    }
+    return;
+  }
+
   if (p_buttonId > 3)
   {
     // if current suit is not set yet, play "no cards played yet" message
@@ -624,7 +735,7 @@ void btn_announceHand (uint8_t p_playerId, uint8_t p_buttonId)
   }
 
   uint16_t hand = bridgeHand.getHand(p_playerId, suitId);
-  phrases.playSuit(p_playerId, suitId, hand, NEW_AUDIO);
+  phrases.playHandSuit(p_playerId, suitId, hand, NEW_AUDIO);
 }
 
 void btn_D1() { btn_announceHand (PLAYER_DUMMY, 0); }
@@ -657,6 +768,22 @@ void resetKeyboard(uint8_t p_playerId)
 }
 
 
+//----------------------------------------------------------------------
+//----------------------------------------------------------------------
+void btn_function ()
+{
+	s_mode = s_mode + 1;
+	if (s_mode >= NUMMODES) s_mode = MODE_PLAY_HAND;
+
+	phrases.playMode(s_mode, NEW_AUDIO);
+	if (s_mode == MODE_ENTER_CONTRACT)
+	{
+		s_contract_mode = SUBMODE_ENTER_CONTRACT_WINNER;
+		s_contract_tricks = 0;
+		phrases.playContractMode(s_contract_mode, APPEND_AUDIO);
+	}
+}
+
 /*******************************************************************
      Button IDs:
      
@@ -670,7 +797,7 @@ void resetKeyboard(uint8_t p_playerId)
      UP   --     D1    D2  |  D3    D4    --    --
      DN          H1    H2  |  H3    H4    --    PLAY
      --   --     HC    DC  |  --    --    --    PLAY
-     RPT  State  --    RST |  UNDO  --    --    PLAY
+     RPT  State  Func  RST |  UNDO  --    --    PLAY
 ********************************************************************/
 
 
@@ -725,6 +852,7 @@ void checkButton()
       case 37:	btn_repeat(); break;
       case 45:	btn_state(Button == m_previousButtonId); break;
       case 28:	btn_undo(); break;
+      case 53:	btn_function(); break;
       case 61:  keyboardRestartInitiate(); break;
       default:	phrases.playNumber(SND_UNEXPECTED_BUTTON, Button, NEW_AUDIO);
     }    

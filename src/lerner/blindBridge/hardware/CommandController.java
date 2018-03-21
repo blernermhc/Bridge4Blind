@@ -194,7 +194,7 @@ public class CommandController implements Runnable
 						p_out.println("Keyboards:");
 						for (KeyboardController kbdController : m_game.getKeyboardControllers().values())
 						{
-							p_out.println("  " + idx + ": " + kbdController.getMyPosition() + " (" + kbdController.m_device + ")");
+							p_out.println("  " + idx + ": " + kbdController.getMyPosition() + " (" + kbdController.m_communicationPort.getName() + ")");
 							++idx;
 						}
 					}
@@ -224,7 +224,7 @@ public class CommandController implements Runnable
 						p_out.println("Antennas:");
 						for (AntennaController antennaController : m_game.getAntennaControllers().values())
 						{
-							p_out.println("  " + idx + ": " + antennaController.getMyPosition() + " (" + antennaController.m_device + ")");
+							p_out.println("  " + idx + ": " + antennaController.getMyPosition() + " (" + antennaController.m_serialPort.getName() + ")");
 							++idx;
 						}
 					}
@@ -287,7 +287,7 @@ public class CommandController implements Runnable
 						int idx = 0;
 						Direction direction = Direction.fromString(args[++idx]);
 						KeyboardController kbdController = m_game.getKeyboardControllers().get(direction); 
-						if (kbdController != null) kbdController.initialize();
+						if (kbdController != null) kbdController.tryOpen(kbdController.m_communicationPort);
 					}
 					break;
 						
@@ -298,7 +298,7 @@ public class CommandController implements Runnable
 						int idx = 0;
 						Direction direction = Direction.fromString(args[++idx]);
 						AntennaController antController = m_game.getAntennaControllers().get(direction); 
-						if (antController != null) antController.initialize();
+						if (antController != null) antController.tryOpen(antController.m_communicationPort);
 					}
 					break;
 						

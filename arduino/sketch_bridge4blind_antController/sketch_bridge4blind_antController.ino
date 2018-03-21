@@ -70,21 +70,22 @@ void setup(void)
   #ifndef ESP8266
     while (!Serial); // for Leonardo/Micro/Zero
   #endif
-  Serial.begin(115200);
-  Serial.println("Resetting Antenna");
+  //Serial.begin(115200);
+  Serial.begin(9600);
+  Serial.println("Antenna: Resetting");
 
   nfc.begin();
 
   uint32_t versiondata = nfc.getFirmwareVersion();
   if (! versiondata)
   {
-    Serial.print("Didn't find PN53x board");
+    Serial.print("Antenna: Did not find PN53x board");
     while (1); // halt
   }
   
   // Got ok data, print it out!
-  Serial.print("Found chip PN5"); Serial.println((versiondata>>24) & 0xFF, HEX); 
-  Serial.print("Firmware ver. "); Serial.print((versiondata>>16) & 0xFF, DEC); 
+  Serial.print("Antenna: Found chip PN5"); Serial.println((versiondata>>24) & 0xFF, HEX); 
+  Serial.print("Antenna: Firmware ver. "); Serial.print((versiondata>>16) & 0xFF, DEC); 
   Serial.print('.'); Serial.println((versiondata>>8) & 0xFF, DEC);
   
   // Set the max number of retry attempts to read from a card
@@ -97,8 +98,8 @@ void setup(void)
   // configure board to read RFID tags
   nfc.SAMConfig();
   
-  Serial.println("Waiting for an ISO14443A card");
-  Serial.println("Reset Complete");
+  Serial.println("Antenna: Waiting for an ISO14443A card");
+  Serial.println("Antenna: Reset Complete");
 }
 
 #define CHAR_BUFFER_SIZE 15

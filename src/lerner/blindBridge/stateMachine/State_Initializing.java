@@ -4,8 +4,6 @@
 
 package lerner.blindBridge.stateMachine;
 
-import lerner.blindBridge.hardware.AntennaController;
-import lerner.blindBridge.hardware.KeyboardController;
 import lerner.blindBridge.main.Game;
 
 /***********************************************************************
@@ -53,31 +51,7 @@ public class State_Initializing extends ControllerState
 	 */
 	public BridgeHandState checkState()
 	{
-		boolean ready = true;
-		
-		if (ready)
-		{
-			for (AntennaController antController : m_game.getAntennaControllers().values())
-			{
-				if (! antController.isDeviceReady())
-				{
-					ready = false;
-					break;
-				}
-			}
-		}
-		
-		if (ready)
-		{
-			for (KeyboardController kbdController : m_game.getKeyboardControllers().values())
-			{
-				if (! kbdController.isDeviceReady())
-				{
-					ready = false;
-					break;
-				}
-			}
-		}
+		boolean ready = m_game.sc_testDevicesReady();
 		
 		if (ready)
 			return BridgeHandState.NEW_HAND;

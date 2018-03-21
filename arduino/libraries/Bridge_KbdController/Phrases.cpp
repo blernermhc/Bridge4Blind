@@ -143,7 +143,7 @@ void Phrases::pPlayer (uint8_t p_playerId)
 // 1  You have / Dummy has 2 Spades, King, Ten
 //----------------------------------------------------------------------
 
-void Phrases::playSuit (uint8_t p_playerId, uint8_t p_suitId, uint16_t p_handBitmap, uint8_t p_appendAudio)
+void Phrases::playHandSuit (uint8_t p_playerId, uint8_t p_suitId, uint16_t p_handBitmap, uint8_t p_appendAudio)
 {
 	  if (s_silent) return;
 
@@ -477,6 +477,86 @@ void Phrases::playTricksWon(PGM_P p_players, uint8_t p_numTricks, uint8_t p_appe
   else
 	pNumber(p_numTricks);
   m_wave->addSequence(p_numTricks == 1 ? SND_TRICK : SND_TRICKS);
+
+  if (! p_appendAudio) m_wave->playNext();
+}
+
+//----------------------------------------------------------------------
+// Keyboard Mode
+//----------------------------------------------------------------------
+
+void Phrases::playMode(uint8_t p_modeId, uint8_t p_appendAudio)
+{
+	if (s_silent) return;
+
+	if (!p_appendAudio) m_wave->clearSequence();
+
+	if (p_modeId >= NUMMODES)
+	{
+		playNumber(SND_MODEWORD, p_modeId, APPEND_AUDIO);
+	}
+	else
+	{
+		m_wave->addSequence(pgm_read_word(&(SND_MODES[p_modeId])));
+	}
+
+	if (!p_appendAudio) m_wave->playNext();
+}
+
+//----------------------------------------------------------------------
+// Set Contract Mode
+//----------------------------------------------------------------------
+
+void Phrases::playContractMode(uint8_t p_modeId, uint8_t p_appendAudio)
+{
+	if (s_silent) return;
+
+	if (!p_appendAudio) m_wave->clearSequence();
+
+	if (p_modeId >= NUMCONTRACTMODES)
+	{
+		playNumber(SND_CONTRACTMODEWORD, p_modeId, APPEND_AUDIO);
+	}
+	else
+	{
+		m_wave->addSequence(pgm_read_word(&(SND_CONTRACTMODES[p_modeId])));
+	}
+
+	if (!p_appendAudio) m_wave->playNext();
+}
+
+void Phrases::playPosition (uint8_t p_playerId, uint8_t p_appendAudio)
+{
+  if (s_silent) return;
+
+  if (! p_appendAudio) m_wave->clearSequence();
+
+  if (p_playerId >= NUMPLAYERS)
+  {
+	  m_wave->addSequence(SND_IS_NOT_SET);
+  }
+  else
+  {
+	  pPlayer(p_playerId);
+  }
+
+  if (! p_appendAudio) m_wave->playNext();
+}
+
+void Phrases::playSuit (uint8_t p_suitId, uint8_t p_singular, uint8_t p_appendAudio)
+{
+  if (s_silent) return;
+
+  if (! p_appendAudio) m_wave->clearSequence();
+
+  if (p_suitId >= NUMSUITS)
+  {
+	  m_wave->addSequence(SND_IS_NOT_SET);
+  }
+  else
+  {
+	  pSuit(p_suitId, p_singular);
+  }
 
   if (! p_appendAudio) m_wave->playNext();
 }

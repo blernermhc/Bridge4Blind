@@ -1,14 +1,10 @@
 package lerner.blindBridge.hardware;
 import java.io.BufferedInputStream;
 import java.io.IOException;
-import java.util.Enumeration;
 
 import org.apache.log4j.Category;
 
-import gnu.io.CommPortIdentifier;
-import gnu.io.SerialPort;
 import gnu.io.SerialPortEvent;
-import gnu.io.SerialPortEventListener;
 import lerner.blindBridge.main.Game;
 import lerner.blindBridge.model.BridgeScore;
 import lerner.blindBridge.model.Card;
@@ -16,14 +12,13 @@ import lerner.blindBridge.model.CardLibrary;
 import lerner.blindBridge.model.Contract;
 import lerner.blindBridge.model.Direction;
 import lerner.blindBridge.model.ErrorCode;
-import lerner.blindBridge.model.GameListener;
 import lerner.blindBridge.model.Suit;
 
 /**********************************************************************
  * Communicates with an RFID Antenna Controller 
  *********************************************************************/
 
-public class AntennaController implements SerialPortEventListener, GameListener
+public class AntennaController extends SerialController
 {
 	/**
 	 * Used to collect logging output for this class
@@ -35,11 +30,21 @@ public class AntennaController implements SerialPortEventListener, GameListener
 	// CONSTANTS
 	//--------------------------------------------------
 
+	/** Milliseconds to block while waiting for port open */
+	private static final int TIME_OUT = 2000;
+
+	/** Default bits per second for COM port. */
+	//private static final int DATA_RATE = 115200;
+	private static final int DATA_RATE = 9600;
+	
+	/** Start of messages sent by the Antenna Hardware during boot-up or firmware reset */
+	private static final String IDENT_MSG = "Antenna:";
+
 	/** Message sent by the Antenna Hardware at start of boot-up or firmware reset */
-	private static final String RESET_MSG = "Resetting Antenna";
+	private static final String RESET_MSG = "Antenna: Resetting";
 
 	/** Final message sent by the Antenna Hardware during boot-up or firmware reset */
-	private static final String READY_MSG = "Reset Complete";
+	private static final String READY_MSG = "Antenna: Reset Complete";
 
 	/** Card present messages begin with this string */
 	private static String s_cardPresentPrefix = "CARD: ";
@@ -51,186 +56,106 @@ public class AntennaController implements SerialPortEventListener, GameListener
 	// CONFIGURATION MEMBER DATA
 	//--------------------------------------------------
 	
-	/** The game data */
-	Game		m_game;
-	
-	/** The device this controller uses */
-	String m_device;
-
-	/** Indicates if the device has completed initialization or reset */
-	private boolean m_deviceReady = false;
-
-	/** The position of this Keyboard Controller */
-	Direction m_myPosition;
-
 	//--------------------------------------------------
 	// INTERNAL MEMBER DATA
 	//--------------------------------------------------
 
 	enum AntennaControllerState {
-		CAPTURE_CARD
+		  DETERMINE_POSITION
+		, CAPTURE_CARD
 		, SCAN_CARDS
 		, PLAY_CARDS
 	};
 
+	/** Processing state of the controller */
+	private AntennaControllerState m_controllerState = AntennaControllerState.DETERMINE_POSITION;
+	
 	/** Last seen card */
 	private Card m_currentCard = null;
 
-	/** Processing state of the controller */
-	private AntennaControllerState m_controllerState = AntennaControllerState.CAPTURE_CARD;
-	
-
-	SerialPort serialPort;
-
-	/** The port we're normally going to use. */
-	private static final String PORT_NAMES[] = { 
-	                                            // "/dev/tty.usbserial-A9007UX1", // Mac OS X
-	                                            "/dev/cu.usbmodem14641", // Mac OS X
-	                                            "/dev/cu.usbmodem146331", // Mac OS X
-	                                            "/dev/ttyACM0", // Raspberry Pi
-	                                            "/dev/ttyUSB0", // Linux
-	                                            "COM3", // Windows
-											};
-
-	/**
-	* A BufferedReader which will be fed by a InputStreamReader 
-	* converting the bytes into characters 
-	* making the displayed results codepage independent
-	*/
-	private BufferedInputStream input;
-
-	/** The output stream to the port */
-	//private OutputStream output;
-	
-	/** Milliseconds to block while waiting for port open */
-	private static final int TIME_OUT = 2000;
-
-	/** Default bits per second for COM port. */
-	//private static final int DATA_RATE = 9600;
-	private static final int DATA_RATE = 115200;
-	
 	//--------------------------------------------------
 	// CONSTRUCTORS
 	//--------------------------------------------------
 	
 	/***********************************************************************
-	 * Configures and initializes a Keyboard Controller
-	 * @param p_game		The game object managing the hands
-	 * @param p_direction		The player position of the player using this Keyboard Controller
-	 * @param p_device			The USB serial device of the antenna this controller is listening to 
+	 * Configures and initializes an Antenna Controller
+	 * @param p_game				The game object managing the hands
+	 * @param p_direction		Antenna position (null if using scan to determine position)
+	 * @param p_hasHardware		If false, there is no hardware and the "antenna"
+	 * 	will be controlled from the command interpreter (for testing)
 	 ***********************************************************************/
-	public AntennaController(Game p_game, Direction p_direction, String p_device)
+	public AntennaController(Game p_game, Direction p_direction, boolean p_hasHardware)
 	{
-		m_game = p_game;
-		m_myPosition = p_direction;
-		m_device = p_device;
-		initialize();
+		super(p_game, p_hasHardware);
+		if (p_direction != null)
+		{
+			m_myPosition = p_direction;
+			m_controllerState = AntennaControllerState.CAPTURE_CARD;
+		}
 	}
 
 	//--------------------------------------------------
-	// COMMUNICATION METHODS
+	// CONFIGURATION METHODS (used by findPortToOpen)
 	//--------------------------------------------------
 
-	/***********************************************************************
-	 * Set up communication with the Keyboard Controller
-	 * @returns false if initialization fails
-	 ***********************************************************************/
-	public boolean initialize()
-	{
-		if (m_device == null)
-		{	// simulated controller, no hardware to connect to
-			m_deviceReady = true;
-			return true;
-		}
-		
-		// the next line is for Raspberry Pi and 
-		// gets us into the while loop and was suggested here was suggested http://www.raspberrypi.org/phpBB3/viewtopic.php?f=81&t=32186
-		//System.setProperty("gnu.io.rxtx.SerialPorts", "/dev/ttyACM0");
+	/* (non-Javadoc)
+	 * @see lerner.blindBridge.hardware.SerialController#getPortOpenTimeout()
+	 */
+	public int getPortOpenTimeout() { return TIME_OUT; }
 
-		CommPortIdentifier portId = null;
-		Enumeration portEnum = CommPortIdentifier.getPortIdentifiers();
-		while (portEnum.hasMoreElements())
-		{
-			CommPortIdentifier currPortId = (CommPortIdentifier) portEnum.nextElement();
-			System.out.println("CommPortId: " + currPortId.getName());
-		}
+	/* (non-Javadoc)
+	 * @see lerner.blindBridge.hardware.SerialController#getPortDataRate()
+	 */
+	public int getPortDataRate() { return DATA_RATE; }
 
-		portEnum = CommPortIdentifier.getPortIdentifiers();
-
-		//First, Find an instance of serial port as set in PORT_NAMES.
-		while (portEnum.hasMoreElements())
-		{
-			CommPortIdentifier currPortId = (CommPortIdentifier) portEnum.nextElement();
-			if (m_device != null && currPortId.getName().equals(m_device))
-			{
-				portId = currPortId;
-				break;
-			}
-			else
-			{
-				for (String portName : PORT_NAMES)
-				{
-					if (currPortId.getName().equals(portName))
-					{
-						portId = currPortId;
-						break;
-					}
-				}
-			}
-		}
-		if (portId == null)
-		{
-			s_cat.error("Could not find COM port");
-			return false;
-		}
-
-		
-		try
-		{
-			// open serial port, and use class name for the appName.
-			serialPort = (SerialPort) portId.open(this.getClass().getName(), TIME_OUT);
-
-			// set port parameters
-			serialPort.setSerialPortParams(DATA_RATE,
-					SerialPort.DATABITS_8,
-					SerialPort.STOPBITS_1,
-					SerialPort.PARITY_NONE);
-
-			// open the streams
-			input = new BufferedInputStream(serialPort.getInputStream());
-			// input = new BufferedReader(new InputStreamReader(serialPort.getInputStream()));
-			// output = serialPort.getOutputStream();
-
-			// add event listeners
-			serialPort.addEventListener(this);
-			serialPort.notifyOnDataAvailable(true);
-		}
-		catch (Exception e)
-		{
-			s_cat.error("initialize: failed", e);
-			return false;
-		}
-		
-		return true;
-	}
-
-	/***********************************************************************
-	 * This should be called when you stop using the port.
-	 * This will prevent port locking on platforms like Linux.
-	 ***********************************************************************/
-	public synchronized void close()
-	{
-		if (serialPort != null)
-		{
-			serialPort.removeEventListener();
-			serialPort.close();
-		}
-	}
-
+	/* (non-Javadoc)
+	 * @see lerner.blindBridge.hardware.SerialController#getIdentMsg()
+	 */
+	public String getIdentMsg() { return IDENT_MSG; }
+	
+	/* (non-Javadoc)
+	 * @see lerner.blindBridge.hardware.SerialController#getResetMsg()
+	 */
+	public String getResetMsg() { return RESET_MSG; }
+	
+	/* (non-Javadoc)
+	 * @see lerner.blindBridge.hardware.SerialController#getReadyMsg()
+	 */
+	public String getReadyMsg() { return READY_MSG; }
+	
 	//--------------------------------------------------
 	// HELPER METHODS
 	//--------------------------------------------------
 
+	/***********************************************************************
+	 * Determines the antenna's position based on the suit of the first card scanned.
+	 * Clubs is North, Diamonds is East, Hearts is South and Spades is West
+	 * @param p_card		the scanned card
+	 * @return the direction (null if the card is null or did not have one of these four suits.
+	 ***********************************************************************/
+	private Direction determinePositionFromCardScan ( Card p_card )
+	{
+		if (p_card == null) return null;
+		
+		switch ( p_card.getSuit() )
+		{
+			case CLUBS:		m_myPosition = Direction.NORTH; break;
+			case DIAMONDS:	m_myPosition = Direction.EAST; break;
+			case HEARTS:		m_myPosition = Direction.SOUTH; break;
+			case SPADES:		m_myPosition = Direction.WEST; break;
+			default:			return null;
+		}
+		
+		m_game.antennaPositionDetermined(this);
+		return m_myPosition;
+	}
+
+	/***********************************************************************
+	 * Reads a newline-terminated string of characters from the input stream.
+	 * @param p_input	the input stream
+	 * @return	the string.  May be empty, but never null.
+	 * @throws IOException if there was a problem reading from the stream
+	 ***********************************************************************/
 	private String readLine (BufferedInputStream p_input)
 		throws IOException
 	{
@@ -268,7 +193,8 @@ public class AntennaController implements SerialPortEventListener, GameListener
 		
 		if (p_line.equals(READY_MSG))
 		{
-			m_deviceReady = true;
+			// do not signal ready if position is still unknown
+			if (m_controllerState != AntennaControllerState.DETERMINE_POSITION) m_deviceReady = true;
 			return p_line;
 		}
 		
@@ -301,6 +227,10 @@ public class AntennaController implements SerialPortEventListener, GameListener
 		return processCardPresentEvent(card);
 	}
 
+	/***********************************************************************
+	 * Actions to take when a card has been removed from the antenna
+	 * @return a description of the actions taken
+	 ***********************************************************************/
 	private String processCardRemovedEvent()
 	{
 		if (m_currentCard != null)
@@ -311,11 +241,31 @@ public class AntennaController implements SerialPortEventListener, GameListener
 		return "Ignore card-remove event, as there is no current card";
 	}
 	
+	/***********************************************************************
+	 * Actions to take when a card has appeared at the antenna.
+	 * @param p_card		the card present
+	 * @return a description of the actions taken
+	 ***********************************************************************/
 	public String processCardPresentEvent ( Card p_card )
 	{
 		String description;
 		switch (m_controllerState)
 		{
+			case DETERMINE_POSITION:
+			{
+				if (determinePositionFromCardScan (p_card) != null)
+				{
+					description = "Card scan set my postion to: " + m_myPosition;
+					m_controllerState = AntennaControllerState.CAPTURE_CARD;
+					m_deviceReady = true;
+				}
+				else
+				{
+					description = "Could not set my position from card scan: " + p_card;
+				}
+			}
+			break;
+			
 			case CAPTURE_CARD:
 			{
 				m_currentCard = p_card;
@@ -360,9 +310,9 @@ public class AntennaController implements SerialPortEventListener, GameListener
 		{
 			try
 			{
-				while (input.available() > 0)
+				while (m_input.available() > 0)
 				{
-					String line = readLine(input);
+					String line = readLine(m_input);
 					String description = processLine(line);
 					System.out.println("From " + m_myPosition + " Antenna: " + description);
 				}

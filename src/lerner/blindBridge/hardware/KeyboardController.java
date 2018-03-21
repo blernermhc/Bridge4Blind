@@ -3,29 +3,25 @@ import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayDeque;
-import java.util.Enumeration;
 import java.util.Queue;
 
 import org.apache.log4j.Category;
 
-import gnu.io.CommPortIdentifier;
-import gnu.io.SerialPort;
 import gnu.io.SerialPortEvent;
-import gnu.io.SerialPortEventListener;
 import lerner.blindBridge.main.Game;
 import lerner.blindBridge.model.BridgeScore;
 import lerner.blindBridge.model.Card;
 import lerner.blindBridge.model.Contract;
 import lerner.blindBridge.model.Direction;
 import lerner.blindBridge.model.ErrorCode;
-import lerner.blindBridge.model.GameListener;
+import lerner.blindBridge.model.Rank;
 import lerner.blindBridge.model.Suit;
 
 /**********************************************************************
  * Communicates with a Blind players' Keyboard Controller 
  *********************************************************************/
 
-public class KeyboardController implements SerialPortEventListener, GameListener, Runnable
+public class KeyboardController extends SerialController implements Runnable
 {
 	/**
 	 * Used to collect logging output for this class
@@ -123,22 +119,26 @@ public class KeyboardController implements SerialPortEventListener, GameListener
 	// CONSTANTS
 	//--------------------------------------------------
 
-	/** Final message sent by the Keyboard Hardware during boot-up */
-	static final String READY_MSG = "Ready!";
+	/** Milliseconds to block while waiting for port open */
+	private static final int TIME_OUT = 2000;
+
+	/** Default bits per second for COM port. */
+	//private static final int DATA_RATE = 115200;
+	private static final int DATA_RATE = 9600;
+	
+	/** Start of messages sent by the Antenna Hardware during boot-up or firmware reset */
+	private static final String IDENT_MSG = "Keyboard:";
+
+	/** Message sent by the Antenna Hardware at start of boot-up or firmware reset */
+	private static final String RESET_MSG = "Keyboard: Resetting";
+
+	/** Final message sent by the Antenna Hardware during boot-up or firmware reset */
+	private static final String READY_MSG = "Keyboard: Ready!";
 
 	//--------------------------------------------------
 	// CONFIGURATION MEMBER DATA
 	//--------------------------------------------------
 	
-	/** The game data */
-	Game		m_game;
-	
-	/** the device this controller uses */
-	String m_device;
-
-	/** Indicates if the device has completed initialization or reset */
-	private boolean m_deviceReady = false;
-
 	/** 
 	 * If true, read ASCII newline-terminated messages from
 	 * the Keyboard Controller until the final setup message is received.
@@ -152,9 +152,6 @@ public class KeyboardController implements SerialPortEventListener, GameListener
 	 * mode.
 	 */
 	boolean m_readOneLineEventMode = false;
-	
-	/** The position of this Keyboard Controller */
-	Direction m_myPosition;
 	
 	/** The position of the partner of this controller */
 	Direction m_myPartnersPosition;
@@ -246,34 +243,8 @@ public class KeyboardController implements SerialPortEventListener, GameListener
 	/** Queue of messages to send to the keyboard controller hardware */
 	Queue<KbdMsg>	m_sendMessageQueue = new ArrayDeque<>();;
 
-	SerialPort serialPort;
-
-	/** The port we're normally going to use. */
-	private static final String PORT_NAMES[] = { 
-	                                            // "/dev/tty.usbserial-A9007UX1", // Mac OS X
-	                                            "/dev/cu.usbmodem14641", // Mac OS X
-	                                            "/dev/cu.usbmodem146331", // Mac OS X
-	                                            "/dev/ttyACM0", // Raspberry Pi
-	                                            "/dev/ttyUSB0", // Linux
-	                                            "COM3", // Windows
-											};
-
-	/**
-	* A BufferedReader which will be fed by a InputStreamReader 
-	* converting the bytes into characters 
-	* making the displayed results codepage independent
-	*/
-	private BufferedInputStream input;
-
 	/** The output stream to the port */
-	private OutputStream output;
-	
-	/** Milliseconds to block while waiting for port open */
-	private static final int TIME_OUT = 2000;
-
-	/** Default bits per second for COM port. */
-	private static final int DATA_RATE = 9600;
-	
+	private OutputStream m_output;
 	
 	/** Maximum delay to insert to ensure reserve time between messages (in milliseconds) */
 	private static final long MAX_RESERVE_DELAY_MILLIS = 5000;  
@@ -303,21 +274,53 @@ public class KeyboardController implements SerialPortEventListener, GameListener
 	 * @param p_game		The object managing the hands
 	 * @param p_direction		The player position of the player using this Keyboard Controller
 	 ***********************************************************************/
-	public KeyboardController(Game p_game, Direction p_direction, String p_device)
+	public KeyboardController(Game p_game, Direction p_direction)
+		throws IOException
 	{
-		m_game = p_game;
-		m_device = p_device;
-		initialize();
-		
+		super(p_game, true);
+		m_output = m_serialPort.getOutputStream();
+
 		//--------------------------------------------------
 		// Start thread to send queued messages to keyboard controller hardware
 		//--------------------------------------------------
 	    m_thread = new Thread (this);
 	    m_thread.start();
 
-		setPlayer(p_direction);
+	    if (p_direction != null)
+	    {
+	    		setPlayer(p_direction);
+	    }
 	}
 
+	//--------------------------------------------------
+	// CONFIGURATION METHODS (used by findPortToOpen)
+	//--------------------------------------------------
+
+	/* (non-Javadoc)
+	 * @see lerner.blindBridge.hardware.SerialController#getPortOpenTimeout()
+	 */
+	public int getPortOpenTimeout() { return TIME_OUT; }
+
+	/* (non-Javadoc)
+	 * @see lerner.blindBridge.hardware.SerialController#getPortDataRate()
+	 */
+	public int getPortDataRate() { return DATA_RATE; }
+
+	/* (non-Javadoc)
+	 * @see lerner.blindBridge.hardware.SerialController#getIdentMsg()
+	 */
+	public String getIdentMsg() { return IDENT_MSG; }
+	
+	/* (non-Javadoc)
+	 * @see lerner.blindBridge.hardware.SerialController#getResetMsg()
+	 */
+	public String getResetMsg() { return RESET_MSG; }
+	
+	/* (non-Javadoc)
+	 * @see lerner.blindBridge.hardware.SerialController#getReadyMsg()
+	 */
+	public String getReadyMsg() { return READY_MSG; }
+	
 	/***********************************************************************
 	 * Sends a message to the Keyboard Controller to indicate the playerId of the keyboard controller.
 	 * (i.e., which position is the blind player playing)
@@ -414,8 +417,8 @@ public class KeyboardController implements SerialPortEventListener, GameListener
 
 					try
 					{
-						if (dmsg.numBytes >= 1) output.write((byte)dmsg.byte0);	
-						if (dmsg.numBytes >= 2) output.write((byte)dmsg.byte1);
+						if (dmsg.numBytes >= 1) m_output.write((byte)dmsg.byte0);	
+						if (dmsg.numBytes >= 2) m_output.write((byte)dmsg.byte1);
 					}
 					catch (Exception e)
 					{
@@ -470,7 +473,7 @@ public class KeyboardController implements SerialPortEventListener, GameListener
 	 ***********************************************************************/
 	public void send_reloadFinished ()
 	{
-		m_deviceReady = true;
+		if (m_myPosition != null) m_deviceReady = true;	// wait until position is known
 		send_simpleMessage(KBD_MESSAGE.FINISH_RELOAD);
 	}
 	
@@ -676,95 +679,6 @@ public class KeyboardController implements SerialPortEventListener, GameListener
 	// COMMUNICATION METHODS
 	//--------------------------------------------------
 
-	/***********************************************************************
-	 * Set up communication with the Keyboard Controller
-	 * @return false if initialization fails
-	 ***********************************************************************/
-	public boolean initialize()
-	{
-		// the next line is for Raspberry Pi and 
-		// gets us into the while loop and was suggested here was suggested http://www.raspberrypi.org/phpBB3/viewtopic.php?f=81&t=32186
-		//System.setProperty("gnu.io.rxtx.SerialPorts", "/dev/ttyACM0");
-
-		CommPortIdentifier portId = null;
-		Enumeration portEnum = CommPortIdentifier.getPortIdentifiers();
-		while (portEnum.hasMoreElements())
-		{
-			CommPortIdentifier currPortId = (CommPortIdentifier) portEnum.nextElement();
-			System.out.println("CommPortId: " + currPortId.getName());
-		}
-
-		portEnum = CommPortIdentifier.getPortIdentifiers();
-
-		//First, Find an instance of serial port as set in PORT_NAMES.
-		while (portEnum.hasMoreElements())
-		{
-			CommPortIdentifier currPortId = (CommPortIdentifier) portEnum.nextElement();
-			if (m_device != null && currPortId.getName().equals(m_device))
-			{
-				portId = currPortId;
-				break;
-			}
-			else
-			{
-				for (String portName : PORT_NAMES)
-				{
-					if (currPortId.getName().equals(portName))
-					{
-						portId = currPortId;
-						break;
-					}
-				}
-			}
-		}
-		if (portId == null)
-		{
-			s_cat.error("Could not find COM port");
-			return false;
-		}
-
-		
-		try
-		{
-			// open serial port, and use class name for the appName.
-			serialPort = (SerialPort) portId.open(this.getClass().getName(), TIME_OUT);
-
-			// set port parameters
-			serialPort.setSerialPortParams(DATA_RATE,
-					SerialPort.DATABITS_8,
-					SerialPort.STOPBITS_1,
-					SerialPort.PARITY_NONE);
-
-			// open the streams
-			input = new BufferedInputStream(serialPort.getInputStream());
-			// input = new BufferedReader(new InputStreamReader(serialPort.getInputStream()));
-			output = serialPort.getOutputStream();
-
-			// add event listeners
-			serialPort.addEventListener(this);
-			serialPort.notifyOnDataAvailable(true);
-		}
-		catch (Exception e)
-		{
-			s_cat.error("initialize: failed", e);
-			return false;
-		}
-		return true;
-	}
-
-	/***********************************************************************
-	 * This should be called when you stop using the port.
-	 * This will prevent port locking on platforms like Linux.
-	 ***********************************************************************/
-	public synchronized void close()
-	{
-		if (serialPort != null)
-		{
-			serialPort.removeEventListener();
-			serialPort.close();
-		}
-	}
-
 	private String binary8 (int p_num)
 	{
 		return String.format("%8s", Integer.toBinaryString(p_num & 0xff)).replace(" ", "0");
@@ -791,6 +705,9 @@ public class KeyboardController implements SerialPortEventListener, GameListener
 		return line.toString();
 	}
 
+	/** Prefix that indicates line from Keyboard Controller is a command to process */
+	public static final String CMD_PREFIX = "CMD: ";
+	
 	/* *******************************************************************
 	 * (non-Javadoc)
 	 * @see gnu.io.SerialPortEventListener#serialEvent(gnu.io.SerialPortEvent)
@@ -802,12 +719,16 @@ public class KeyboardController implements SerialPortEventListener, GameListener
 		{
 			try
 			{
-				while (input.available() > 0)
+				while (m_input.available() > 0)
 				{
 					if (m_readLineEventMode || m_readOneLineEventMode)
 					{
-						String line = readLine(input);
+						String line = readLine(m_input);
 						System.out.println("Keyboard(" + m_myPosition + "): " + line);
+						if (line.startsWith(CMD_PREFIX))
+						{
+							processIncomingCommand(line.substring(CMD_PREFIX.length()));
+						}
 						if (READY_MSG.equals(line))
 						{
 							m_readLineEventMode = false;
@@ -818,7 +739,7 @@ public class KeyboardController implements SerialPortEventListener, GameListener
 					else
 					{
 						// read an 8-bit byte, but operate on it as an int, so it is, in effect, unsigned
-						int msg = input.read();
+						int msg = m_input.read();
 						if (msg != 192)
 							System.out.println("From Keyboard: " + binaryMsgToString(msg));
 						String messageDescription = processIncomingMessage(msg);
@@ -914,6 +835,145 @@ public class KeyboardController implements SerialPortEventListener, GameListener
 			}
 		}
 		return "no code";
+	}
+
+	/***********************************************************************
+	 * Commands that can be entered in the command interpreter.
+	 ***********************************************************************/
+	public enum TextCommand {
+		  RESET			("Requests Reset")
+		, DEBUG			("Debug message")
+		, PLAY			("Play card: position cardAbbrev (e.g., N QH)")
+		, KBDPOS			("Indicate keyboard position: newPosition)")
+		, CONTRACT		("Set contract: position numTricks suit")
+		, DEALHANDS		("Asks Game Controller to Deal hands")
+		, UNDO			("Undo")
+		;
+		
+		private String m_description;
+		
+		TextCommand (String p_description)
+		{
+			m_description = p_description;
+		}
+		
+		public String getDescription() { return m_description; } 
+	}
+
+	/***********************************************************************
+	 * Processes text commands from the keyboard controller.
+	 ***********************************************************************/
+	public void processIncomingCommand ( String p_line )
+	{
+		if (p_line.trim().equals("")) return;	// skip empty input
+			
+		TextCommand cmd = null;
+		try
+		{
+			String[] args = p_line.split(" ");
+			if (args.length <= 0) return;
+				
+			cmd = TextCommand.valueOf(args[0].toUpperCase());
+				
+			switch (cmd)
+			{
+				case RESET:
+				{
+					if (args.length != 1)
+						throw new IllegalArgumentException("Wrong number of arguments");
+					System.out.println("    about to initiate reset");
+					m_deviceReady = false;
+					m_timeOfLastMessage = System.currentTimeMillis();	// Hardware announces reset start
+					m_messageReserveMillis = 1500;
+					m_game.getBridgeHand().evt_resetKeyboard(this);
+				}
+				break;
+
+				case DEBUG:
+				{
+					System.out.println(p_line);
+				}
+				break;
+				
+				case PLAY:
+				{	// position rank suit
+					if (args.length != 4)
+						throw new IllegalArgumentException("Wrong number of arguments");
+					int idx = 0;
+					int id;
+					id = Integer.parseInt(args[++idx]);
+					Direction direction = Direction.values()[id];
+					id = Integer.parseInt(args[++idx]);
+					Rank rank = Rank.values()[id];
+					id = Integer.parseInt(args[++idx]);
+					Suit suit = Suit.values()[id];
+					Card card = new Card(rank,suit);
+					m_game.getBridgeHand().evt_playCard(direction, card);
+				}
+				break;
+					
+					
+				case KBDPOS:
+				{ 	// position
+					// identify the position of this keyboard
+					if (args.length != 2)
+						throw new IllegalArgumentException("Wrong number of arguments");
+					int idx = 0;
+					int id;
+					id = Integer.parseInt(args[++idx]);
+					Direction direction = Direction.values()[id];
+					m_myPosition = direction;
+					m_deviceReady = true;
+					m_game.keyboardPositionDetermined(this);
+				}
+				break;
+						
+				case CONTRACT:
+				{	// winner tricks suit
+					if (args.length != 4)
+						throw new IllegalArgumentException("Wrong number of arguments");
+					int idx = 0;
+					int id;
+					id = Integer.parseInt(args[++idx]);
+					Direction direction = Direction.values()[id];
+					int numTricks = Integer.parseInt(args[++idx]);
+					if (numTricks < 0 || numTricks > 7)
+						throw new IllegalArgumentException("Invalid numTricks: " + numTricks);
+					id = Integer.parseInt(args[++idx]);
+					Suit suit = Suit.values()[id];
+					Contract contract = new Contract(direction, suit, numTricks);
+					m_game.getBridgeHand().evt_setContract(contract);
+				}
+				break;
+
+				case DEALHANDS:
+				{
+					if (args.length != 1)
+						throw new IllegalArgumentException("Wrong number of arguments");
+					// TODO: Not implemented yet
+					// m_game.getBridgeHand().evt_dealHands(-1);
+				}
+				break;
+						
+				case UNDO:
+				{
+					if (args.length != 1)
+						throw new IllegalArgumentException("Wrong number of arguments");
+					m_game.getBridgeHand().evt_scanHandTest(m_game.getBridgeHand().getDummyPosition(), 0);
+				}
+				break;
+										
+				default:
+						break;
+			}
+		}
+		catch (Exception e)
+		{
+			System.out.print("Error: ");
+			System.out.println(e.getMessage());
+			e.printStackTrace(System.out);
+			if (cmd != null) System.out.println(cmd.getDescription());
+		}
 	}
 
 	//--------------------------------------------------
