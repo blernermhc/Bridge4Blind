@@ -9,6 +9,7 @@
 #include <Phrases.h>
 #include <Eventlist.h>
 #include <FatStructs.h>
+#include <EEPROM.h>
 
 
 SdReader card;    // This object holds the information for the card
@@ -89,14 +90,56 @@ void sdErrorCheck(void)
   while(1);
 }
 
-void setup() {
+// Address we will use to store the position
+#define NON_VOLATILE_POSITION_ADDR 0
+
+//-------------------------------------------------------------
+// Copies the position for non-volatile storage into variable storage.
+// Sets variable to PLAYERID_NOT_SET if the non-volatile value is out of range.
+//-------------------------------------------------------------
+uint8_t loadNonVolatilePosition ()
+{
+	uint8_t val = EEPROM.read(NON_VOLATILE_POSITION_ADDR);
+	if (val > PLAYERID_NOT_SET) val = PLAYERID_NOT_SET;
+	bridgeHand.m_myPlayerId = val;
+	return val;
+}
+
+//-------------------------------------------------------------
+// Copies the current position into non-volatile storage, if different.
+// Assumes the current value is "valid".
+//-------------------------------------------------------------
+void saveNonVolatilePosition ()
+{
+	uint8_t val = EEPROM.read(NON_VOLATILE_POSITION_ADDR);
+	if (val != bridgeHand.m_myPlayerId)
+	{
+	  EEPROM.write(NON_VOLATILE_POSITION_ADDR, bridgeHand.m_myPlayerId);
+	}
+}
+
+void printSerialMessagePrefix ()
+{
+	  Serial.print("Keyboard(");
+	  Serial.print(bridgeHand.m_myPlayerId, DEC);
+	  Serial.print("): ");
+}
+
+void setup()
+{
+	  // see if we know our position from an earlier run
+	  loadNonVolatilePosition();
+
   // set up serial port
   Serial.begin(9600);
   Serial.write(RESTARTING_MSG);	// tell Game Controller we are restarting
-  putstring_nl("Keyboard: Resetting");
-  putstring_nl("Keyboard: v1.2");
+  printSerialMessagePrefix();
+  putstring_nl("Resetting");
+  printSerialMessagePrefix();
+  putstring_nl("v1.2");
   
-   putstring("Keyboard: Free RAM: ");       // This can help with debugging, running out of RAM is bad
+  printSerialMessagePrefix();
+  putstring("Free RAM: ");       // This can help with debugging, running out of RAM is bad
   Serial.println(freeRam());      // if this is under 150 bytes it may spell trouble!
   
   // Set the output pins for the DAC control. This pins are defined in the library
@@ -125,7 +168,8 @@ void setup() {
  
   //  if (!card.init(true)) { //play with 4 MHz spi if 8MHz isn't working for you
   if (!card.init()) {         //play with 8 MHz spi (default faster!)  
-    putstring_nl("Keyboard: Card init. failed!");  // Something went wrong, lets print out why
+	printSerialMessagePrefix();
+    putstring_nl("Card init. failed!");  // Something went wrong, lets print out why
     sdErrorCheck();
     while(1);                            // then 'halt' - do nothing!
   }
@@ -140,13 +184,15 @@ void setup() {
       break;                             // we found one, lets bail
   }
   if (part == 5) {                       // if we ended up not finding one  :(
-    putstring_nl("Keyboard: No valid FAT partition!");
+	printSerialMessagePrefix();
+    putstring_nl("No valid FAT partition!");
     sdErrorCheck();      // Something went wrong, lets print out why
     while(1);                            // then 'halt' - do nothing!
   }
   
   // Lets tell the user about what we found
-  putstring("Keyboard: Using partition ");
+  printSerialMessagePrefix();
+  putstring("Using partition ");
   Serial.print(part, DEC);
   putstring(", type is FAT");
   Serial.println(vol.fatType(),DEC);     // FAT16 or FAT32?
@@ -154,7 +200,8 @@ void setup() {
   // Try to open the root directory
   if (!root.openRoot(vol))
   {
-    putstring_nl("Keyboard: Cannot open root dir!"); // Something went wrong,
+	printSerialMessagePrefix();
+    putstring_nl("Cannot open root dir!"); // Something went wrong,
     while(1);                             // then 'halt' - do nothing!
   }
   
@@ -163,7 +210,8 @@ void setup() {
   bridgeHand.setPhrases(&phrases);
   
   // Whew! We got past the tough parts.
-  putstring_nl("Keyboard: Ready!");
+  printSerialMessagePrefix();
+  putstring_nl("Ready!");
 
   //------------------------------------
   // Setup Button64 Shield
@@ -196,6 +244,10 @@ void loop()
 
 //#define DEBUG_KB 1
 
+
+/****************************************************************** 
+ * Parse and process two-byte requests.
+ ****************************************************************/
 void processInput2 (uint8_t p_input0, uint8_t p_input1, uint8_t p_repeat)
 {
   uint8_t opId = ((p_input0 & INPUT_OPID2_MASK) >> INPUT_OPID2_SHIFT);
@@ -223,7 +275,7 @@ void processInput2 (uint8_t p_input0, uint8_t p_input1, uint8_t p_repeat)
   switch (opId)
   {
     case 0:	break;
-    case 1:	bridgeHand.setPlayer(playerId, p_repeat); eventList.addEvent(p_input0, p_input1, p_repeat); break;
+    case 1:	bridgeHand.setPlayer(playerId, p_repeat); eventList.addEvent(p_input0, p_input1, p_repeat); saveNonVolatilePosition(); break;
     case 2:	bridgeHand.setDummy(playerId, p_repeat); eventList.addEvent(p_input0, p_input1, p_repeat); break;
     case 3:	bridgeHand.setNextPlayer(playerId, p_repeat); eventList.addEvent(p_input0, p_input1, p_repeat); break;
     case 4:	bridgeHand.setContract(playerId, suitId, cardId, p_repeat); eventList.addEvent(p_input0, p_input1, p_repeat); break;
@@ -239,6 +291,9 @@ void processInput2 (uint8_t p_input0, uint8_t p_input1, uint8_t p_repeat)
   }    
 }
 
+/****************************************************************** 
+ * Parse and process one-byte requests (except button simulations)
+ ****************************************************************/
 void processInput1 (uint8_t p_input0, uint8_t p_repeat)
 {
   uint8_t opId = (p_input0 & INPUT_OPID1_MASK);
@@ -270,6 +325,7 @@ void processInput1 (uint8_t p_input0, uint8_t p_repeat)
     case 13:	phrases.playMessage(SND_ENTER_CONTRACT, NEW_AUDIO); eventList.addEvent(p_input0, p_repeat); break;
     case 14:	phrases.playMessage(SND_CARD_ALREADY_PLAYED, NEW_AUDIO); eventList.addEvent(p_input0, p_repeat); break;
     case 15:	phrases.playMessage(SND_CARD_NOT_IN_HAND, NEW_AUDIO); eventList.addEvent(p_input0, p_repeat); break;
+    case 16:	sendPosition(p_repeat), eventList.addEvent(p_input0, p_repeat); break;
     default:
       phrases.playNumber(SND_UNEXPECTED_OP_1, opId, NEW_AUDIO);
       eventList.addEvent(p_input0, p_repeat);
@@ -305,6 +361,9 @@ void keyboardRestartComplete()
 }
 
 
+/****************************************************************** 
+ * Parse and process button press simulations
+ ****************************************************************/
 void processInputButton (uint8_t p_input0, uint8_t p_repeat)
 {
   uint8_t buttonId = (p_input0 & INPUT_OPID1_MASK);
@@ -670,7 +729,7 @@ void btn_play()
 
   Serial.write(START_SEND_MSG);  // tell Game Controller to read to next newline
   putstring("CMD: PLAY ");
-  Serial.write(bridgeHand.m_currentHandId);
+  Serial.print(bridgeHand.m_currentHandId);
   putstring(" ");
   Serial.print(s_selectedCardId);
   putstring(" ");
@@ -765,6 +824,19 @@ void resetKeyboard(uint8_t p_playerId)
     s_selectedSuitId = SUITID_NOT_SET;
     s_selectedCardId = CARDID_NOT_SET;
   }
+}
+
+/** Handles request from game controller to enter the keyboard's position */
+void sendPosition (uint8_t p_repeat)
+{
+	if (p_repeat)
+	{
+		phrases.playMode(MODE_SET_POSITION, NEW_AUDIO);
+		return;
+	}
+	
+	s_mode = MODE_PLAY_HAND;
+	btn_function();
 }
 
 

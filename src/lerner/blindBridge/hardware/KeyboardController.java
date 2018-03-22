@@ -1,7 +1,6 @@
 package lerner.blindBridge.hardware;
 import java.io.BufferedInputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.util.ArrayDeque;
 import java.util.Queue;
 
@@ -64,6 +63,7 @@ public class KeyboardController extends SerialController implements Runnable
 		, ENTER_CONTRACT		(13, 1500)
 		, CANNOT_PLAY_ALREADY_PLAYED		(14, 1500)
 		, CANNOT_PLAY_NOT_IN_HAND		(15, 1500)
+		, SEND_POSITION		(16, 1500)
 		;
 		
 		private int m_msgId;
@@ -126,14 +126,14 @@ public class KeyboardController extends SerialController implements Runnable
 	//private static final int DATA_RATE = 115200;
 	private static final int DATA_RATE = 9600;
 	
-	/** Start of messages sent by the Antenna Hardware during boot-up or firmware reset */
-	private static final String IDENT_MSG = "Keyboard:";
+	/** Start of messages sent by the Keyboard Hardware during boot-up or firmware reset */
+	private static final String IDENT_MSG = "Keyboard(";
 
-	/** Message sent by the Antenna Hardware at start of boot-up or firmware reset */
-	private static final String RESET_MSG = "Keyboard: Resetting";
+	/** End of message sent by the Keyboard Hardware at start of boot-up or firmware reset */
+	private static final String RESET_MSG = ": Resetting";
 
-	/** Final message sent by the Antenna Hardware during boot-up or firmware reset */
-	private static final String READY_MSG = "Keyboard: Ready!";
+	/** End of final message sent by the Keyboard Hardware during boot-up or firmware reset */
+	private static final String READY_MSG = ": Ready!";
 
 	//--------------------------------------------------
 	// CONFIGURATION MEMBER DATA
@@ -243,9 +243,6 @@ public class KeyboardController extends SerialController implements Runnable
 	/** Queue of messages to send to the keyboard controller hardware */
 	Queue<KbdMsg>	m_sendMessageQueue = new ArrayDeque<>();;
 
-	/** The output stream to the port */
-	private OutputStream m_output;
-	
 	/** Maximum delay to insert to ensure reserve time between messages (in milliseconds) */
 	private static final long MAX_RESERVE_DELAY_MILLIS = 5000;  
 
@@ -278,7 +275,6 @@ public class KeyboardController extends SerialController implements Runnable
 		throws IOException
 	{
 		super(p_game, true);
-		m_output = m_serialPort.getOutputStream();
 
 		//--------------------------------------------------
 		// Start thread to send queued messages to keyboard controller hardware
@@ -361,6 +357,16 @@ public class KeyboardController extends SerialController implements Runnable
 
 		if (s_cat.isDebugEnabled()) s_cat.debug("setPlayer: setting player to: " + m_myPosition);
 		return setPlayer(m_myPosition);
+	}
+	
+	/***********************************************************************
+	 * Changes state to DETERMINE_POSITION to use card scans to specify
+	 * the antenna's position.
+	 ***********************************************************************/
+	public void requestPosition()
+	{
+		m_myPosition = null;
+		send_simpleMessage(KBD_MESSAGE.SEND_POSITION);
 	}
 	
 	
@@ -729,7 +735,7 @@ public class KeyboardController extends SerialController implements Runnable
 						{
 							processIncomingCommand(line.substring(CMD_PREFIX.length()));
 						}
-						if (READY_MSG.equals(line))
+						if (line.endsWith(READY_MSG))
 						{
 							m_readLineEventMode = false;
 							System.out.println("Found " + READY_MSG);
@@ -924,7 +930,7 @@ public class KeyboardController extends SerialController implements Runnable
 					Direction direction = Direction.values()[id];
 					m_myPosition = direction;
 					m_deviceReady = true;
-					m_game.keyboardPositionDetermined(this);
+					send_multiByteMessage(MULTIBYTE_MESSAGE.SET_PLAYER, m_myPosition);
 				}
 				break;
 						
@@ -1176,6 +1182,7 @@ public class KeyboardController extends SerialController implements Runnable
 		
 		out.append("Kbd[" + m_myPosition + "]");
 		out.append(" dummy: " + m_dummyPosition);
+		out.append(" device: " + m_communicationPort.getName());
 		
 		return out.toString();
 	}

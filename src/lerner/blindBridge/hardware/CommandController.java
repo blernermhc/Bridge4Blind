@@ -50,7 +50,7 @@ public class CommandController implements Runnable
 		, PRINTSTATE("Prints the Game Controller state")
 		, CANCELRESET("Send reset finished to ensure that audio is enabled: kbdPosition")
 		, SHOWKBDS("Print a list of the known keyboards with an index for use in changing the keyboard's position")
-		, KBDPOS("Move a keyboard to a new position: idx (from SHOWKBDS) newPosition)")
+		, REINITPOS("Reinitialize keyboard and antenna positions")
 		, SHOWANTS("Print a list of the known antennas with an index for use in changing the antenna's position")
 		, ANTPOS("Move an antenna to a new position: idx (from SHOWANTS) newPosition)")
 		, S("Simulates RFID scan of a card: position cardAbbrev (e.g., QH)")
@@ -200,23 +200,13 @@ public class CommandController implements Runnable
 					}
 					break;
 					
-					/*
-					case KBDPOS:
+					case REINITPOS:
 					{ // change the position of a keyboard
-						if (args.length != 3)
+						if (args.length != 1)
 							throw new IllegalArgumentException("Wrong number of arguments");
-						int idx = 0;
-						int kbdIndex = Integer.parseInt(args[++idx]);
-						if (kbdIndex < 0 || kbdIndex >= m_bridgeHand.getKeyboardControllers().values().size())
-							throw new IllegalArgumentException("Invalid kbdIndex: " + kbdIndex);
-						Direction direction = Direction.fromString(args[++idx]);
-						KeyboardController kbdController = m_keyboardControllerList.get(kbdIndex);
-						m_keyboardControllers.remove(kbdController.getMyPosition());
-						kbdController.setPlayer(direction);
-						m_keyboardControllers.put(direction, kbdController);
+						m_game.evt_resetControllerPositions();
 					}
 					break;
-					*/
 						
 					case SHOWANTS:
 					{
@@ -287,7 +277,11 @@ public class CommandController implements Runnable
 						int idx = 0;
 						Direction direction = Direction.fromString(args[++idx]);
 						KeyboardController kbdController = m_game.getKeyboardControllers().get(direction); 
-						if (kbdController != null) kbdController.tryOpen(kbdController.m_communicationPort);
+						if (kbdController != null)
+						{
+							kbdController.close();
+							kbdController.tryOpen(kbdController.m_communicationPort);
+						}
 					}
 					break;
 						
@@ -298,7 +292,11 @@ public class CommandController implements Runnable
 						int idx = 0;
 						Direction direction = Direction.fromString(args[++idx]);
 						AntennaController antController = m_game.getAntennaControllers().get(direction); 
-						if (antController != null) antController.tryOpen(antController.m_communicationPort);
+						if (antController != null)
+						{
+							antController.close();
+							antController.tryOpen(antController.m_communicationPort);
+						}
 					}
 					break;
 						

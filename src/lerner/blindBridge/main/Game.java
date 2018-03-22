@@ -6,6 +6,7 @@ import java.util.Deque;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -347,12 +348,16 @@ public class Game
 		
 	}
 	
+	/** set to true while we wait for keyboard to announce its position */
+	private boolean m_waitingForPosition = false;
+
 	/***********************************************************************
 	 * Determines if all devices are ready to play
 	 * @return true if ready, false otherwise
 	 ***********************************************************************/
 	public boolean sc_testDevicesReady ()
 	{
+		if (s_cat.isDebugEnabled()) s_cat.debug("sc_testDevicesReady: entered");
 		boolean ready = true;
 		
 		if (ready)
@@ -378,21 +383,120 @@ public class Game
 				}
 			}
 		}
+
+		if (s_cat.isDebugEnabled()) s_cat.debug("sc_testDevicesReady: ready: " + ready);
 		
-		// Add dummy antennas if there are fewer hardware antennas than players
-		for (Direction direction : Direction.values())
+		if (! ready) return false;
+
+		boolean reconfigRequired = false;
+		
+		for (KeyboardController kbdController : m_keyboardControllerList)
 		{
-			if (m_antennaControllers.get(direction) == null)
+			Direction direction = kbdController.getMyPosition(); 
+			if (direction != null)
 			{
-				addAntennaController(direction, false);
+				if (m_keyboardControllers.get(direction) != null)
+				{
+					s_cat.error("sc_testDevicesReady: direction: " + direction + " has more than one keyboard controller");
+					reconfigRequired = true;
+				}
+				else
+				{
+					m_keyboardControllers.put(direction, kbdController);
+				}
+			}
+			else
+			{
+				reconfigRequired = true;
+			}
+		}
+		
+		
+		for (AntennaController antController : m_antennaControllerList)
+		{
+			Direction direction = antController.getMyPosition(); 
+			if (direction != null)
+			{
+				if (m_antennaControllers.get(direction) != null)
+				{
+					s_cat.error("sc_testDevicesReady: direction: " + direction + " has more than one antenna controller");
+					reconfigRequired = true;
+				}
+				else
+				{
+					m_antennaControllers.put(direction, antController);
+				}
+			}
+			else
+			{
+				reconfigRequired = true;
+			}
+		}
+		
+		if (s_cat.isDebugEnabled()) s_cat.debug("sc_testDevicesReady: reconfigRequired: " + reconfigRequired);
+
+		if (reconfigRequired)
+		{
+			evt_resetControllerPositions();
+		}
+		else
+		{
+			m_waitingForPosition = false;
+		}
+		
+		if (!reconfigRequired && m_antennaControllerList.size() < BridgeHand.NUMBER_OF_PLAYERS)
+		{
+			// Add dummy antennas if there are fewer hardware antennas than players
+			for (Direction direction : Direction.values())
+			{
+				if (m_antennaControllers.get(direction) == null)
+				{
+					AntennaController antController = addAntennaController(direction, false);
+					m_antennaControllers.put(direction, antController);
+				}
 			}
 		}
 
-		return ready;
+		if (s_cat.isDebugEnabled()) s_cat.debug("sc_testDevicesReady: finished reconfigRequired: " + reconfigRequired);
+
+		return (! reconfigRequired);
 	}
 	//--------------------------------------------------
 	// INTERNAL METHODS
 	//--------------------------------------------------
+
+	/***********************************************************************
+	 * Asks each device to indicate its position
+	 ***********************************************************************/
+	public void evt_resetControllerPositions ()
+	{
+		// only call these once, until complete
+		if (! m_waitingForPosition)
+		{
+			m_waitingForPosition = true;
+
+			Iterator<AntennaController> antennaControllers = m_antennaControllerList.iterator();
+			while (antennaControllers.hasNext())
+			{
+				AntennaController antController = antennaControllers.next();
+				if (antController.isVirtualController())
+					antennaControllers.remove();
+				else
+					antController.requestPosition();
+			}
+
+			for (KeyboardController kbdController : m_keyboardControllerList)
+			{
+				kbdController.requestPosition();
+			}
+		}
+
+		m_bridgeHandStateController.setForceNewState(BridgeHandState.INITIALIZING);
+		
+		// clear the positional maps so we can try again on next test
+		m_antennaControllers.clear();
+		m_keyboardControllers.clear();
+	}
 	
     /***********************************************************************
      * Finds the communication ports with names that match the given pattern
@@ -457,7 +561,6 @@ public class Game
 		KeyboardController kbdController = new KeyboardController(this, p_direction);
 		m_keyboardControllerList.add(kbdController);
 		m_gameListeners.add(kbdController);
-		if (p_direction != null) m_keyboardControllers.put(p_direction, kbdController);
 		return kbdController;
 	}
 	
@@ -475,7 +578,6 @@ public class Game
 		AntennaController antController = new AntennaController(this, p_direction, p_hasHardware);
 		m_antennaControllerList.add(antController);
 		m_gameListeners.add(antController);
-		if (p_direction != null) m_antennaControllers.put(p_direction, antController);
 		return antController;
 	}
 	
@@ -483,7 +585,7 @@ public class Game
 	 * Record antenna's position once determined.
 	 * @param p_antController the antenna
 	 ***********************************************************************/
-	public void antennaPositionDetermined (AntennaController p_antController)
+	public void antennaPositionDeterminedXX (AntennaController p_antController)
 	{
 		m_antennaControllers.put(p_antController.getMyPosition(), p_antController);
 	}
@@ -492,7 +594,7 @@ public class Game
 	 * Record keyboard's position once determined.
 	 * @param p_kbdController the keyboard
 	 ***********************************************************************/
-	public void keyboardPositionDetermined (KeyboardController p_kbdController)
+	public void keyboardPositionDeterminedXX (KeyboardController p_kbdController)
 	{
 		m_keyboardControllers.put(p_kbdController.getMyPosition(), p_kbdController);
 	}

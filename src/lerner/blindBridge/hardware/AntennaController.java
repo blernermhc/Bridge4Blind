@@ -38,13 +38,13 @@ public class AntennaController extends SerialController
 	private static final int DATA_RATE = 9600;
 	
 	/** Start of messages sent by the Antenna Hardware during boot-up or firmware reset */
-	private static final String IDENT_MSG = "Antenna:";
+	private static final String IDENT_MSG = "Antenna(";
 
-	/** Message sent by the Antenna Hardware at start of boot-up or firmware reset */
-	private static final String RESET_MSG = "Antenna: Resetting";
+	/** End of message sent by the Antenna Hardware at start of boot-up or firmware reset */
+	private static final String RESET_MSG = ": Resetting";
 
-	/** Final message sent by the Antenna Hardware during boot-up or firmware reset */
-	private static final String READY_MSG = "Antenna: Reset Complete";
+	/** End of final message sent by the Antenna Hardware during boot-up or firmware reset */
+	private static final String READY_MSG = ": Reset Complete";
 
 	/** Card present messages begin with this string */
 	private static String s_cardPresentPrefix = "CARD: ";
@@ -68,7 +68,7 @@ public class AntennaController extends SerialController
 	};
 
 	/** Processing state of the controller */
-	private AntennaControllerState m_controllerState = AntennaControllerState.DETERMINE_POSITION;
+	private AntennaControllerState m_controllerState = AntennaControllerState.CAPTURE_CARD;
 	
 	/** Last seen card */
 	private Card m_currentCard = null;
@@ -123,6 +123,33 @@ public class AntennaController extends SerialController
 	 */
 	public String getReadyMsg() { return READY_MSG; }
 	
+	/***********************************************************************
+	 * Changes state to DETERMINE_POSITION to use card scans to specify
+	 * the antenna's position.
+	 ***********************************************************************/
+	public void requestPosition()
+	{
+		m_myPosition = null;
+		m_controllerState = AntennaControllerState.DETERMINE_POSITION;
+	}
+	
+	//--------------------------------------------------
+	// COMMUNICATION METHODS
+	//--------------------------------------------------
+	
+	public void send_setPosition ( Direction p_direction )
+	{
+		int msg = (0b01000000 | p_direction.ordinal());
+		try
+		{
+			m_output.write((byte)msg);
+		}
+		catch (Exception e)
+		{
+			s_cat.error("sendQueuedMessages: failed to send message: " + msg, e);
+		}
+	}
+
 	//--------------------------------------------------
 	// HELPER METHODS
 	//--------------------------------------------------
@@ -146,7 +173,6 @@ public class AntennaController extends SerialController
 			default:			return null;
 		}
 		
-		m_game.antennaPositionDetermined(this);
 		return m_myPosition;
 	}
 
@@ -185,13 +211,13 @@ public class AntennaController extends SerialController
 	 ***********************************************************************/
 	private String processLine (String p_line)
 	{
-		if (p_line.equals(RESET_MSG))
+		if (p_line.endsWith(RESET_MSG))
 		{
 			m_deviceReady = false;
 			return p_line;
 		}
 		
-		if (p_line.equals(READY_MSG))
+		if (p_line.endsWith(READY_MSG))
 		{
 			// do not signal ready if position is still unknown
 			if (m_controllerState != AntennaControllerState.DETERMINE_POSITION) m_deviceReady = true;
@@ -257,6 +283,7 @@ public class AntennaController extends SerialController
 				{
 					description = "Card scan set my postion to: " + m_myPosition;
 					m_controllerState = AntennaControllerState.CAPTURE_CARD;
+					send_setPosition(m_myPosition);
 					m_deviceReady = true;
 				}
 				else
@@ -530,6 +557,7 @@ public class AntennaController extends SerialController
 		out.append("Antenna[" + m_myPosition + "]");
 		out.append(" state: " + m_controllerState);
 		out.append(" curCard: " + m_currentCard);
+		out.append(" device: " + (m_virtualController ? "virtual" : m_communicationPort.getName()));
 		
 		return out.toString();
 	}

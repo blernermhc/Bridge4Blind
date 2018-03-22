@@ -6,6 +6,7 @@ package lerner.blindBridge.hardware;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Iterator;
 
 import org.apache.log4j.Category;
@@ -14,6 +15,7 @@ import gnu.io.CommPortIdentifier;
 import gnu.io.SerialPort;
 import gnu.io.SerialPortEventListener;
 import lerner.blindBridge.main.Game;
+import lerner.blindBridge.model.BridgeHand;
 import lerner.blindBridge.model.Direction;
 import lerner.blindBridge.model.GameListener;
 
@@ -42,6 +44,9 @@ public abstract class SerialController implements SerialPortEventListener, GameL
 	
 	/** Indicates if the device has completed initialization or reset */
 	protected boolean 		m_deviceReady = false;
+	
+	/** Indicates if the controller has actual hardware, or is virtualized in software */
+	protected boolean		m_virtualController = false;
 
 	/** The position of this Keyboard Controller */
 	protected Direction		m_myPosition;
@@ -58,6 +63,9 @@ public abstract class SerialController implements SerialPortEventListener, GameL
 	*/
 	protected BufferedInputStream m_input;
 
+	/** The output stream to the port */
+	protected OutputStream m_output;
+	
 	//--------------------------------------------------
 	// INTERNAL MEMBER DATA
 	//--------------------------------------------------
@@ -77,10 +85,12 @@ public abstract class SerialController implements SerialPortEventListener, GameL
 		m_game = p_game;
 		if (! p_hasHardware)
 		{
+			m_virtualController = true;
 			m_deviceReady = true;
 		}
 		else
 		{
+			m_virtualController = false;
 			findDeviceToOpen();
 		}
 	}
@@ -138,12 +148,14 @@ public abstract class SerialController implements SerialPortEventListener, GameL
 
 			// open the streams
 			m_input = new BufferedInputStream(m_serialPort.getInputStream());
-			//output = serialPort.getOutputStream();
+			m_output = m_serialPort.getOutputStream();
 			
-			String line = readFullLineWithTimeout(m_input, getPortOpenTimeout()*2);
+			String line = readFullLineWithTimeout(m_input, getPortOpenTimeout()*4);
 			if (s_cat.isDebugEnabled()) s_cat.debug("tryOpen: read second line from device: " + p_portIdentifier.getName() + "\n" + line);
 			if (line.startsWith(getIdentMsg()))
 			{
+				determinePositionFromInitializationMessage(line);
+
 				// add event listeners
 				m_serialPort.addEventListener(this);
 				m_serialPort.notifyOnDataAvailable(true);
@@ -168,8 +180,15 @@ public abstract class SerialController implements SerialPortEventListener, GameL
 	{
 		if (m_serialPort != null)
 		{
-			m_serialPort.removeEventListener();
-			m_serialPort.close();
+			try
+			{
+				m_serialPort.removeEventListener();
+				m_serialPort.close();
+			}
+			catch (Exception e)
+			{
+				s_cat.error("close failed: ", e);
+			}
 		}
 	}
 
@@ -220,6 +239,37 @@ public abstract class SerialController implements SerialPortEventListener, GameL
 	//--------------------------------------------------
 	// HELPER METHODS
 	//--------------------------------------------------
+	
+	private void determinePositionFromInitializationMessage ( String p_line )
+	{
+		String line = p_line.substring(getIdentMsg().length());	// remove prefix
+		int endPos = line.indexOf(')');
+		if (endPos <= 0)
+		{
+			if (s_cat.isDebugEnabled()) s_cat.debug("determinePositionFromInitializationMessage: did not find closing paren");
+			return;	// did not find position
+		}
+		line = line.substring(0, endPos);
+		int position = Integer.parseInt(line);
+		if (position >= 0 && position < BridgeHand.NUMBER_OF_PLAYERS)
+		{
+			m_myPosition = Direction.values()[position];
+			if (s_cat.isDebugEnabled()) s_cat.debug("determinePositionFromInitializationMessage: found position: " + m_myPosition);
+		}
+		else
+		{
+			if (s_cat.isDebugEnabled()) s_cat.debug("determinePositionFromInitializationMessage: ignoring illegal position: " + position);
+		}
+	}
+
+	/***********************************************************************
+	 * Indicates if the controller has actual hardware, or is virtualized in software
+	 * @return true if simulated in software, false if talks to actual hardware
+	 ***********************************************************************/
+	public boolean isVirtualController ()
+	{
+		return m_virtualController;
+	}
 
 	//--------------------------------------------------
 	// ACCESSORS

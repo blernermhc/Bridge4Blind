@@ -27,6 +27,7 @@ products from Adafruit!
 #include <Wire.h>
 #include <SPI.h>
 #include <Adafruit_PN532.h>
+#include <EEPROM.h>
 
 // If using the breakout with SPI, define the pins for SPI communication.
 //#define PN532_SCK  (2)
@@ -65,27 +66,80 @@ Adafruit_PN532 nfc(PN532_SCK, PN532_MISO, PN532_MOSI, PN532_SS);
    #define Serial SerialUSB
 #endif
 
+//-------------------------------------------------------------
+// Save / Restore persistent values.
+// For now, just myPostion.  If we want more, look at this page:
+// https://playground.arduino.cc/Code/EEPROMLoadAndSaveSettings
+//-------------------------------------------------------------
+
+#define	PLAYERID_NOT_SET 16
+uint8_t	s_myPosition = PLAYERID_NOT_SET;
+
+// Address we will use to store the position
+#define NON_VOLATILE_POSITION_ADDR 0
+
+//-------------------------------------------------------------
+// Copies the position for non-volatile storage into variable storage.
+// Sets variable to PLAYERID_NOT_SET if the non-volatile value is out of range.
+//-------------------------------------------------------------
+uint8_t loadNonVolatilePosition ()
+{
+	uint8_t val = EEPROM.read(NON_VOLATILE_POSITION_ADDR);
+	if (val > PLAYERID_NOT_SET) val = PLAYERID_NOT_SET;
+	s_myPosition = val;
+	return val;
+}
+
+//-------------------------------------------------------------
+// Copies the current position into non-volatile storage, if different.
+// Assumes the current value is "valid".
+//-------------------------------------------------------------
+void saveNonVolatilePosition ()
+{
+	uint8_t val = EEPROM.read(NON_VOLATILE_POSITION_ADDR);
+	if (val != s_myPosition)
+	{
+	  EEPROM.write(NON_VOLATILE_POSITION_ADDR, s_myPosition);
+	}
+}
+
+void printSerialMessagePrefix ()
+{
+	  Serial.print("Antenna(");
+	  Serial.print(s_myPosition, DEC);
+	  Serial.print("): ");
+}
+
 void setup(void)
 {
   #ifndef ESP8266
     while (!Serial); // for Leonardo/Micro/Zero
   #endif
+  
+  // see if we know our position from an earlier run
+  loadNonVolatilePosition();
+  
   //Serial.begin(115200);
   Serial.begin(9600);
-  Serial.println("Antenna: Resetting");
+  printSerialMessagePrefix();
+  Serial.println("Resetting");
 
   nfc.begin();
 
   uint32_t versiondata = nfc.getFirmwareVersion();
   if (! versiondata)
   {
-    Serial.print("Antenna: Did not find PN53x board");
-    while (1); // halt
+	  printSerialMessagePrefix();
+	  Serial.print("Did not find PN53x board");
+	  while (1); // halt
   }
   
   // Got ok data, print it out!
-  Serial.print("Antenna: Found chip PN5"); Serial.println((versiondata>>24) & 0xFF, HEX); 
-  Serial.print("Antenna: Firmware ver. "); Serial.print((versiondata>>16) & 0xFF, DEC); 
+  printSerialMessagePrefix();
+  Serial.print("Found chip PN5"); Serial.println((versiondata>>24) & 0xFF, HEX);
+  
+  printSerialMessagePrefix();
+  Serial.print("Firmware ver. "); Serial.print((versiondata>>16) & 0xFF, DEC); 
   Serial.print('.'); Serial.println((versiondata>>8) & 0xFF, DEC);
   
   // Set the max number of retry attempts to read from a card
@@ -98,8 +152,30 @@ void setup(void)
   // configure board to read RFID tags
   nfc.SAMConfig();
   
-  Serial.println("Antenna: Waiting for an ISO14443A card");
-  Serial.println("Antenna: Reset Complete");
+  printSerialMessagePrefix();
+  Serial.println("Waiting for an ISO14443A card");
+  
+  printSerialMessagePrefix();
+  Serial.println("Reset Complete");
+}
+
+#define INPUT_SET_POSITION_MASK 0b01000000
+#define INPUT_POSITION_ID_MASK  0b00001111
+
+void processInput()
+{
+  if (Serial.available() <= 0) return;
+
+  uint8_t input0 = Serial.read();
+
+  // only supports one message.  If more are needed, copy from kbdController sketch
+  if ((input0 & INPUT_SET_POSITION_MASK) != 0)
+  {
+    s_myPosition = input0 & INPUT_POSITION_ID_MASK;
+    saveNonVolatilePosition();
+    printSerialMessagePrefix();
+    Serial.println("Set position in non-volatile memory");
+  }
 }
 
 #define CHAR_BUFFER_SIZE 15
@@ -111,6 +187,8 @@ char* cardHex = &charBuffer1[0];
 
 void loop(void)
 {
+	processInput();	// see if there is a command from the game controller
+	
   boolean success;
   uint8_t uid[] = { 0, 0, 0, 0, 0, 0, 0 };	// Buffer to store the returned UID
   uint8_t uidLength;				// Length of the UID (4 or 7 bytes depending on ISO14443A card type)
