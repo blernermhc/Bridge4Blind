@@ -116,6 +116,7 @@ void setup(void)
     while (!Serial); // for Leonardo/Micro/Zero
   #endif
   
+    delay(250);
   // see if we know our position from an earlier run
   loadNonVolatilePosition();
   
@@ -259,6 +260,7 @@ uint8_t bytesToHex (uint8_t* p_bytes, int p_numBytes, char* p_buffer, int p_bufS
 	if ( ((p_numBytes * 2) + 1) > p_bufSize)
 	{
 		// input too long
+		printSerialMessagePrefix();
 		Serial.print("bytesToHex: input too long.  numBytes: ");
 		Serial.print(p_numBytes, DEC);
 		Serial.print(" buf char len: ");

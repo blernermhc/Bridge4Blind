@@ -79,8 +79,10 @@ public abstract class SerialController implements SerialPortEventListener, GameL
 	 * @param p_game				The game object managing the hands
 	 * @param p_hasHardware		If false, there is no hardware and the "antenna"
 	 * 	will be controlled from the command interpreter (for testing)
+	 * @throws IOException if it cannot open a port for this controller.
 	 ***********************************************************************/
 	public SerialController ( Game p_game, boolean p_hasHardware )
+		throws IOException
 	{
 		m_game = p_game;
 		if (! p_hasHardware)
@@ -91,14 +93,15 @@ public abstract class SerialController implements SerialPortEventListener, GameL
 		else
 		{
 			m_virtualController = false;
-			findDeviceToOpen();
+			if (! findDeviceToOpen()) throw new IOException("Unable to find a device for this controller");
 		}
 	}
 
 	//--------------------------------------------------
 	// METHODS
 	//--------------------------------------------------
-	
+
+	public abstract String getName();
 	public abstract int getPortOpenTimeout();
 	public abstract int getPortDataRate();
 	public abstract String getIdentMsg();
@@ -132,9 +135,30 @@ public abstract class SerialController implements SerialPortEventListener, GameL
 		return false;
 	}
 	
+	/***********************************************************************
+	 * Attempts to open the given port and then sees if it is connected
+	 * to an instance of the expected hardware, by inspecting the lines
+	 * of text arriving on the serial line.
+	 * <p>
+	 * Arduinos reset when a connection is made, so we look for the lines
+	 * output during setup.  Each line should begin with the IdentMsg string
+	 * (e.g., "Antenna(" or "Keyboard(") followed by the last know position of
+	 * the device (an ordinal of a Direction enum value), a close paren and
+	 * arbitrary text.
+	 * <p>
+	 * This method scans the text arriving on the serial line and extracts the
+	 * text between two newline characters (since it may connect in the middle
+	 * of a line).
+	 * <p>
+	 * Invalid positions are OK.  The state controller will check these
+	 * as part of the INITIALIZATION state checks.
+	 * 
+	 * @param p_portIdentifier	the port to open
+	 * @return true if successful, false otherwise
+	 ***********************************************************************/
 	public boolean tryOpen ( CommPortIdentifier p_portIdentifier )
 	{
-		if (s_cat.isDebugEnabled()) s_cat.debug("tryOpen: attempting to open device: " + p_portIdentifier.getName());
+		if (s_cat.isDebugEnabled()) s_cat.debug("tryOpen(" + getName() + "): attempting to open device: " + p_portIdentifier.getName());
 		try
 		{
 			// open serial port, and use class name for the appName.
@@ -146,12 +170,18 @@ public abstract class SerialController implements SerialPortEventListener, GameL
 					SerialPort.STOPBITS_1,
 					SerialPort.PARITY_NONE);
 
+			/* did not seem to help with missing characters from antenna controller
+			m_serialPort.setFlowControlMode(SerialPort.FLOWCONTROL_RTSCTS_IN
+			                                | SerialPort.FLOWCONTROL_RTSCTS_OUT);
+			m_serialPort.setRTS(true);
+			*/
+			
 			// open the streams
 			m_input = new BufferedInputStream(m_serialPort.getInputStream());
 			m_output = m_serialPort.getOutputStream();
 			
 			String line = readFullLineWithTimeout(m_input, getPortOpenTimeout()*4);
-			if (s_cat.isDebugEnabled()) s_cat.debug("tryOpen: read second line from device: " + p_portIdentifier.getName() + "\n" + line);
+			if (s_cat.isDebugEnabled()) s_cat.debug("tryOpen(" + getName() + "): read full line from device:\n" + line);
 			if (line.startsWith(getIdentMsg()))
 			{
 				determinePositionFromInitializationMessage(line);
@@ -160,14 +190,14 @@ public abstract class SerialController implements SerialPortEventListener, GameL
 				m_serialPort.addEventListener(this);
 				m_serialPort.notifyOnDataAvailable(true);
 				m_communicationPort = p_portIdentifier;
-				if (s_cat.isDebugEnabled()) s_cat.debug("tryOpen: using device: " + p_portIdentifier.getName());
+				if (s_cat.isDebugEnabled()) s_cat.debug("tryOpen(" + getName() + "): using device: " + p_portIdentifier.getName());
 				return true;
 			}
 			
 		}
 		catch (Exception e)
 		{
-			s_cat.error("findDeviceToOpen: initialization failed", e);
+			s_cat.error("findDeviceToOpen(" + getName() + "): initialization failed", e);
 		}
 		return false;
 	}
@@ -194,11 +224,12 @@ public abstract class SerialController implements SerialPortEventListener, GameL
 
 	/***********************************************************************
 	 * Waits for up to the given number of milliseconds for a newline-terminated 
-	 * string to become available on the input stream following a newline
-	 * (so we are sure to get a line from the start)
+	 * string to become available on the input stream following two newlines
+	 * (so we are sure to get a line from the start - waiting for one was not sufficient-still lost chars).
+	 * Also ignores "TIMEOUT!" which is sometimes generated by the RFID antenna library.
 	 * @param p_input				the input stream to read
 	 * @param p_timeoutInMillis		max time to wait in milliseconds
-	 * @return the first newline-terminated string read, or as much as has arrived (if any) before the timeout occurred.
+	 * @return the second newline-terminated string read, or as much as has arrived (if any) before the timeout occurred.
 	 * May return the empty string, will never return null.
 	 * @throws IOException if there is an error reading the stream.
 	 ***********************************************************************/
@@ -208,7 +239,7 @@ public abstract class SerialController implements SerialPortEventListener, GameL
 		long maxTimeMillis = System.currentTimeMillis() + p_timeoutInMillis;
 
 		StringBuilder line = new StringBuilder();
-		boolean foundFirstNewline = false;
+		int newlinesToSkip = 2;
 		int buflen = 256;
 		byte[] buffer = new byte[buflen];
 		byte ch;
@@ -220,15 +251,22 @@ public abstract class SerialController implements SerialPortEventListener, GameL
 				ch = buffer[i];
 				if (ch == '\n')
 				{
-					if (foundFirstNewline)
+					if (newlinesToSkip == 0)
 					{
+						if (line.toString().equals("TIMEOUT!"))
+						{	// skip this from Adafruit_PN532 library
+							line = new StringBuilder();
+							continue;
+						}
 						return line.toString();
 					}
-					foundFirstNewline = true;
+					--newlinesToSkip;
 				}
-				else if (foundFirstNewline)
+				else if (newlinesToSkip == 0)
 				{
-					if (ch != 13) line.append((char)ch);
+					// ignore carriage return and other control characters
+					if (ch >= 32 && ch < 127) line.append((char)ch);
+					//if (ch != 13) line.append((char)ch);
 				}
 			}
 		}

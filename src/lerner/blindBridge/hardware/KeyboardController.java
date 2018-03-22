@@ -119,11 +119,13 @@ public class KeyboardController extends SerialController implements Runnable
 	// CONSTANTS
 	//--------------------------------------------------
 
+	/** A name to describe this class */
+	private static final String CONTROLLER_NAME = "Keyboard";
+	
 	/** Milliseconds to block while waiting for port open */
 	private static final int TIME_OUT = 2000;
 
 	/** Default bits per second for COM port. */
-	//private static final int DATA_RATE = 115200;
 	private static final int DATA_RATE = 9600;
 	
 	/** Start of messages sent by the Keyboard Hardware during boot-up or firmware reset */
@@ -143,8 +145,11 @@ public class KeyboardController extends SerialController implements Runnable
 	 * If true, read ASCII newline-terminated messages from
 	 * the Keyboard Controller until the final setup message is received.
 	 * Then switch back to byte-message mode.
+	 * <p>
+	 * Start with true, since connecting to the USB port triggers
+	 * an Arduino reset.
 	 */
-	boolean m_readLineEventMode = false;
+	boolean m_readLineEventMode = true;
 	
 	/**
 	 * If true, read one ASCII newline-terminated message from
@@ -270,6 +275,7 @@ public class KeyboardController extends SerialController implements Runnable
 	 * Configures and initializes a Keyboard Controller
 	 * @param p_game		The object managing the hands
 	 * @param p_direction		The player position of the player using this Keyboard Controller
+	 * @throws IOException if it cannot open a port for this controller.
 	 ***********************************************************************/
 	public KeyboardController(Game p_game, Direction p_direction)
 		throws IOException
@@ -292,6 +298,11 @@ public class KeyboardController extends SerialController implements Runnable
 	// CONFIGURATION METHODS (used by findPortToOpen)
 	//--------------------------------------------------
 
+	/* (non-Javadoc)
+	 * @see lerner.blindBridge.hardware.SerialController#getName()
+	 */
+	public String getName() { return CONTROLLER_NAME; }
+	
 	/* (non-Javadoc)
 	 * @see lerner.blindBridge.hardware.SerialController#getPortOpenTimeout()
 	 */

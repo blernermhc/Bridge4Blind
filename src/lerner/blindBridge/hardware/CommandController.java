@@ -54,6 +54,7 @@ public class CommandController implements Runnable
 		, SHOWANTS("Print a list of the known antennas with an index for use in changing the antenna's position")
 		, ANTPOS("Move an antenna to a new position: idx (from SHOWANTS) newPosition)")
 		, S("Simulates RFID scan of a card: position cardAbbrev (e.g., QH)")
+		, QUIT("Exit program")
 		;
 		
 		private String m_description;
@@ -205,6 +206,14 @@ public class CommandController implements Runnable
 						if (args.length != 1)
 							throw new IllegalArgumentException("Wrong number of arguments");
 						m_game.evt_resetControllerPositions();
+					}
+					break;
+						
+					case QUIT:
+					{ // change the position of a keyboard
+						if (args.length != 1)
+							throw new IllegalArgumentException("Wrong number of arguments");
+						m_game.evt_exit();
 					}
 					break;
 						

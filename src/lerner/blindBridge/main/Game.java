@@ -316,6 +316,35 @@ public class Game
 		m_bridgeHandStateController.runStateMachine();
 	}
 
+	/***********************************************************************
+	 * Cleanup at the end of the program
+	 ***********************************************************************/
+	public void closeAllPorts()
+	{
+		for (AntennaController antController : m_antennaControllerList)
+		{
+			try
+			{
+				antController.close();
+			}
+			catch (Exception e)
+			{
+				s_cat.error("closeAllPorts: exception", e);
+			}
+		}
+
+		for (KeyboardController kbdController : m_keyboardControllerList)
+		{
+			try
+			{
+				kbdController.close();
+			}
+			catch (Exception e)
+			{
+				s_cat.error("closeAllPorts: exception", e);
+			}
+		}
+	}
 	//--------------------------------------------------
 	// METHODS
 	//--------------------------------------------------
@@ -345,7 +374,16 @@ public class Game
 		startNewHand();
 		m_bridgeHandStateController.setForceNewState(BridgeHandState.NEW_HAND);
 		m_bridgeHandStateController.notifyStateMachine();
-		
+	}
+	
+	/***********************************************************************
+	 * Quit program gracefully
+	 ***********************************************************************/
+	public void evt_exit()
+	{
+		if (s_cat.isDebugEnabled()) s_cat.debug("evt_exit: exiting");
+		closeAllPorts();
+		System.exit(0);
 	}
 	
 	/** set to true while we wait for keyboard to announce its position */
@@ -451,7 +489,15 @@ public class Game
 			{
 				if (m_antennaControllers.get(direction) == null)
 				{
-					AntennaController antController = addAntennaController(direction, false);
+					AntennaController antController = null;
+					try
+					{
+						antController = addAntennaController(direction, false);
+					}
+					catch (Exception e)
+					{	// this should never happen for Virtual controllers
+						s_cat.error("sc_testDevicesReady: failed to create virtual antenna controllers", e);
+					}
 					m_antennaControllers.put(direction, antController);
 				}
 			}
@@ -554,6 +600,7 @@ public class Game
 	 * Adds a keyboard controller to the configuration
 	 * @param p_direction		the position of the controller, if known
 	 * @return the keybaord object
+	 * @throws IOException if it cannot open a port for this controller.
 	 ***********************************************************************/
 	public KeyboardController addKeyboardController (Direction p_direction)
 		throws IOException
@@ -572,8 +619,10 @@ public class Game
 	 * @param p_hasHardware		If false, there is no hardware and the "antenna"
 	 * 	will be controlled from the command interpreter (for testing)
 	 * @return the new antenna object
+	 * @throws IOException if it cannot open a port for this controller.
 	 ***********************************************************************/
 	public AntennaController addAntennaController (Direction p_direction, boolean p_hasHardware)
+		throws IOException
 	{
 		AntennaController antController = new AntennaController(this, p_direction, p_hasHardware);
 		m_antennaControllerList.add(antController);
@@ -655,8 +704,24 @@ public class Game
 	 ***********************************************************************/
 	public static void main(String[] p_args) throws Exception
 	{
-		Game main = new Game();
-		main.initialize(p_args);
+		int status = 0;
+		Game main = null;
+		try
+		{
+			main = new Game();
+			main.initialize(p_args);
+		}
+		catch (Exception e)
+		{
+			s_cat.error("main: uncaught exception", e);
+			status = 1;
+		}
+		finally
+		{
+			System.out.println("Exiting");
+			if (main != null) main.closeAllPorts();
+			System.exit(status);
+		}
 	}
 
 	/***********************************************************************
