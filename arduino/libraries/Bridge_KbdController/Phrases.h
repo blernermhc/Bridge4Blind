@@ -126,14 +126,24 @@ const char* const SND_PLAYERS[] PROGMEM = { SND_NORTH
               , SND_DUMMY
               };
 
-const char SND_MODE_PLAY[]   PROGMEM = "MODEPLAY";
-const char SND_MODE_SET_POSITION[]   PROGMEM = "MODEPOS";
+const char SND_MODE_PLAY[]             PROGMEM = "MODEPLAY";
+const char SND_MODE_UNDO[]             PROGMEM = "MODEUNDO";
+const char SND_MODE_REDO[]             PROGMEM = "MODEREDO";
+const char SND_MODE_SET_POSITION[]     PROGMEM = "MODEPOS";
 const char SND_MODE_ENTER_CONTRACT[]   PROGMEM = "MODECONT";
+const char SND_MODE_RESYNCHRONIZE[]    PROGMEM = "MODESYNC";
+const char SND_MODE_START_NEW_HAND[]   PROGMEM = "MODENEWH";
+const char SND_MODE_DEAL_HANDS[]       PROGMEM = "MODEDEAL";
 
-#define NUMMODES 3
+#define NUMMODES 8
 const char* const SND_MODES[] PROGMEM = { SND_MODE_PLAY
+		      , SND_MODE_UNDO
+		      , SND_MODE_REDO
               , SND_MODE_SET_POSITION
               , SND_MODE_ENTER_CONTRACT
+			  , SND_MODE_RESYNCHRONIZE
+			  , SND_MODE_START_NEW_HAND
+			  , SND_MODE_DEAL_HANDS
               };
 
 const char SND_MODE_ENTER_CONTRACT_WINNER[]   PROGMEM = "CONTWIN";
@@ -157,25 +167,16 @@ const char SND_WAITING_FOR[]  PROGMEM = "WAITFOR";
 const char SND_TO_PLAY[]  PROGMEM = "TOPLAY";
 
 const char SND_SELECT_CARD[]    PROGMEM = "SELCARD";
-const char SND_NOT_PLAYED[]   PROGMEM = "NOTPLAY";
 const char SND_ALREADY_PLAYED[]   PROGMEM = "ALREADY";
-const char SND_AGAIN_PICK_UP_DUMMY[]  PROGMEM = "AGAINDUM";
-const char SND_AGAIN_CLEAR_CONTRACT[]  PROGMEM = "AGAINCON";
 const char SND_RESET_STARTED[]    PROGMEM = "RSTSTART";
 const char SND_RESET_FINISHED[]   PROGMEM = "RSTDONE";
 const char SND_SCAN_HAND[]    PROGMEM = "SCANHAND";
 const char SND_SCAN_DUMMY[]   PROGMEM = "SCANDUMY";
-const char SND_PICKUP_DUMMY[]   PROGMEM = "DMPKUP";
 const char SND_ENTER_CONTRACT[]    PROGMEM = "ENTERCON";
-const char SND_PRESS_AGAIN_TO_PLACE[] PROGMEM = "AGAIN";
-const char SND_BACK_IN_HAND[]   PROGMEM = "BACKINHD";
 const char SND_CANNOT_PLAY[]    PROGMEM = "CANTPLAY";
 const char SND_PLAY_IS[]    PROGMEM = "PLAYIS";
-const char SND_PRESS_AGAIN_FOR[]  PROGMEM = "PRAGAIN";
-const char SND_TO_PICK_UP[]   PROGMEM = "TOPICKUP";
 const char SND_CONTRACT_IS[]    PROGMEM = "CONTRACT";
 const char SND_PLAYED[]     PROGMEM = "PLAYED";
-const char SND_PICKED_UP[]    PROGMEM = "PKDUP";
 const char SND_HAND_IS_COMPLETE[] PROGMEM = "HANDDONE";
 const char SND_UNEXPECTED_BUTTON[] PROGMEM = "UNXBTN";
 const char SND_UNEXPECTED_OP_1[] PROGMEM = "UNXOP1";
@@ -200,6 +201,36 @@ const char SND_CARD_ALREADY_PLAYED[] PROGMEM = "CARDPLYD";
 const char SND_CARD_NOT_IN_HAND[] PROGMEM = "NOTINHND";
 const char SND_MODEWORD[] PROGMEM = "MODE";
 const char SND_CONTRACTMODEWORD[] PROGMEM = "CONTMODE";
+const char SND_CONFIRM_START_NEW_HAND[] PROGMEM = "NEWHCONF";
+
+#define UNDO_EVENTID_UNKNOWN		0
+#define UNDO_EVENTID_NEW_HAND	1
+#define UNDO_EVENTID_DEAL_HANDS	2
+#define UNDO_EVENTID_SCAN_CARD	3
+#define UNDO_EVENTID_SCAN_HAND	4
+#define UNDO_EVENTID_SET_CONTRACT	5
+
+const char SND_UNDO[] PROGMEM = "UNDO";
+const char SND_REDO[] PROGMEM = "REDO";
+const char SND_PRESS_AGAIN_TO[] PROGMEM = "PRESSTO";
+const char SND_RESTORE[] PROGMEM = "RESTORE";
+const char SND_RESTORED[] PROGMEM = "RESTORED";
+const char SND_PREVIOUS_HAND[] PROGMEM = "PREVHAND";
+const char SND_PICK_UP[] PROGMEM = "PICKUP";
+const char SND_PICKED_UP[]    PROGMEM = "PKDUP";
+const char SND_BY[]    PROGMEM = "BY";
+const char SND_RETURN[]    PROGMEM = "RETURN";
+const char SND_RETURNED[]    PROGMEM = "RETURNED";
+const char SND_HAND[]    PROGMEM = "HAND";
+const char SND_REMOVE[]    PROGMEM = "REMOVE";
+const char SND_REMOVED[]    PROGMEM = "REMOVED";
+const char SND_CONTRACT[]    PROGMEM = "CONTRACT";
+const char SND_CLEAR[]    PROGMEM = "CLEAR";
+const char SND_CLEARED[]    PROGMEM = "CLEARED";
+const char SND_ALL_HANDS[]    PROGMEM = "ALLHANDS";
+const char SND_UNKNOWN_EVENTID[]    PROGMEM = "UNKEVTID";
+
+
 
 //------------------------------------------------------------------------------
 /**
@@ -239,10 +270,9 @@ class Phrases
 	void playMyPosition (uint8_t p_playerId, uint8_t p_appendAudio);
 	void playDummyPosition (uint8_t p_playerId, uint8_t p_appendAudio);
 	void playCurrentSuit (uint8_t p_suitId, uint8_t p_appendAudio);
-	void playConfirmPickupCard (uint8_t p_cardId, uint8_t p_suitId, uint8_t p_appendAudio);
+	void playUndoMode ( uint8_t p_confirmedFlag, uint8_t p_redoFlag, uint8_t p_undoEventId, uint8_t p_playerId, uint8_t p_cardId, uint8_t p_suitId, uint8_t p_appendAudio);
 	void playSelectedCard (uint8_t p_playerId, uint8_t p_cardId, uint8_t p_suitId, uint8_t p_appendAudio);
 	void playBadCard (uint8_t p_suitId, uint8_t p_appendAudio);
-	void playConfirmPickupCardOther (uint8_t p_playerId, uint8_t p_cardId, uint8_t p_suitId, uint8_t p_appendAudio);
 	void playContract (uint8_t p_playerId, uint8_t p_suitId, uint8_t p_numTricks, uint8_t p_appendAudio);
 	void playCardPlayed (uint8_t p_playerId, PGM_P p_action, uint8_t p_cardId, uint8_t p_suitId, uint8_t p_appendAudio);
 	void playHandComplete (uint8_t p_playerId, uint8_t p_appendAudio);

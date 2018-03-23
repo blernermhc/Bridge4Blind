@@ -323,19 +323,95 @@ void Phrases::playCurrentSuit (uint8_t p_suitId, uint8_t p_appendAudio)
 }
 
 //----------------------------------------------------------------------
-// 6  Press again to place Ten Diamond back into your hand
+// Various announcements regarding processing undo and redo commands
 //----------------------------------------------------------------------
-
-void Phrases::playConfirmPickupCard (uint8_t p_cardId, uint8_t p_suitId, uint8_t p_appendAudio)
+void Phrases::playUndoMode ( uint8_t p_confirmedFlag, uint8_t p_redoFlag, uint8_t p_undoEventId, uint8_t p_playerId, uint8_t p_cardId, uint8_t p_suitId, uint8_t p_appendAudio)
 {
   if (s_silent) return;
 
   if (! p_appendAudio) m_wave->clearSequence();
 
-  m_wave->addSequence(SND_PRESS_AGAIN_TO_PLACE);
-  pCard(p_cardId);
-  pSuit(p_suitId, true);
-  m_wave->addSequence(SND_BACK_IN_HAND);
+  if (! p_confirmedFlag)
+  {
+  	  m_wave->addSequence(SND_PRESS_AGAIN_TO);
+  }
+
+  if (p_redoFlag)
+  {
+  	  m_wave->addSequence(SND_REDO);
+  }
+
+  switch (p_undoEventId)
+  {
+  	  case UNDO_EVENTID_UNKNOWN:
+  	  {
+  	  	  m_wave->addSequence(SND_UNDO);
+  	  }
+  	  break;
+
+  	  case UNDO_EVENTID_NEW_HAND:
+  	  {
+  		  if (p_confirmedFlag)
+  			  m_wave->addSequence(SND_RESTORED);
+  		  else
+  			  m_wave->addSequence(SND_RESTORE);
+
+  		  m_wave->addSequence(SND_PREVIOUS_HAND);
+  	  }
+  	  break;
+
+  	  case UNDO_EVENTID_DEAL_HANDS:
+  	  {
+  		  if (p_confirmedFlag)
+  			  m_wave->addSequence(SND_CLEARED);
+  		  else
+  			  m_wave->addSequence(SND_CLEAR);
+
+  		  m_wave->addSequence(SND_ALL_HANDS);
+  	  }
+  	  break;
+
+  	  case UNDO_EVENTID_SCAN_CARD:
+  	  {
+  		  if (p_confirmedFlag)
+  			  m_wave->addSequence(SND_PICKED_UP);
+  		  else
+  			  m_wave->addSequence(SND_PICK_UP);
+  		  pCard(p_cardId);
+  		  pSuit(p_suitId, true);
+  		  m_wave->addSequence(SND_BY);
+  		  pPlayer(p_playerId);
+  	  }
+  	  break;
+
+  	  case UNDO_EVENTID_SCAN_HAND:
+  	  {
+  		  if (p_confirmedFlag)
+  			  m_wave->addSequence(SND_RETURNED);
+  		  else
+  			  m_wave->addSequence(SND_RETURN);
+  		  m_wave->addSequence(SND_HAND);
+  		  m_wave->addSequence(SND_BY);
+  		  pPlayer(p_playerId);
+  	  }
+  	  break;
+
+  	  case UNDO_EVENTID_SET_CONTRACT:
+  	  {
+  		  if (p_confirmedFlag)
+  			  m_wave->addSequence(SND_REMOVED);
+  		  else
+  			  m_wave->addSequence(SND_REMOVE);
+  		  m_wave->addSequence(SND_CONTRACT);
+  	  }
+  	  break;
+
+  	  default:
+  	  {
+  		  playNumber(SND_UNKNOWN_EVENTID, p_undoEventId, p_appendAudio);
+  	  }
+  	  break;
+  }
 
   if (! p_appendAudio) m_wave->playNext();
 }
@@ -373,25 +449,6 @@ void Phrases::playBadCard (uint8_t p_suitId, uint8_t p_appendAudio)
   m_wave->addSequence(SND_CANNOT_PLAY);
   m_wave->addSequence(SND_PLAY_IS);
   pSuit(p_suitId, false);
-
-  if (! p_appendAudio) m_wave->playNext();
-}
-
-//----------------------------------------------------------------------
-// 12 Press again for West to pick up Four Diamond
-//----------------------------------------------------------------------
-
-void Phrases::playConfirmPickupCardOther (uint8_t p_playerId, uint8_t p_cardId, uint8_t p_suitId, uint8_t p_appendAudio)
-{
-  if (s_silent) return;
-
-  if (! p_appendAudio) m_wave->clearSequence();
-
-  m_wave->addSequence(SND_PRESS_AGAIN_FOR);
-  pPlayer(p_playerId);
-  m_wave->addSequence(SND_TO_PICK_UP);
-  pCard(p_cardId);
-  pSuit(p_suitId, true);
 
   if (! p_appendAudio) m_wave->playNext();
 }

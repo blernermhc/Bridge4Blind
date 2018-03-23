@@ -51,6 +51,11 @@ public class State_ScanDummy extends ControllerState
 		{
 			gameListener.sig_scanDummyHand();
 		}
+		
+		if (m_game.getBridgeHand().isAutoScan())
+		{
+			m_game.getBridgeHand().sc_scanHands();
+		}
 	}
 
 	/* (non-Javadoc)

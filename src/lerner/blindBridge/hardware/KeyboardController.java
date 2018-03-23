@@ -33,7 +33,7 @@ public class KeyboardController extends SerialController implements Runnable
 		, D1, D2, D3, D4, DC
 		, UP, DOWN
 		, REPEAT, STATE
-		, UNDO, MASTERUNDO
+		, FUNCTION
 	};
 	
 	/**
@@ -50,12 +50,12 @@ public class KeyboardController extends SerialController implements Runnable
 		NOOP					(0, 0)
 		, SCAN_HAND			(1, 1500)
 		, SCAN_DUMMY			(2, 1500)
-		, CLEAR_DUMMY		(3, 0)
+		// 3 not used
 		, REMIND_PLAY		(4, 1000)
 		, REMIND_DUMMY		(5, 1000)
 		, HAND_COMPLETE		(6, 1500)
-		, ALREADY_PLAYED		(7, 2000)
-		, PRESS_TO_CONFIRM	(8, 2000)
+		// 7 not used
+		// 8 not used
 		, NEW_GAME			(9, 0)
 		, NEW_HAND			(10, 0)
 		, START_RELOAD		(11, 1500)
@@ -100,6 +100,7 @@ public class KeyboardController extends SerialController implements Runnable
 		, UNPLAY_CARD		(7, 3000)
 		, TRICK_TAKEN		(8, 1500)
 		, CANNOT_PLAY_WRONG_SUIT		(9, 4000)
+		, UNDO				(15, 4000)
 		;
 		
 		private int m_msgId;
@@ -115,6 +116,37 @@ public class KeyboardController extends SerialController implements Runnable
 		public int getReserveInMillis() { return m_reserveInMillis; }
 	};
 
+	/**
+	 *********************************************************************
+	 * Multi-byte Messages to send to Keyboard Controller.
+	 * The first parameter is the ID of the event to send in the message.
+	 * The second parameter is the time in milliseconds we expect the
+	 * audio associated with the event will take to play.
+	 * The system ensures that once a message is sent, the next message
+	 * will be sent no sooner than allowed by the reserve. 
+	 **********************************************************************
+	 */
+	public enum UNDO_EVENT {
+		NOOP					(0, 0)
+		, NEW_HAND			(1, 2000)
+		, DEAL_HANDS			(2, 2000)
+		, SCAN_CARD			(3, 2250)
+		, SCAN_HAND			(4, 3000)
+		, SET_CONTRACT		(5, 1500)
+		;
+		
+		private int m_msgId;
+		private int m_reserveInMillis;
+		
+		UNDO_EVENT (int p_msgId, int p_reserveInMillis)
+		{
+			m_msgId				= p_msgId;
+			m_reserveInMillis	= p_reserveInMillis;
+		}
+		
+		public int getMsgId() { return m_msgId; }
+		public int getReserveInMillis() { return m_reserveInMillis; }
+	};
 	//--------------------------------------------------
 	// CONSTANTS
 	//--------------------------------------------------
@@ -206,25 +238,27 @@ public class KeyboardController extends SerialController implements Runnable
 	 ***********************************************************************/
 	class KbdMsg_data extends KbdMsg
 	{
-		int byte0;
-		int byte1;
-		int numBytes;	// 1 or 2
+		int[] byteValues;
 		int reserve;
 		String description;
 		
 		public KbdMsg_data (int p_byte0, int p_reserve, String p_description)
 		{
-			numBytes = 1;
-			byte0 = p_byte0;
+			byteValues = new int[] { p_byte0 };
 			reserve = p_reserve;
 			description = p_description;
 		}
 		
 		public KbdMsg_data (int p_byte0, int p_byte1, int p_reserve, String p_description)
 		{
-			numBytes = 2;
-			byte0 = p_byte0;
-			byte1 = p_byte1;
+			byteValues = new int[] { p_byte0, p_byte1 };
+			reserve = p_reserve;
+			description = p_description;
+		}
+		
+		public KbdMsg_data (int p_byte0, int p_byte1, int p_byte2, int p_reserve, String p_description)
+		{
+			byteValues = new int[] { p_byte0, p_byte1, p_byte2 };
 			reserve = p_reserve;
 			description = p_description;
 		}
@@ -234,10 +268,11 @@ public class KeyboardController extends SerialController implements Runnable
 			StringBuilder out = new StringBuilder();
 			out.append("KbdMsg_data:");
 			out.append("\n  description: " + description);
-			out.append("\n  numBytes: " + numBytes);
-			out.append("\n  byte0: " + byte0 + " (" + Integer.toBinaryString(byte0) + ")");
-			if (numBytes > 1)
-				out.append("\n  byte1: " + byte1 + " (" + Integer.toBinaryString(byte1) + ")");
+			out.append("\n  numBytes: " + byteValues.length);
+			for (int i = 0; i < byteValues.length; ++i)
+			{
+				out.append("\n  byte" + i + ": " + byteValues[i] + " (" + Integer.toBinaryString(byteValues[i]) + ")");
+			}
 			out.append("\n  reserve: " + reserve);
 			out.append("\n");
 			
@@ -434,8 +469,10 @@ public class KeyboardController extends SerialController implements Runnable
 
 					try
 					{
-						if (dmsg.numBytes >= 1) m_output.write((byte)dmsg.byte0);	
-						if (dmsg.numBytes >= 2) m_output.write((byte)dmsg.byte1);
+						for (int byteValue : dmsg.byteValues)
+						{
+							m_output.write((byte)byteValue);
+						}
 					}
 					catch (Exception e)
 					{
@@ -605,7 +642,42 @@ public class KeyboardController extends SerialController implements Runnable
 	}
 		
 	/***********************************************************************
-	 * Sends a generic multi-byte message to the Keyboard Controller.
+	 * Sends a message to the Keyboard Controller announcing an undo or redo event.
+	 * @param p_confirmed	if true, message is confirming that an undo or redo event was processed
+	 * 						if false, message is asking for confirmation before processing the undo or redo event.
+	 * @param p_redoFlag		if true, this is a redo. Otherwise, this is an undo. 
+	 * @param p_undoEvent	the event being undone or redone.
+	 * @param p_direction	position of player involved in event
+	 * @param p_card			card involved in event
+	 * @return true if sent, false if failed
+	 ***********************************************************************/
+	public boolean send_undoAnnouncement (boolean p_confirmed, boolean p_redoFlag, UNDO_EVENT p_undoEvent, Direction p_direction, Card p_card)
+	{
+		if (s_cat.isDebugEnabled()) s_cat.debug("send_undoAnnouncement: entered"
+				+ " confirmed: " + p_confirmed
+				+ " undoEvent: " + p_undoEvent
+				+ " direction: " + p_direction
+				+ " card: " + p_card
+				);
+
+		int undoMsg = 0;
+		if (p_confirmed)		undoMsg |= 0b10000000;	// confirmed
+		if (p_redoFlag)		undoMsg |= 0b01000000;	// redo rather than undo
+		undoMsg |= p_undoEvent.getMsgId();			// add undo event id
+		
+		boolean status = send_multiByteMessage( MULTIBYTE_MESSAGE.UNDO
+		                                        , p_card.getSuit().ordinal()
+		                                        , p_direction.ordinal()
+		                                        , p_card.getRank().ordinal()
+		                                        , undoMsg
+                								  );
+
+		if (s_cat.isDebugEnabled()) s_cat.debug("send_undoAnnouncement: finished");
+		return status;
+	}
+	
+	/***********************************************************************
+	 * Sends a generic two-byte message to the Keyboard Controller.
 	 * Logs an error if the message fails.
 	 * @param p_msg	the message to send
 	 * @param p_suit		the suit value (3 bits)
@@ -616,10 +688,42 @@ public class KeyboardController extends SerialController implements Runnable
 	public boolean send_multiByteMessage(MULTIBYTE_MESSAGE p_msg, int p_suit, int p_player, int p_cardNumber)
 	{
 		if (s_cat.isDebugEnabled()) s_cat.debug("send_multiByteMessage: entered"
+                + " msg: " + p_msg
+                + " suit: " + p_suit
+                + " player: " + p_player
+                + " cardNum: " + p_cardNumber
+                );
+		
+		boolean status	= true;
+		int opId			= p_msg.getMsgId();
+		int reserve		= p_msg.getReserveInMillis();
+
+		queueMessage(new KbdMsg_data( ((0b10000000) | ((opId & 0b1111) << 3) | (p_suit & 0b111))
+		                              , (((p_player & 0b1111) << 4) | (p_cardNumber & 0b1111))
+		                              , reserve
+		                              , p_msg.toString()));
+
+		return status;
+	}
+	
+	/***********************************************************************
+	 * Sends a generic multi-byte message to the Keyboard Controller.
+	 * Logs an error if the message fails.
+	 * @param p_msg	the message to send
+	 * @param p_suit		the suit value (3 bits)
+	 * @param p_player	the player position value (4 bits)
+	 * @param p_cardNumber	the number of the card (4 bits - 0:Two, 1:Three, ..., 12:Ace)
+	 * @param p_addlByte		an additional byte of data to send (ignore if -1)
+	 * @return true if sent, false if failed
+	 ***********************************************************************/
+	public boolean send_multiByteMessage(MULTIBYTE_MESSAGE p_msg, int p_suit, int p_player, int p_cardNumber, int p_addlByte)
+	{
+		if (s_cat.isDebugEnabled()) s_cat.debug("send_multiByteMessage: entered"
 		                                        + " msg: " + p_msg
 		                                        + " suit: " + p_suit
 		                                        + " player: " + p_player
 		                                        + " cardNum: " + p_cardNumber
+		                                        + " addlByte: " + p_addlByte
 		                                        );
 		boolean status	= true;
 		int opId			= p_msg.getMsgId();
@@ -627,6 +731,7 @@ public class KeyboardController extends SerialController implements Runnable
 
 		queueMessage(new KbdMsg_data( ((0b10000000) | ((opId & 0b1111) << 3) | (p_suit & 0b111))
 		                         , (((p_player & 0b1111) << 4) | (p_cardNumber & 0b1111))
+		                         , p_addlByte
 		                         , reserve
 		                         , p_msg.toString()));
 
@@ -803,6 +908,7 @@ public class KeyboardController extends SerialController implements Runnable
 		}
 		else if (opId == 2)
 		{
+			// remove these, using text command now
 			if (cardId == 0)
 			{
 				if (s_cat.isDebugEnabled()) s_cat.debug("processIncomingMessage: undo play card");
@@ -863,8 +969,10 @@ public class KeyboardController extends SerialController implements Runnable
 		, PLAY			("Play card: position cardAbbrev (e.g., N QH)")
 		, KBDPOS			("Indicate keyboard position: newPosition)")
 		, CONTRACT		("Set contract: position numTricks suit")
-		, DEALHANDS		("Asks Game Controller to Deal hands")
+		, DEAL			("Asks Game Controller to Deal hands")
+		, NEWHAND		("Asks Game Controller to start a new hand")
 		, UNDO			("Undo")
+		, REDO			("Redo last undo")
 		;
 		
 		private String m_description;
@@ -963,12 +1071,19 @@ public class KeyboardController extends SerialController implements Runnable
 				}
 				break;
 
-				case DEALHANDS:
+				case DEAL:
 				{
 					if (args.length != 1)
 						throw new IllegalArgumentException("Wrong number of arguments");
-					// TODO: Not implemented yet
-					// m_game.getBridgeHand().evt_dealHands(-1);
+					m_game.getBridgeHand().evt_dealHands(-1);
+				}
+				break;
+						
+				case NEWHAND:
+				{
+					if (args.length != 1)
+						throw new IllegalArgumentException("Wrong number of arguments");
+					m_game.evt_startNewHand();
 				}
 				break;
 						
@@ -976,7 +1091,15 @@ public class KeyboardController extends SerialController implements Runnable
 				{
 					if (args.length != 1)
 						throw new IllegalArgumentException("Wrong number of arguments");
-					m_game.getBridgeHand().evt_scanHandTest(m_game.getBridgeHand().getDummyPosition(), 0);
+					m_game.getBridgeHand().evt_undo();
+				}
+				break;
+										
+				case REDO:
+				{
+					if (args.length != 1)
+						throw new IllegalArgumentException("Wrong number of arguments");
+					m_game.getBridgeHand().evt_redo();
 				}
 				break;
 										
@@ -1055,6 +1178,18 @@ public class KeyboardController extends SerialController implements Runnable
 			{
 				send_simpleMessage(KBD_MESSAGE.HAND_COMPLETE);
 			}
+		}
+	}
+
+	public void sig_cardScanned_undo ( boolean p_redoFlag, Direction p_direction, Card p_card, boolean p_handComplete, boolean p_confirmed )
+	{
+		if (p_handComplete)
+		{
+			send_undoAnnouncement(p_confirmed, p_redoFlag, UNDO_EVENT.SCAN_HAND, p_direction, p_card);
+		}
+		else
+		{
+			send_undoAnnouncement(p_confirmed, p_redoFlag, UNDO_EVENT.SCAN_CARD, p_direction, p_card);
 		}
 	}
 

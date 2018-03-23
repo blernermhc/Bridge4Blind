@@ -174,16 +174,26 @@ void BridgeHand::cannotPlay(uint8_t p_suitId, uint8_t p_repeat)
   m_phrases->playBadCard(p_suitId, NEW_AUDIO);
 }
 
-void BridgeHand::clearDummy(uint8_t p_repeat)
+void BridgeHand::handComplete(uint8_t p_repeat)
 {
-  if (! p_repeat)
-  {
-    for (uint16_t suitId = 0; suitId < 4; ++suitId)
-    {
-      m_hands[1][suitId] = 0;
-    }
-  }
-  m_phrases->playMessage(SND_PICKUP_DUMMY, NEW_AUDIO);
+	m_phrases->playNewAudio();
+
+	m_phrases->playMessage(SND_HAND_IS_COMPLETE, APPEND_AUDIO);
+	m_phrases->playPause();
+
+	m_phrases->playTricksWon(SND_WE, m_ourTricks, APPEND_AUDIO);
+	m_phrases->playPause();
+
+	m_phrases->playTricksWon(SND_THEY, m_theirTricks, APPEND_AUDIO);
+	m_phrases->playPause();
+
+	if (m_contractPlayerId != PLAYERID_NOT_SET)
+	{
+		m_phrases->playContract(m_contractPlayerId, m_contractSuitId, m_contractNumTricks, APPEND_AUDIO);
+		m_phrases->playPause();
+	}
+
+	m_phrases->playNext();
 }
 
 void BridgeHand::trickFinished(uint8_t p_playerId, uint8_t p_repeat)

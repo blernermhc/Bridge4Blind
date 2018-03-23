@@ -44,24 +44,47 @@ volatile uint8_t		Button    = 0;			// Required for 64 Button Shield (SPI Only)
 volatile uint8_t		m_previousButtonId = 0;	// Used to detect pressing same button twice (e.g., State)
 
 // Function button cycle
+// NOTE: sendPosition() sets mode to the mode prior to MODE_SET_POSITION.
+//       update that function if the mode order changes.
 #define MODE_PLAY_HAND 0
-#define MODE_SET_POSITION 1
-#define MODE_ENTER_CONTRACT 2
-// #define MODE_DEAL_HANDS 3
-// #define MODE_SET_OPTIONS 4
+#define MODE_UNDO 1
+#define MODE_REDO 2
+#define MODE_SET_POSITION 3
+#define MODE_ENTER_CONTRACT 4
+#define MODE_RESYNCHRONIZE 5
+#define MODE_START_NEW_HAND 6
+#define MODE_DEAL_HANDS 7
+// #define MODE_SET_OPTIONS 6
 
 #define SUBMODE_ENTER_CONTRACT_WINNER 0
 #define SUBMODE_ENTER_CONTRACT_TRICKS 1
 #define SUBMODE_ENTER_CONTRACT_SUIT 2
 
+// Play must be pressed twice
+#define SUBMODE_START_NEW_HAND_INITIAL 0
+#define SUBMODE_START_NEW_HAND_WAIT_CONFIRM 1
+
+// Play must be pressed twice
+#define SUBMODE_UNDO_WAIT_CONFIRM 1
+
+// indicates keyboard mode (determines what keys are active, etc.)
 uint8_t s_mode = MODE_PLAY_HAND;
+
+// for multi-step modes, indicates what step we are at (e.g., for setting contract)
+uint8_t s_submode = 0;
+
+// data to be sent using the various function modes
+
+// playerId to send for setPosition mode
 uint8_t s_setPosition_playerId;
 
-uint8_t s_contract_mode = SUBMODE_ENTER_CONTRACT_WINNER;
+// contract info to send for enter contract mode
 uint8_t s_contract_winner;
 uint8_t s_contract_tricks;
 uint8_t s_contract_suit;
 
+// indicates if undo mode is attempting an undo or a redo
+uint8_t s_redoFlag;
 
 #define DEBOUNCE 100  // button debouncer
 
@@ -242,8 +265,39 @@ void loop()
 #define INPUT_CARDID_MASK 0b00001111
 #define INPUT_BUTTON_MASK 0b01000000
 
+#define INPUT_UNDO_MASK 0b11111000
+#define INPUT_UNDO_CONFIRM_FLAG_MASK 0b10000000
+#define INPUT_UNDO_REDO_FLAG_MASK 0b01000000
+#define INPUT_UNDO_EVENTID_MASK 0b00111111
+
 //#define DEBUG_KB 1
 
+/****************************************************************** 
+ * Parse and process three-byte requests.
+ ****************************************************************/
+void processUndoAnnouncement (uint8_t p_input0, uint8_t p_input1, uint8_t p_input2, uint8_t p_repeat)
+{
+  uint8_t opId = ((p_input0 & INPUT_OPID2_MASK) >> INPUT_OPID2_SHIFT);
+  uint8_t suitId = (p_input0 & INPUT_SUITID_MASK);
+  uint8_t playerId = ((p_input1 & INPUT_PLAYERID_MASK) >> INPUT_PLAYERID_SHIFT);
+  uint8_t cardId = (p_input1 & INPUT_CARDID_MASK);
+  
+  uint8_t confirmedFlag	= ((p_input2 & INPUT_UNDO_CONFIRM_FLAG_MASK) != 0);
+  uint8_t redoFlag		= ((p_input2 & INPUT_UNDO_REDO_FLAG_MASK) != 0);
+  uint8_t undoEventId	= (p_input2 & INPUT_UNDO_EVENTID_MASK);
+
+  if (confirmedFlag)
+  {
+	  s_mode = MODE_PLAY_HAND;
+  }
+  else
+  {
+	  s_mode = MODE_UNDO;
+	  s_submode = SUBMODE_UNDO_WAIT_CONFIRM;
+	  s_redoFlag = redoFlag;
+  }
+  phrases.playUndoMode(confirmedFlag, redoFlag, undoEventId, playerId, cardId, suitId, NEW_AUDIO);
+}
 
 /****************************************************************** 
  * Parse and process two-byte requests.
@@ -312,12 +366,9 @@ void processInput1 (uint8_t p_input0, uint8_t p_repeat)
     case 0:	break;
     case 1:	phrases.playMessage(SND_SCAN_HAND, NEW_AUDIO); eventList.addEvent(p_input0, p_repeat); break;
     case 2:	phrases.playMessage(SND_SCAN_DUMMY, NEW_AUDIO); eventList.addEvent(p_input0, p_repeat); break;
-    case 3:	bridgeHand.clearDummy(p_repeat); eventList.addEvent(p_input0, p_repeat); break;
     case 4:	phrases.playMessage(SND_IN_HAND, NEW_AUDIO); eventList.addEvent(p_input0, p_repeat); break;
     case 5:	phrases.playMessage(SND_ON_BOARD, NEW_AUDIO); eventList.addEvent(p_input0, p_repeat); break;
-    case 6:	phrases.playMessage(SND_HAND_IS_COMPLETE, NEW_AUDIO); eventList.addEvent(p_input0, p_repeat); break;
-    case 7:	phrases.playMessage(SND_ALREADY_PLAYED, NEW_AUDIO); eventList.addEvent(p_input0, p_repeat); break;
-//TODO:    case 8:	phrases.playMessage(SND_CONFIRM_UNDO, NEW_AUDIO); eventList.addEvent(p_input0, p_repeat); break;
+    case 6:	bridgeHand.handComplete(p_repeat); eventList.addEvent(p_input0, p_repeat); break;
     case 9:	eventList.resetEventList(p_repeat); bridgeHand.newGame(); break;
     case 10:	eventList.resetEventList(p_repeat); bridgeHand.newHand(); break;
     case 11:	eventList.resetEventList(false); keyboardRestartInitiate(); break;
@@ -346,7 +397,8 @@ void processInput1 (uint8_t p_input0, uint8_t p_repeat)
 void keyboardRestartInitiate()
 {
   Serial.write(START_SEND_MSG);		// tell Game Controller to read to next newline
-  putstring_nl("Sending resetart");
+  printSerialMessagePrefix();
+  putstring_nl("Sending restart");
 
   phrases.playMessage(SND_RESET_STARTED, NEW_AUDIO); 
   phrases.setSilentMode(true);
@@ -394,14 +446,16 @@ void processInputButton (uint8_t p_input0, uint8_t p_repeat)
     case 12:	btn_down(); break;
     case 13:	btn_repeat(); break;
     case 14:	btn_state(buttonId == m_previousButtonId); break;
-    case 15:	btn_undo(); break;
-    case 16:	btn_masterUndo(); break;
+    case 15:	btn_function(); break;
     default:
       phrases.playNumber(SND_UNEXPECTED_BUTTON, buttonId, NEW_AUDIO);
   }
   m_previousButtonId = buttonId;
 }
 
+/****************************************************************** 
+ * Read commands from the serial line
+ ****************************************************************/
 void processInput()
 {
   if (Serial.available() <= 0) return;
@@ -421,7 +475,26 @@ void processInput()
       return;
     }
     uint8_t input1 = Serial.read();
-    processInput2(input0, input1, 0);
+    
+    if ((input0 & INPUT_UNDO_MASK) == INPUT_UNDO_MASK)
+    { // read third byte for undo/redo announcements
+      int maxAttempts = 10000;
+      while (Serial.available() <= 0 && --maxAttempts > 0);	// wait for 2nd byte
+      if (Serial.available() <= 0)
+      {
+        uint8_t opId = ((input0 & INPUT_OPID2_MASK) >> INPUT_OPID2_SHIFT);
+        phrases.playNumber(SND_INCOMPLETE_MSG, opId, NEW_AUDIO);
+        uint8_t code = 0b11100000 | opId;
+        Serial.write(code);
+        return;
+      }
+      uint8_t input2 = Serial.read();
+      processUndoAnnouncement(input0, input1, input2, 0);
+    }
+    else
+    {
+		processInput2(input0, input1, 0);
+    }
   }
   else
   {
@@ -517,11 +590,16 @@ void btn_up()
     Serial.print(bridgeHand.m_dummyPlayerId);
     putstring_nl("");
 
-    if (s_mode == MODE_ENTER_CONTRACT && s_contract_mode == SUBMODE_ENTER_CONTRACT_TRICKS)
+    if (s_mode == MODE_ENTER_CONTRACT && s_submode == SUBMODE_ENTER_CONTRACT_TRICKS)
     {
     		s_contract_tricks = s_contract_tricks + 1;
     		if (s_contract_tricks > 7) s_contract_tricks = 7;
     		phrases.playNumber(0, s_contract_tricks, NEW_AUDIO);
+    		return;
+    }
+    else if (s_mode != MODE_PLAY_HAND)
+    {
+    		announce_mode();
     		return;
     }
     
@@ -566,11 +644,16 @@ void btn_down()
     Serial.print(bridgeHand.m_dummyPlayerId);
     putstring_nl("");
 
-    if (s_mode == MODE_ENTER_CONTRACT && s_contract_mode == SUBMODE_ENTER_CONTRACT_TRICKS)
+    if (s_mode == MODE_ENTER_CONTRACT && s_submode == SUBMODE_ENTER_CONTRACT_TRICKS)
     {
     		s_contract_tricks = s_contract_tricks - 1;
     		if (s_contract_tricks < 1) s_contract_tricks = 1;
     		phrases.playNumber(0, s_contract_tricks, NEW_AUDIO);
+    		return;
+    }
+    else if (s_mode != MODE_PLAY_HAND)
+    {
+    		announce_mode();
     		return;
     }
     
@@ -603,6 +686,14 @@ void btn_down()
 //----------------------------------------------------------------------
 void btn_repeat()
 {
+    if (s_mode != MODE_PLAY_HAND)
+    {	// if in a function mode, restore normal PLAY HAND mode
+    		s_mode = MODE_PLAY_HAND;
+    		s_submode = 0;
+    		announce_mode();
+    		return;
+    }
+
   uint8_t input0 = eventList.previousEvent();
   if ((input0 & INPUT_FORMAT_MASK) != 0)
   {
@@ -623,98 +714,120 @@ void btn_repeat()
 //----------------------------------------------------------------------
 void btn_state(uint8_t p_isSecondPress)
 {
+    if (s_mode != MODE_PLAY_HAND)
+    {
+    		announce_mode();
+    		return;
+    }
+
   if (p_isSecondPress &&  wave.isplaying)
     wave.stop();
   else
     bridgeHand.playState();
 }  
 
-#define UNDO_FLAG 0b10000000
-#define UNDO_MSG 0b01000000
-uint8_t s_cardPlayedMsg = NO_CARD_PLAYED;
-
-//----------------------------------------------------------------------
-//----------------------------------------------------------------------
-void btn_undo()
-{
-  if (bridgeHand.m_myPlayerId == bridgeHand.m_dummyPlayerId)
-  {
-	phrases.playMessage(SND_YOU_ARE_DUMMY, NEW_AUDIO);
-	return;
-  }
-
-  if (s_cardPlayedMsg == NO_CARD_PLAYED)
-  {
-	phrases.playMessage(SND_NOT_PLAYED, NEW_AUDIO);
-	return;
-  }
-
-  uint8_t suitId = bridgeHand.cardSuit(s_cardPlayedMsg);
-  uint8_t cardId = bridgeHand.cardNumber(s_cardPlayedMsg);
-
-  if ((s_cardPlayedMsg & UNDO_FLAG) != 0)
-  {
-	phrases.playConfirmPickupCard(cardId, suitId, NEW_AUDIO);
-	s_cardPlayedMsg &= ~UNDO_FLAG; // note undo has been pressed once
-	return;
-  }
-
-  // send undo
-  uint8_t msg = (13 * suitId) + cardId;	// 0-51, 0: two; 1: three; ... 12: ace; repeat
-  Serial.write(UNDO_MSG | msg);
-
-  s_cardPlayedMsg = NO_CARD_PLAYED;
-}  
-
-//----------------------------------------------------------------------
-//----------------------------------------------------------------------
-void btn_masterUndo()
-{
-  //TODO: not yet implemented
-}  
-
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
 void btn_play()
 {
-	if (s_mode == MODE_SET_POSITION)
+	switch (s_mode)
 	{
-		  Serial.write(START_SEND_MSG);  // tell Game Controller to read to next newline
-		  putstring("CMD: KBDPOS ");
-		  Serial.print(s_setPosition_playerId);
-		  putstring_nl("");
+		case (MODE_UNDO):
+		{
+			Serial.write(START_SEND_MSG);  // tell Game Controller to read to next newline
+			putstring("CMD: UNDO");
+			putstring_nl("");
 
-		  s_mode = MODE_PLAY_HAND;
-		  return;
-	}
+			s_mode = MODE_PLAY_HAND;
+			return;
+		}
+		break;
 
-	if (s_mode == MODE_ENTER_CONTRACT)
-	{
-		s_contract_mode = s_contract_mode + 1;
-		if (s_contract_mode >= NUMCONTRACTMODES)
+	    case (MODE_SET_POSITION):
 		{
 			  Serial.write(START_SEND_MSG);  // tell Game Controller to read to next newline
-			  putstring("CMD: CONTRACT ");
-			  Serial.print(s_contract_winner);
-			  putstring(" ");
-			  Serial.print(s_contract_tricks);
-			  putstring(" ");
-			  Serial.print(s_contract_suit);
+			  putstring("CMD: KBDPOS ");
+			  Serial.print(s_setPosition_playerId);
 			  putstring_nl("");
 
-			  s_contract_mode = 0;
 			  s_mode = MODE_PLAY_HAND;
+			  return;
 		}
-		else
+	    break;
+	    
+	    case (MODE_ENTER_CONTRACT):
 		{
-			phrases.playContractMode(s_contract_mode, NEW_AUDIO);
+			s_submode = s_submode + 1;
+			if (s_submode >= NUMCONTRACTMODES)
+			{
+				  Serial.write(START_SEND_MSG);  // tell Game Controller to read to next newline
+				  putstring("CMD: CONTRACT ");
+				  Serial.print(s_contract_winner);
+				  putstring(" ");
+				  Serial.print(s_contract_tricks);
+				  putstring(" ");
+				  Serial.print(s_contract_suit);
+				  putstring_nl("");
+
+				  s_submode = 0;
+				  s_mode = MODE_PLAY_HAND;
+			}
+			else
+			{
+				phrases.playContractMode(s_submode, NEW_AUDIO);
+			}
+			return;
 		}
-		return;
+	    break;
+
+	    case (MODE_RESYNCHRONIZE):
+		{
+			  Serial.write(START_SEND_MSG);  // tell Game Controller to read to next newline
+			  putstring("CMD: RESET");
+			  putstring_nl("");
+
+			  s_mode = MODE_PLAY_HAND;
+			  return;
+		}
+	    break;
+	    
+	    case (MODE_START_NEW_HAND):
+		{
+			if (s_submode == SUBMODE_START_NEW_HAND_WAIT_CONFIRM)
+			{
+				  Serial.write(START_SEND_MSG);  // tell Game Controller to read to next newline
+				  putstring("CMD: NEWHAND");
+				  putstring_nl("");
+
+				  s_submode = 0;
+				  s_mode = MODE_PLAY_HAND;
+			}
+			else
+			{
+				s_submode = s_submode + 1;
+				phrases.playMessage(SND_CONFIRM_START_NEW_HAND, NEW_AUDIO);
+			}
+			return;
+		}
+	    break;
+
+	    case (MODE_DEAL_HANDS):
+		{
+			  Serial.write(START_SEND_MSG);  // tell Game Controller to read to next newline
+			  putstring("CMD: DEAL");
+			  putstring_nl("");
+
+			  s_mode = MODE_PLAY_HAND;
+			  return;
+		}
+	    break;
+
+	    default: break;
 	}
 
   if (bridgeHand.m_myPlayerId == bridgeHand.m_dummyPlayerId)
   {
-	phrases.playMessage(SND_YOU_ARE_DUMMY, NEW_AUDIO);
+	  phrases.playMessage(SND_YOU_ARE_DUMMY, NEW_AUDIO);
 	return;
   }
 
@@ -729,50 +842,72 @@ void btn_play()
 
   Serial.write(START_SEND_MSG);  // tell Game Controller to read to next newline
   putstring("CMD: PLAY ");
-  Serial.print(bridgeHand.m_currentHandId);
+  if (bridgeHand.m_currentHandId == PLAYER_DUMMY)
+	  Serial.print(bridgeHand.m_dummyPlayerId);
+  else
+	  Serial.print(bridgeHand.m_myPlayerId);
   putstring(" ");
   Serial.print(s_selectedCardId);
   putstring(" ");
   Serial.print(s_selectedSuitId);
   putstring_nl("");
-
-  s_cardPlayedMsg = UNDO_FLAG | bridgeHand.encodeCard(s_selectedCardId, s_selectedSuitId);	// leading 1 indicates undo has not been pressed yet
 }  
 
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
 void btn_announceHand (uint8_t p_playerId, uint8_t p_buttonId)
 {
-  if (s_mode == MODE_SET_POSITION)
-  {
-    if (p_buttonId <= 3)
-    {
-      s_setPosition_playerId = p_buttonId;
-      phrases.playPosition(s_setPosition_playerId, NEW_AUDIO);
-    }
-    return;
-  }
+	if (s_mode != MODE_PLAY_HAND && p_buttonId > 3)
+	{	// current suit buttons are not used for function modes
+		announce_mode();
+		return;
+	}
+	
+	switch (s_mode)
+	{
+		case (MODE_PLAY_HAND): break;
+		
+		case (MODE_SET_POSITION):
+		{	// suit buttons correspond to player positions (e.g., NORTH, EAST).
+			s_setPosition_playerId = p_buttonId;
+			phrases.playPosition(s_setPosition_playerId, NEW_AUDIO);
+		    return;
+		}
+		break;
+		
+		case (MODE_ENTER_CONTRACT):
+		{	
+			if (s_submode == SUBMODE_ENTER_CONTRACT_WINNER)
+			{
+				  s_contract_winner = p_buttonId;
+				  phrases.playPosition(s_contract_winner, NEW_AUDIO);
+			}
+			else if (s_submode == SUBMODE_ENTER_CONTRACT_SUIT)
+			{
+				  s_contract_suit = p_buttonId;
+				  phrases.playSuit(s_contract_suit, true, NEW_AUDIO);
+			}
+			else
+			{	// only up/down buttons are be active
+				announce_mode();
+			}
+		    return;
+		}
+		break;
+		
+		default:
+		{
+			announce_mode();
+			return;
+		}
+		break;
+	}
 
-  if (s_mode == MODE_ENTER_CONTRACT && s_contract_mode == SUBMODE_ENTER_CONTRACT_WINNER)
-  {
-    if (p_buttonId <= 3)
-    {
-      s_contract_winner = p_buttonId;
-      phrases.playPosition(s_contract_winner, NEW_AUDIO);
-    }
-    return;
-  }
-
-  if (s_mode == MODE_ENTER_CONTRACT && s_contract_mode == SUBMODE_ENTER_CONTRACT_SUIT)
-  {
-    if (p_buttonId <= 3)
-    {
-      s_contract_suit = p_buttonId;
-      phrases.playSuit(s_contract_suit, true, NEW_AUDIO);
-    }
-    return;
-  }
-
+  //-------------------------------------------
+  // If current suit is set, the handler for the current suit buttons translates
+  // p_buttonId based on the current suit and p_buttonId will be <= 3.
+  // If this is not set, p_buttonId will be > 3.
+  //-------------------------------------------
   if (p_buttonId > 3)
   {
     // if current suit is not set yet, play "no cards played yet" message
@@ -835,7 +970,7 @@ void sendPosition (uint8_t p_repeat)
 		return;
 	}
 	
-	s_mode = MODE_PLAY_HAND;
+	s_mode = MODE_REDO;		// mode prior to MODE_SET_POSITION, since btn_function advances s_mode
 	btn_function();
 }
 
@@ -847,12 +982,54 @@ void btn_function ()
 	s_mode = s_mode + 1;
 	if (s_mode >= NUMMODES) s_mode = MODE_PLAY_HAND;
 
+	s_submode = 0;
+	
+	announce_mode();
+}
+
+//----------------------------------------------------------------------
+//----------------------------------------------------------------------
+void announce_mode ()
+{
 	phrases.playMode(s_mode, NEW_AUDIO);
-	if (s_mode == MODE_ENTER_CONTRACT)
+	
+	// play submodes, if required
+	switch (s_mode)
 	{
-		s_contract_mode = SUBMODE_ENTER_CONTRACT_WINNER;
-		s_contract_tricks = 0;
-		phrases.playContractMode(s_contract_mode, APPEND_AUDIO);
+		case (MODE_ENTER_CONTRACT):
+		{
+			phrases.playContractMode(s_submode, APPEND_AUDIO);			
+		}
+		break;
+
+		case (MODE_START_NEW_HAND):
+		{
+			if (s_submode == SUBMODE_START_NEW_HAND_WAIT_CONFIRM)
+				phrases.playMessage(SND_CONFIRM_START_NEW_HAND, APPEND_AUDIO);
+		}
+		break;
+		
+		case (MODE_UNDO):
+		{
+			if (s_submode == SUBMODE_UNDO_WAIT_CONFIRM)
+			{
+				// says "Press Play to confirm undo"
+				phrases.playUndoMode(false, false, UNDO_EVENTID_UNKNOWN, 0, 0, 0, APPEND_AUDIO);
+			}
+		}
+		break;
+
+		case (MODE_REDO):
+		{
+			if (s_submode == SUBMODE_UNDO_WAIT_CONFIRM)
+			{
+				// says "Press Play to confirm redo"
+				phrases.playUndoMode(false, true, UNDO_EVENTID_UNKNOWN, 0, 0, 0, APPEND_AUDIO);
+			}
+		}
+		break;
+
+		default: break;
 	}
 }
 
@@ -869,7 +1046,7 @@ void btn_function ()
      UP   --     D1    D2  |  D3    D4    --    --
      DN          H1    H2  |  H3    H4    --    PLAY
      --   --     HC    DC  |  --    --    --    PLAY
-     RPT  State  Func  RST |  UNDO  --    --    PLAY
+     RPT  State  Func  --  |  --    --    --    PLAY
 ********************************************************************/
 
 
@@ -923,9 +1100,9 @@ void checkButton()
       case 39:	btn_down(); break;
       case 37:	btn_repeat(); break;
       case 45:	btn_state(Button == m_previousButtonId); break;
-      case 28:	btn_undo(); break;
+      //case 28:	btn_undo(); break;
       case 53:	btn_function(); break;
-      case 61:  keyboardRestartInitiate(); break;
+      //case 61:  keyboardRestartInitiate(); break;
       default:	phrases.playNumber(SND_UNEXPECTED_BUTTON, Button, NEW_AUDIO);
     }    
     

@@ -82,21 +82,26 @@ public class BridgeHandStateController
 		while (true)
 		{
 			BridgeHandState newState = getForceNewState();
-			if (newState == null)
+			if (newState != null)
 			{
-				newState = m_currentState.getControllerState().checkState();
+				if (s_cat.isDebugEnabled())
+					s_cat.debug("runStateMachine: FORCED transition from " + m_currentState + " to " + newState);
+				m_currentState = newState;
+				m_currentState.getControllerState().onEntry(m_game);
 			}
-			
+
+			newState = m_currentState.getControllerState().checkState();
+
 			if (newState == null)
 			{
 				if (s_cat.isDebugEnabled())
 					s_cat.debug("runStateMachine: transition from " + m_currentState + " to exit");
 				break;
 			}
+
 			if (newState != m_currentState)
 			{
-				if (s_cat.isDebugEnabled()) s_cat.debug("runStateMachine: transition from "
-														+ m_currentState + " to " + newState);
+				if (s_cat.isDebugEnabled()) s_cat.debug("runStateMachine: transition from " + m_currentState + " to " + newState);
 				m_currentState = newState;
 				m_currentState.getControllerState().onEntry(m_game);
 			}

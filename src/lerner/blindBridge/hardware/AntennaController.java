@@ -436,6 +436,16 @@ public class AntennaController extends SerialController
 	}
 
 	/* (non-Javadoc)
+	 * @see lerner.blindBridge.model.GameListener#sig_cardScanned_undo(boolean, lerner.blindBridge.model.Direction, lerner.blindBridge.model.Card, boolean, boolean)
+	 */
+	@Override
+	public void sig_cardScanned_undo ( boolean p_redoFlag, Direction p_direction, Card p_card, boolean p_handComplete, boolean p_confirmed )
+	{
+		// nothing to do
+	}
+
+
+	/* (non-Javadoc)
 	 * @see model.GameListener#blindHandsScanned()
 	 */
 	@Override

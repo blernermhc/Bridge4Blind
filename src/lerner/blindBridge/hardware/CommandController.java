@@ -40,8 +40,7 @@ public class CommandController implements Runnable
 		, NEWHAND("Starts a new hand")
 		, CONTRACT("Set contract: position numTricks suit")
 		, PLAY("Play card (simulates RFID scan from sighted player next to play): position cardAbbrev (e.g., QH)")
-		, SCANHAND("Simulates scanning keyboard hand for testing: kbdPosition [predefined hand #]")
-		, SCANDUMMY("Simulates scanning the dummy's hand for teasting")
+		, DEAL("Deals a random or predefined hand and simulates scanning: [predefined hand #]")
 		, B("Simulates pressing a keyboard controller button for testing: kbdPosition buttonName")
 		, REOPEN("Reopens connection to keyboard controller: kbdPosition")
 		, REOPENANT("Reopens connection to antenna controller: kbdPosition")
@@ -331,28 +330,19 @@ public class CommandController implements Runnable
 					}
 					break;
 						
-					case SCANHAND:
+					case DEAL:
 					{
-						if (args.length != 2 && args.length != 3)
+						if (args.length != 1 && args.length != 2)
 							throw new IllegalArgumentException("Wrong number of arguments");
 						int idx = 0;
-						Direction direction = Direction.fromString(args[++idx]);
 						int testHand = -1;
-						if (args.length == 3)
+						if (args.length == 2)
 						{
 							testHand = Integer.parseInt(args[++idx]);
 							if (testHand < 0 || testHand >=  BridgeHand.m_testHand.length)
 							throw new IllegalArgumentException("Invalid testHand: " + testHand);
 						}
-						m_game.getBridgeHand().evt_scanHandTest(direction, testHand);
-					}
-					break;
-						
-					case SCANDUMMY:
-					{
-						if (args.length != 1)
-							throw new IllegalArgumentException("Wrong number of arguments");
-						m_game.getBridgeHand().evt_scanHandTest(m_game.getBridgeHand().getDummyPosition(), 0);
+						m_game.getBridgeHand().evt_dealHands(testHand);
 					}
 					break;
 						

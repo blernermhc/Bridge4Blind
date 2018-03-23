@@ -45,6 +45,8 @@ public interface GameListener
 	 */
 	public void sig_cardScanned(Direction p_direction, Card p_card, boolean p_handComplete);
 
+	public void sig_cardScanned_undo ( boolean p_redoFlag, Direction p_direction, Card p_card, boolean p_handComplete, boolean p_confirmed );
+	
 	/**
 	 * Called when all of the blind hands have been completely scanned in
 	 */

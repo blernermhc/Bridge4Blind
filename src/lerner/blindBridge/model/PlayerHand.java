@@ -51,11 +51,29 @@ public class PlayerHand
 	// METHODS
 	//--------------------------------------------------
 	
+	/***********************************************************************
+	 * Adds a card to the hand, usually from a scan.
+	 * @param p_card the card
+	 ***********************************************************************/
 	public void addCard (Card p_card)
 	{
 		m_cards.add(p_card);
 	}
 	
+	/***********************************************************************
+	 * Removes a card from the hand (invoked by undo)
+	 * @param p_card the card
+	 ***********************************************************************/
+	public void removeCard (Card p_card)
+	{
+		m_cards.remove(p_card);
+	}
+	
+	/***********************************************************************
+	 * Removes a card from the hand in order to play it.
+	 * @param p_card the card
+	 * @return true if the card is found, false otherwise.
+	 ***********************************************************************/
 	public boolean useCard (Card p_card)
 	{
 		if (! m_cards.remove(p_card))

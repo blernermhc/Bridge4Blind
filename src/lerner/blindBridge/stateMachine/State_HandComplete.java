@@ -59,8 +59,15 @@ public class State_HandComplete extends ControllerState
 	 */
 	public BridgeHandState checkState()
 	{
+		// Wait for a controller to start a new hand,
+		// so we can leave the current hand state visible.
+		// The Game#evt_startNewGame method sets the
+		// state to NEW_HAND.
+		/*
 		m_game.startNewHand();
 		return BridgeHandState.NEW_HAND;
+		*/
+		return BridgeHandState.HAND_COMPLETE;
 	}
 
 	//--------------------------------------------------

@@ -87,6 +87,12 @@ public class Game
 	/** Stack of played hands (used primarily for undo) */
 	private Deque<BridgeHand>	m_playedHands = new ArrayDeque<>();
 	
+	/** Stack of hands that were popped off of the played Hands (used for redo) */
+	private Deque<BridgeHand>	m_undoneHands = new ArrayDeque<>();
+	
+	/** set to true while we wait for keyboard to announce its position */
+	private boolean m_waitingForPosition = false;
+
 	//--------------------------------------------------
 	// CONSTRUCTORS
 	//--------------------------------------------------
@@ -386,9 +392,10 @@ public class Game
 		System.exit(0);
 	}
 	
-	/** set to true while we wait for keyboard to announce its position */
-	private boolean m_waitingForPosition = false;
-
+	//--------------------------------------------------
+	// ACTIONS TAKEN BY STATE MACHINE States
+	//--------------------------------------------------
+	
 	/***********************************************************************
 	 * Determines if all devices are ready to play
 	 * @return true if ready, false otherwise
@@ -404,6 +411,7 @@ public class Game
 			{
 				if (! antController.isDeviceReady())
 				{
+					if (s_cat.isDebugEnabled()) s_cat.debug("sc_testDevicesReady: Antenna " + antController.getMyPosition() + " is not ready yet.");
 					ready = false;
 					break;
 				}
@@ -416,6 +424,7 @@ public class Game
 			{
 				if (! kbdController.isDeviceReady())
 				{
+					if (s_cat.isDebugEnabled()) s_cat.debug("sc_testDevicesReady: Keyboard " + kbdController.getMyPosition() + " is not ready yet.");
 					ready = false;
 					break;
 				}
@@ -445,6 +454,7 @@ public class Game
 			}
 			else
 			{
+				if (s_cat.isDebugEnabled()) s_cat.debug("sc_testDevicesReady: Waiting for a Keyboard to identify its position.");
 				reconfigRequired = true;
 			}
 		}
@@ -467,6 +477,7 @@ public class Game
 			}
 			else
 			{
+				if (s_cat.isDebugEnabled()) s_cat.debug("sc_testDevicesReady: Waiting for an Antenna to identify its position.");
 				reconfigRequired = true;
 			}
 		}

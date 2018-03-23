@@ -4,8 +4,9 @@
 
 package lerner.blindBridge.model;
 
-import java.io.PrintStream;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -105,6 +106,15 @@ public class BridgeHand
 	/** reference to the top-level object (contains list of listeners, and other non-hand data) */
 	private Game								m_game;
 
+	/** If true, automatically scan blind hands and dummy hand when appropriate.  Set by evt_dealHands. */
+	private boolean m_autoScan = false;
+	
+	/** A stack of events that can be undone */
+	private Deque<UndoEvent>					m_undoEvents		= new ArrayDeque<>();
+	
+	/** A stack of events that can be redone, after they were undone */
+	private Deque<UndoEvent>					m_redoEvents		= new ArrayDeque<>();
+	
 	//--------------------------------------------------
 	// INTERNAL MEMBER DATA
 	//--------------------------------------------------
@@ -185,6 +195,32 @@ public class BridgeHand
 		
 		boolean handComplete = hand.isComplete();
 		
+		Object[] objs = { p_direction, p_card };
+		int[] ints = { (handComplete ? 1 : 0) };
+		
+		UndoEvent undoEvent = new UndoEvent(this
+		                                    , "evt_addScannedCard"
+		                                    , objs
+											, ints
+											, new UndoEvent.UndoMethod()
+											{
+												
+												@Override
+												public void undo ( UndoEvent p_event, boolean p_confirmed )
+												{
+													evt_addScannedCard_undo(p_event, p_confirmed);
+												}
+												
+												@Override
+												public void redo ( UndoEvent p_event, boolean p_confirmed )
+												{
+													evt_addScannedCard_redo(p_event, p_confirmed);
+												}
+											}
+											);
+		
+		m_undoEvents.push(undoEvent);
+		
 		// notify listeners of new card
 		for (GameListener gameListener : m_game.getGameListeners())
 		{
@@ -197,7 +233,76 @@ public class BridgeHand
 		
 		return true;
 	}
+
+	public void evt_addScannedCard_undo ( UndoEvent p_undoEvent, boolean p_confirmed )
+	{
+		Direction	direction	= (Direction) p_undoEvent.getObjects()[0];
+		Card			card			= (Card) p_undoEvent.getObjects()[1];
+		boolean		handComplete	= (p_undoEvent.getInts()[0] == 1);
+
+		if (handComplete)
+		{
+			PlayerHand playerHand = m_hands.get(direction);
+			if (playerHand != null)
+			{
+				m_hands.remove(direction);
+				Object[] objs = p_undoEvent.getObjects();
+				Object[] newObjs = { objs[0], objs[1], playerHand };
+				p_undoEvent.setObjects(newObjs);
+			}
+		}
+		else
+		{
+			PlayerHand playerHand = m_hands.get(direction);
+			if (playerHand != null)
+			{
+				playerHand.removeCard(card);
+			}
+		}
 		
+		// notify listeners of new card
+		for (GameListener gameListener : m_game.getGameListeners())
+		{
+			boolean redoFlag = false;
+			gameListener.sig_cardScanned_undo(redoFlag, direction, card, handComplete, p_confirmed);
+		}
+		
+		m_game.getStateController().setForceNewState(p_undoEvent.getCurrentState());
+	}
+
+	public void evt_addScannedCard_redo ( UndoEvent p_undoEvent, boolean p_confirmed )
+	{
+		Direction	direction	= (Direction) p_undoEvent.getObjects()[0];
+		Card			card			= (Card) p_undoEvent.getObjects()[1];
+		boolean		handComplete	= (p_undoEvent.getInts()[0] == 1);
+		
+		if (handComplete)
+		{
+			PlayerHand playerHand = (PlayerHand) p_undoEvent.getObjects()[2];
+			if (playerHand != null)
+			{
+				m_hands.put(direction, playerHand);
+			}
+		}
+		else
+		{
+			PlayerHand playerHand = m_hands.get(direction);
+			if (playerHand != null)
+			{
+				playerHand.addCard(card);
+			}
+		}
+		
+		// notify listeners of new card
+		for (GameListener gameListener : m_game.getGameListeners())
+		{
+			boolean redoFlag = true;
+			gameListener.sig_cardScanned_undo(redoFlag, direction, card, handComplete, p_confirmed);
+		}
+		
+		m_game.getStateController().setForceNewState(p_undoEvent.getCurrentState());
+	}
+
 	/***********************************************************************
 	 * Enters the current contract, if state is ENTER_CONTRACT
 	 * Sets m_nextPlayerId and m_dummyPosition
@@ -399,38 +504,75 @@ public class BridgeHand
 		if (s_cat.isDebugEnabled()) s_cat.debug("evt_resetKeyboard: finished.");
 	}
 	
+	/***********************************************************************
+	 * Deals a random or test hand.
+	 * Use this when all players are using a Keyboard Controller, or for testing.
+	 * @param p_testHand 		if non-negative, index of a predefined test hand.
+	 * @return true if processed, false if ignored.
+	 ***********************************************************************/
+	public boolean evt_dealHands ( int p_testHand )
+	{
+		if (s_cat.isDebugEnabled()) s_cat.debug("evt_dealHands: entered.  p_testHand: " + p_testHand);
+
+		BridgeHandState currentState = m_game.getStateController().getCurrentState();
+		if (currentState != BridgeHandState.SCAN_BLIND_HANDS)
+		{
+			s_cat.error("evt_dealHands: ignoring event since state is not SCAN_BLIND_HANDS. State: " + currentState);
+			return false;
+		}
+		
+		dealHands(p_testHand);
+		
+		m_autoScan = true;	// tell state machine to automatically scan blind hands and dummy hand when appropriate.
+
+		sc_scanHands();		
+
+		m_game.getStateController().notifyStateMachine();
+
+		return true;
+	}
+	
+	//--------------------------------------------------
+	// UNDO/REDO METHODS
+	//--------------------------------------------------
 	
 	/***********************************************************************
-	 * Simulates the scanning of a hand by a blind player or by the dummy.
-	 * Generates addScannedCard events (which sends the scanned cards to the Keyboard Controller(s)).
-	 * @param p_kbdController	the position to scan
-	 * @param p_testHand 		if non-negative, index of a predefined test hand.
+	 * Handles undo requests.
 	 ***********************************************************************/
-	public void evt_scanHandTest (Direction p_direction, int p_testHand)
+	public void evt_undo()
 	{
-		dealHands(p_testHand);		// noop if hands already dealt
-
-		PlayerHand hand = m_testHands.get(p_direction);
-		if (hand == null)
+		UndoEvent evt = m_undoEvents.poll();
+		if (evt == null)
 		{
-			if (s_cat.isDebugEnabled()) s_cat.debug("scanHand: no hand available");
+			if (s_cat.isDebugEnabled()) s_cat.debug("evt_undo: no more undo events");
 			return;
 		}
 		
-		try
-		{
-			for (Card card : hand.getCards())
-			{
-				evt_addScannedCard(p_direction, card);
-			}
-		}
-		catch (Exception e)
-		{
-			System.out.println ("scanHandTest: exception: " + e);
-			e.printStackTrace(new PrintStream(System.out));
-		}
+		m_redoEvents.push(evt);
+		if (s_cat.isDebugEnabled()) s_cat.debug("evt_undo: undoing event: " + evt);
+		
+		evt.undo(true);	// TODO: implement requiring confirmation
 	}
-
+	
+	/***********************************************************************
+	 * Handles redo requests.
+	 ***********************************************************************/
+	public void evt_redo()
+	{
+		UndoEvent evt = m_redoEvents.poll();
+		if (evt == null)
+		{
+			if (s_cat.isDebugEnabled()) s_cat.debug("evt_redo: no more redo events");
+			return;
+		}
+		
+		m_undoEvents.push(evt);
+		if (s_cat.isDebugEnabled()) s_cat.debug("evt_redo: redoing event: " + evt);
+		
+		evt.redo(true);	// TODO: implement requiring confirmation
+	}
+	
+	
 	//--------------------------------------------------
 	// DATA ACCESS HELPER METHODS (used by ControllerState objects)
 	//--------------------------------------------------
@@ -526,6 +668,30 @@ public class BridgeHand
 		return winner;
 	}
 
+	/***********************************************************************
+	 * Simulates the scanning of a hand by a blind player or by the dummy.
+	 * Generates addScannedCard events (which sends the scanned cards to the Keyboard Controller(s)).
+	 * @param p_kbdController	the position to scan
+	 ***********************************************************************/
+	public void sc_scanHands ()
+	{
+		if (s_cat.isDebugEnabled()) s_cat.debug("sc_scanHands: entered");
+		
+		BridgeHandState currentState = m_game.getStateController().getCurrentState();
+		if (currentState == BridgeHandState.SCAN_BLIND_HANDS)
+		{
+			for (KeyboardController kbdController : m_game.getKeyboardControllers().values())
+			{
+				scanHand(kbdController.getMyPosition());
+			}
+		}
+		
+		if (currentState == BridgeHandState.SCAN_DUMMY)
+		{
+			scanHand(m_dummyPosition);
+		}
+	}
+
 	//--------------------------------------------------
 	// HELPER METHODS
 	//--------------------------------------------------
@@ -604,6 +770,35 @@ public class BridgeHand
 		}
 	}
 	
+	/***********************************************************************
+	 * Simulates the scanning of a hand by a blind player or by the dummy.
+	 * Generates addScannedCard events (which sends the scanned cards to the Keyboard Controller(s)).
+	 * @param p_kbdController	the position to scan
+	 ***********************************************************************/
+	public void scanHand (Direction p_direction)
+	{
+		if (s_cat.isDebugEnabled()) s_cat.debug("sc_scanHands: entered for: " + p_direction);
+
+		PlayerHand hand = m_testHands.get(p_direction);
+		if (hand == null)
+		{
+			if (s_cat.isDebugEnabled()) s_cat.debug("sc_scanHand: no hand available");
+			return;
+		}
+		
+		try
+		{
+			for (Card card : hand.getCards())
+			{
+				evt_addScannedCard(p_direction, card);
+			}
+		}
+		catch (Exception e)
+		{
+			s_cat.error("sc_scanHand: exception: ", e);
+		}
+	}
+
 	
 	/***********************************************************************
 	 * Sends the scanned cards to the Keyboard Controller
@@ -641,6 +836,7 @@ public class BridgeHand
 		
 		out.append("BridgeHand:");
 		out.append("\n  Hand State: " + m_game.getStateController().getCurrentState());
+		out.append("\n  Auto Scan: " + m_autoScan);
 		out.append("\n  Contract: " + m_contract);
 		out.append("\n  Dummy Position: " + m_dummyPosition);
 
@@ -747,6 +943,25 @@ public class BridgeHand
 	public BridgeScore getBridgeScore ()
 	{
 		return m_bridgeScore;
+	}
+
+	/***********************************************************************
+	 * If true, automatically scan blind hands and dummy hand when appropriate.
+	 * Set by evt_dealHands.
+	 * @return true if state machine should scan hands automatically 
+	 ***********************************************************************/
+	public boolean isAutoScan ()
+	{
+		return m_autoScan;
+	}
+
+	/***********************************************************************
+	 * Returns the Game object to which this hand belongs.
+	 * @return the Game object
+	 ***********************************************************************/
+	public Game getGame ()
+	{
+		return m_game;
 	}
 
 }
