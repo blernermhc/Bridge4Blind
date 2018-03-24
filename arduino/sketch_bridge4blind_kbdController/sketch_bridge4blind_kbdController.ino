@@ -735,7 +735,26 @@ void btn_play()
 		case (MODE_UNDO):
 		{
 			Serial.write(START_SEND_MSG);  // tell Game Controller to read to next newline
-			putstring("CMD: UNDO");
+			putstring("CMD: UNDO ");
+			if (s_submode == SUBMODE_UNDO_WAIT_CONFIRM)
+				putstring("confirmed");
+			else
+				putstring("requested");
+			putstring_nl("");
+
+			s_mode = MODE_PLAY_HAND;
+			return;
+		}
+		break;
+
+		case (MODE_REDO):
+		{
+			Serial.write(START_SEND_MSG);  // tell Game Controller to read to next newline
+			putstring("CMD: REDO ");
+			if (s_submode == SUBMODE_UNDO_WAIT_CONFIRM)
+				putstring("confirmed");
+			else
+				putstring("requested");
 			putstring_nl("");
 
 			s_mode = MODE_PLAY_HAND;

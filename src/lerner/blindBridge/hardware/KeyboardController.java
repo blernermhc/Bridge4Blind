@@ -677,6 +677,70 @@ public class KeyboardController extends SerialController implements Runnable
 	}
 	
 	/***********************************************************************
+	 * Sends a message to the Keyboard Controller announcing an undo or redo event.
+	 * @param p_confirmed	if true, message is confirming that an undo or redo event was processed
+	 * 						if false, message is asking for confirmation before processing the undo or redo event.
+	 * @param p_redoFlag		if true, this is a redo. Otherwise, this is an undo. 
+	 * @param p_undoEvent	the event being undone or redone.
+	 * @param p_contract		the contract involved in the event
+	 * @return true if sent, false if failed
+	 ***********************************************************************/
+	public boolean send_undoAnnouncement (boolean p_confirmed, boolean p_redoFlag, UNDO_EVENT p_undoEvent, Contract p_contract)
+	{
+		if (s_cat.isDebugEnabled()) s_cat.debug("send_undoAnnouncement: entered"
+				+ " confirmed: " + p_confirmed
+				+ " undoEvent: " + p_undoEvent
+				+ " contract: " + p_contract
+				);
+
+		int undoMsg = 0;
+		if (p_confirmed)		undoMsg |= 0b10000000;	// confirmed
+		if (p_redoFlag)		undoMsg |= 0b01000000;	// redo rather than undo
+		undoMsg |= p_undoEvent.getMsgId();			// add undo event id
+		
+		boolean status = send_multiByteMessage( MULTIBYTE_MESSAGE.UNDO
+		                                        , p_contract.getTrump().ordinal()
+		                                        , p_contract.getBidWinner().ordinal()
+		                                        , p_contract.getContractNum()
+		                                        , undoMsg
+                								  );
+
+		if (s_cat.isDebugEnabled()) s_cat.debug("send_undoAnnouncement: finished");
+		return status;
+	}
+	
+	/***********************************************************************
+	 * Sends a message to the Keyboard Controller announcing an undo or redo event.
+	 * @param p_confirmed	if true, message is confirming that an undo or redo event was processed
+	 * 						if false, message is asking for confirmation before processing the undo or redo event.
+	 * @param p_redoFlag		if true, this is a redo. Otherwise, this is an undo. 
+	 * @param p_undoEvent	the event being undone or redone.
+	 * @return true if sent, false if failed
+	 ***********************************************************************/
+	public boolean send_undoAnnouncement (boolean p_confirmed, boolean p_redoFlag, UNDO_EVENT p_undoEvent)
+	{
+		if (s_cat.isDebugEnabled()) s_cat.debug("send_undoAnnouncement: entered"
+				+ " confirmed: " + p_confirmed
+				+ " undoEvent: " + p_undoEvent
+				);
+
+		int undoMsg = 0;
+		if (p_confirmed)		undoMsg |= 0b10000000;	// confirmed
+		if (p_redoFlag)		undoMsg |= 0b01000000;	// redo rather than undo
+		undoMsg |= p_undoEvent.getMsgId();			// add undo event id
+		
+		boolean status = send_multiByteMessage( MULTIBYTE_MESSAGE.UNDO
+		                                        , 0
+		                                        , 0
+		                                        , 0
+		                                        , undoMsg
+                								  );
+
+		if (s_cat.isDebugEnabled()) s_cat.debug("send_undoAnnouncement: finished");
+		return status;
+	}
+	
+	/***********************************************************************
 	 * Sends a generic two-byte message to the Keyboard Controller.
 	 * Logs an error if the message fails.
 	 * @param p_msg	the message to send
@@ -1089,17 +1153,19 @@ public class KeyboardController extends SerialController implements Runnable
 						
 				case UNDO:
 				{
-					if (args.length != 1)
+					if (args.length != 2)
 						throw new IllegalArgumentException("Wrong number of arguments");
-					m_game.getBridgeHand().evt_undo();
+					boolean confirmed = (args[1].toLowerCase().startsWith("c"));
+					m_game.getBridgeHand().evt_undo(confirmed);
 				}
 				break;
 										
 				case REDO:
 				{
-					if (args.length != 1)
+					if (args.length != 2)
 						throw new IllegalArgumentException("Wrong number of arguments");
-					m_game.getBridgeHand().evt_redo();
+					boolean confirmed = (args[1].toLowerCase().startsWith("c"));
+					m_game.getBridgeHand().evt_redo(confirmed);
 				}
 				break;
 										
@@ -1148,6 +1214,15 @@ public class KeyboardController extends SerialController implements Runnable
 	}
 
 	/* (non-Javadoc)
+	 * @see lerner.blindBridge.model.GameListener#sig_gameReset_undo(boolean, boolean)
+	 */
+	@Override
+	public void sig_gameReset_undo ( boolean p_redoFlag, boolean p_confirmed )
+	{
+		send_undoAnnouncement(p_confirmed, p_redoFlag, UNDO_EVENT.NEW_HAND);
+	}
+	
+	/* (non-Javadoc)
 	 * @see model.GameListener#scanBlindHands()
 	 */
 	@Override
@@ -1181,7 +1256,10 @@ public class KeyboardController extends SerialController implements Runnable
 		}
 	}
 
-	public void sig_cardScanned_undo ( boolean p_redoFlag, Direction p_direction, Card p_card, boolean p_handComplete, boolean p_confirmed )
+	/* (non-Javadoc)
+	 * @see lerner.blindBridge.model.GameListener#sig_cardScanned_undo(boolean, boolean, lerner.blindBridge.model.Direction, lerner.blindBridge.model.Card, boolean)
+	 */
+	public void sig_cardScanned_undo ( boolean p_redoFlag, boolean p_confirmed, Direction p_direction, Card p_card, boolean p_handComplete )
 	{
 		if (p_handComplete)
 		{
@@ -1191,6 +1269,15 @@ public class KeyboardController extends SerialController implements Runnable
 		{
 			send_undoAnnouncement(p_confirmed, p_redoFlag, UNDO_EVENT.SCAN_CARD, p_direction, p_card);
 		}
+	}
+
+	/* (non-Javadoc)
+	 * @see lerner.blindBridge.model.GameListener#sig_cardPlayed_undo(boolean, boolean, lerner.blindBridge.model.Direction, lerner.blindBridge.model.Card)
+	 */
+	@Override
+	public void sig_cardPlayed_undo ( boolean p_redoFlag, boolean p_confirmed, Direction p_direction, Card p_card )
+	{
+		send_undoAnnouncement(p_confirmed, p_redoFlag, UNDO_EVENT.SCAN_CARD, p_direction, p_card);
 	}
 
 	/* (non-Javadoc)
@@ -1229,6 +1316,15 @@ public class KeyboardController extends SerialController implements Runnable
 	public void sig_contractSet ( lerner.blindBridge.model.Contract p_contract )
 	{
 		send_contract(p_contract);
+	}
+
+	/* (non-Javadoc)
+	 * @see lerner.blindBridge.model.GameListener#sig_contractSet_undo(boolean, boolean, lerner.blindBridge.model.Contract)
+	 */
+	@Override
+	public void sig_contractSet_undo ( boolean p_redoFlag, boolean p_confirmed, Contract p_contract )
+	{
+		send_undoAnnouncement(p_confirmed, p_redoFlag, UNDO_EVENT.SET_CONTRACT, p_contract);
 	}
 
 	/* (non-Javadoc)

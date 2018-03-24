@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -195,6 +196,7 @@ public class BridgeHand
 		
 		boolean handComplete = hand.isComplete();
 		
+		// insert undo event
 		Object[] objs = { p_direction, p_card };
 		int[] ints = { (handComplete ? 1 : 0) };
 		
@@ -219,7 +221,24 @@ public class BridgeHand
 											}
 											);
 		
-		m_undoEvents.push(undoEvent);
+		addUndoEvent(undoEvent);
+		
+		// If hand is complete, remove single card scan events for this player position.
+		// Once a hand is complete, we don't want to undo one card at a time.
+		if (handComplete)
+		{
+			Iterator<UndoEvent> undoEvents = m_undoEvents.iterator();
+			while (undoEvents.hasNext())
+			{
+				UndoEvent undoEvt = undoEvents.next();
+				if ("evt_addScannedCard".equals(undoEvt.getEventName())
+						&& p_direction.equals(undoEvt.getObjects()[0]) )
+				{
+					undoEvents.remove();
+				}
+			}
+		}
+
 		
 		// notify listeners of new card
 		for (GameListener gameListener : m_game.getGameListeners())
@@ -234,73 +253,93 @@ public class BridgeHand
 		return true;
 	}
 
+	/***********************************************************************
+	 * Actions required to undo an addScannedCard event.
+	 * @param p_undoEvent	the undo event created by the addScannedCard event.
+	 * @param p_confirmed	if false this is the initial request (announce only),
+	 *  If true, the request has been confirmed and the undo actions should be processed.
+	 ***********************************************************************/
 	public void evt_addScannedCard_undo ( UndoEvent p_undoEvent, boolean p_confirmed )
 	{
 		Direction	direction	= (Direction) p_undoEvent.getObjects()[0];
 		Card			card			= (Card) p_undoEvent.getObjects()[1];
 		boolean		handComplete	= (p_undoEvent.getInts()[0] == 1);
 
-		if (handComplete)
+		if (p_confirmed)
 		{
-			PlayerHand playerHand = m_hands.get(direction);
-			if (playerHand != null)
+			if (handComplete)
 			{
-				m_hands.remove(direction);
-				Object[] objs = p_undoEvent.getObjects();
-				Object[] newObjs = { objs[0], objs[1], playerHand };
-				p_undoEvent.setObjects(newObjs);
+				PlayerHand playerHand = m_hands.get(direction);
+				if (playerHand != null)
+				{
+					m_hands.remove(direction);
+					Object[] objs = p_undoEvent.getObjects();
+					Object[] newObjs = { objs[0], objs[1], playerHand };
+					p_undoEvent.setObjects(newObjs);
+				}
 			}
-		}
-		else
-		{
-			PlayerHand playerHand = m_hands.get(direction);
-			if (playerHand != null)
+			else
 			{
-				playerHand.removeCard(card);
+				PlayerHand playerHand = m_hands.get(direction);
+				if (playerHand != null)
+				{
+					playerHand.removeCard(card);
+				}
 			}
 		}
 		
-		// notify listeners of new card
+		// notify listeners of event
 		for (GameListener gameListener : m_game.getGameListeners())
 		{
 			boolean redoFlag = false;
-			gameListener.sig_cardScanned_undo(redoFlag, direction, card, handComplete, p_confirmed);
+			gameListener.sig_cardScanned_undo(redoFlag, p_confirmed, direction, card, handComplete);
 		}
 		
-		m_game.getStateController().setForceNewState(p_undoEvent.getCurrentState());
+		if (p_confirmed)
+			m_game.getStateController().setForceNewState(p_undoEvent.getCurrentState());
 	}
 
+	/***********************************************************************
+	 * Actions required to redo an addScannedCard event that was undone.
+	 * @param p_undoEvent	the undo event created by the addScannedCard event.
+	 * @param p_confirmed	if false this is the initial request (announce only),
+	 *  If true, the request has been confirmed and the redo actions should be processed.
+	 ***********************************************************************/
 	public void evt_addScannedCard_redo ( UndoEvent p_undoEvent, boolean p_confirmed )
 	{
 		Direction	direction	= (Direction) p_undoEvent.getObjects()[0];
 		Card			card			= (Card) p_undoEvent.getObjects()[1];
 		boolean		handComplete	= (p_undoEvent.getInts()[0] == 1);
 		
-		if (handComplete)
+		if (p_confirmed)
 		{
-			PlayerHand playerHand = (PlayerHand) p_undoEvent.getObjects()[2];
-			if (playerHand != null)
+			if (handComplete)
 			{
-				m_hands.put(direction, playerHand);
+				PlayerHand playerHand = (PlayerHand) p_undoEvent.getObjects()[2];
+				if (playerHand != null)
+				{
+					m_hands.put(direction, playerHand);
+				}
 			}
-		}
-		else
-		{
-			PlayerHand playerHand = m_hands.get(direction);
-			if (playerHand != null)
+			else
 			{
-				playerHand.addCard(card);
+				PlayerHand playerHand = m_hands.get(direction);
+				if (playerHand != null)
+				{
+					playerHand.addCard(card);
+				}
 			}
 		}
 		
-		// notify listeners of new card
+		// notify listeners of event
 		for (GameListener gameListener : m_game.getGameListeners())
 		{
 			boolean redoFlag = true;
-			gameListener.sig_cardScanned_undo(redoFlag, direction, card, handComplete, p_confirmed);
+			gameListener.sig_cardScanned_undo(redoFlag, p_confirmed, direction, card, handComplete);
 		}
 		
-		m_game.getStateController().setForceNewState(p_undoEvent.getCurrentState());
+		if (p_confirmed)
+			m_game.getStateController().setForceNewState(p_undoEvent.getCurrentState());
 	}
 
 	/***********************************************************************
@@ -326,12 +365,72 @@ public class BridgeHand
 		
 		m_contract = p_contract;
 		
+		// insert undo event
+		Object[] objs = { p_contract };
+		
+		UndoEvent undoEvent = new UndoEvent(this
+		                                    , "evt_setContract"
+		                                    , objs
+											, null
+											, new UndoEvent.UndoMethod()
+											{
+												
+												@Override
+												public void undo ( UndoEvent p_event, boolean p_confirmed )
+												{
+													evt_setContract_undo(false, p_event, p_confirmed);
+												}
+												
+												@Override
+												public void redo ( UndoEvent p_event, boolean p_confirmed )
+												{
+													evt_setContract_undo(true, p_event, p_confirmed);
+												}
+											}
+											);
+		
+		addUndoEvent(undoEvent);
+		
 		m_game.getStateController().notifyStateMachine();
 		
 		if (s_cat.isDebugEnabled()) s_cat.debug("evt_setContract: finished.");
 
 		return true;
 	}
+
+	/***********************************************************************
+	 * Actions required to undo/redo a setContract event.
+	 * @param p_redoFlag		If true, redo.  Otherwise, undo.
+	 * @param p_undoEvent	the undo event created by the setContract event.
+	 * @param p_confirmed	if false this is the initial request (announce only),
+	 *  If true, the request has been confirmed and the undo actions should be processed.
+	 ***********************************************************************/
+	public void evt_setContract_undo ( boolean p_redoFlag, UndoEvent p_undoEvent, boolean p_confirmed )
+	{
+		Contract		contract		= (Contract) p_undoEvent.getObjects()[0];
+
+		if (p_confirmed)
+		{
+			if (p_redoFlag)
+			{
+				m_contract = contract;
+			}
+			else
+			{
+				m_contract = null;
+			}
+		}
+		
+		// notify listeners of event
+		for (GameListener gameListener : m_game.getGameListeners())
+		{
+			gameListener.sig_contractSet_undo(p_redoFlag, p_confirmed, contract);
+		}
+		
+		if (p_confirmed)
+			m_game.getStateController().setForceNewState(p_undoEvent.getCurrentState());
+	}
+
 
 	/***********************************************************************
 	 * Play a card
@@ -410,6 +509,32 @@ public class BridgeHand
 
 		m_currentTrick.playCard(p_direction, p_card);
 		
+		// insert undo event
+		Object[] objs = { p_direction, p_card };
+		
+		UndoEvent undoEvent = new UndoEvent(this
+		                                    , "evt_playCard"
+		                                    , objs
+											, null
+											, new UndoEvent.UndoMethod()
+											{
+												
+												@Override
+												public void undo ( UndoEvent p_event, boolean p_confirmed )
+												{
+													evt_playCard_undo(false, p_event, p_confirmed);
+												}
+												
+												@Override
+												public void redo ( UndoEvent p_event, boolean p_confirmed )
+												{
+													evt_playCard_undo(true, p_event, p_confirmed);
+												}
+											}
+											);
+		
+		addUndoEvent(undoEvent);
+		
 		m_game.getStateController().notifyStateMachine();
 
 		if (s_cat.isDebugEnabled()) s_cat.debug("evt_playCard: finished.");
@@ -417,6 +542,40 @@ public class BridgeHand
 		return true;
 	}
 	
+	/***********************************************************************
+	 * Actions required to undo/redo a playCard event.
+	 * @param p_redoFlag		If true, redo.  Otherwise, undo.
+	 * @param p_undoEvent	the undo event created by the playCard event.
+	 * @param p_confirmed	if false this is the initial request (announce only),
+	 *  If true, the request has been confirmed and the undo actions should be processed.
+	 ***********************************************************************/
+	public void evt_playCard_undo ( boolean p_redoFlag, UndoEvent p_undoEvent, boolean p_confirmed )
+	{
+		Direction	direction	= (Direction) p_undoEvent.getObjects()[0];
+		Card			card			= (Card) p_undoEvent.getObjects()[1];
+
+		if (p_confirmed)
+		{
+			PlayerHand playerHand = m_hands.get(direction);
+			if (playerHand != null)
+			{
+				if (p_redoFlag)
+					playerHand.addCard(card);
+				else
+					playerHand.removeCard(card);
+			}
+		}
+		
+		// notify listeners of event
+		for (GameListener gameListener : m_game.getGameListeners())
+		{
+			gameListener.sig_cardPlayed_undo(p_redoFlag, p_confirmed, direction, card);
+		}
+		
+		if (p_confirmed)
+			m_game.getStateController().setForceNewState(p_undoEvent.getCurrentState());
+	}
+
 	/***********************************************************************
 	 * Resets a Keyboard Controller and sends the current state.
 	 * This runs in response to the message from the Keyboard Controller
@@ -538,41 +697,62 @@ public class BridgeHand
 	
 	/***********************************************************************
 	 * Handles undo requests.
+	 * @param p_confirmed	if false this is the initial request (announce only),
+	 *  If true, the request has been confirmed and the undo actions should be processed.
 	 ***********************************************************************/
-	public void evt_undo()
+	public void evt_undo(boolean p_confirmed)
 	{
-		UndoEvent evt = m_undoEvents.poll();
+		UndoEvent evt = (p_confirmed ? m_undoEvents.poll() : m_undoEvents.peek());
 		if (evt == null)
 		{
-			if (s_cat.isDebugEnabled()) s_cat.debug("evt_undo: no more undo events");
+			if (s_cat.isDebugEnabled()) s_cat.debug("evt_undo: no more undo events, try going to prev game");
+			m_game.evt_startNewHand_undo(false, p_confirmed);
 			return;
 		}
+			
+		if (p_confirmed) m_redoEvents.push(evt);
+
+		if (s_cat.isDebugEnabled()) s_cat.debug("evt_undo: undoing event (" + (p_confirmed ? "confirmed" : "requested") + "): " + evt);
 		
-		m_redoEvents.push(evt);
-		if (s_cat.isDebugEnabled()) s_cat.debug("evt_undo: undoing event: " + evt);
-		
-		evt.undo(true);	// TODO: implement requiring confirmation
+		evt.undo(p_confirmed);
 	}
 	
 	/***********************************************************************
 	 * Handles redo requests.
+	 * @param p_confirmed	if false this is the initial request (announce only),
+	 *  If true, the request has been confirmed and the undo actions should be processed.
 	 ***********************************************************************/
-	public void evt_redo()
+	public void evt_redo(boolean p_confirmed)
 	{
-		UndoEvent evt = m_redoEvents.poll();
+		UndoEvent evt = (p_confirmed ? m_redoEvents.poll() : m_redoEvents.peek());
 		if (evt == null)
 		{
-			if (s_cat.isDebugEnabled()) s_cat.debug("evt_redo: no more redo events");
+			if (s_cat.isDebugEnabled()) s_cat.debug("evt_redo: no more redo events, try going to next game");
+			m_game.evt_startNewHand_undo(true, p_confirmed);
 			return;
 		}
+			
+		if (p_confirmed) m_undoEvents.push(evt);
+
+		if (s_cat.isDebugEnabled()) s_cat.debug("evt_undo: redoing event (" + (p_confirmed ? "confirmed" : "requested") + "): " + evt);
 		
-		m_undoEvents.push(evt);
-		if (s_cat.isDebugEnabled()) s_cat.debug("evt_redo: redoing event: " + evt);
-		
-		evt.redo(true);	// TODO: implement requiring confirmation
+		evt.redo(p_confirmed);
 	}
 	
+	/***********************************************************************
+	 * Adds an undo event to the queue.
+	 * Use this when adding NEW undo events (not during redo).
+	 * Once you add a new event to the undo queue, you can no longer redo
+	 * a previous undo, so this clears the redo queue.
+	 * @param p_undoEvent	the undo event to add
+	 ***********************************************************************/
+	public void addUndoEvent ( UndoEvent p_undoEvent )
+	{
+		m_undoEvents.push(p_undoEvent);
+		m_redoEvents.clear();
+	}
 	
+
 	//--------------------------------------------------
 	// DATA ACCESS HELPER METHODS (used by ControllerState objects)
 	//--------------------------------------------------

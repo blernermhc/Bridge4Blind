@@ -104,17 +104,33 @@ public class UndoEvent
 		StringBuffer out = new StringBuffer();
 		out.append("UndoEvent: " + m_eventName);
 		out.append("\n  state: " + m_currentState);
+		
 		out.append("\n  objects:");
-		for (int idx = 0; idx < m_objects.length; ++idx)
+		if (m_objects == null)
 		{
-			Object obj = m_objects[idx];
-			out.append("\n    " + idx + ": ");
-			out.append(obj == null ? "null" : obj.toString());
+			out.append("null");
 		}
-		out.append("\n  ints:");
-		for (int idx = 0; idx < m_ints.length; ++idx)
+		else
 		{
-			out.append("\n    " + idx + ": " + m_ints[idx]);
+			for (int idx = 0; idx < m_objects.length; ++idx)
+			{
+				Object obj = m_objects[idx];
+				out.append("\n    " + idx + ": ");
+				out.append(obj == null ? "null" : obj.toString());
+			}
+		}
+		
+		out.append("\n  ints:");
+		if (m_ints == null)
+		{
+			out.append("null");
+		}
+		else
+		{
+			for (int idx = 0; idx < m_ints.length; ++idx)
+			{
+				out.append("\n    " + idx + ": " + m_ints[idx]);
+			}
 		}
 		
 		return out.toString();

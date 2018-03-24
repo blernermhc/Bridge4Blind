@@ -365,6 +365,7 @@ public class Game
 	public void startNewHand()
 	{
 		m_playedHands.push(m_bridgeHand);
+		m_undoneHands.clear();	// Once you start a new hand, you can no longer redo a hand undo
 		m_bridgeHand = new BridgeHand(this);
 	}
 
@@ -382,6 +383,55 @@ public class Game
 		m_bridgeHandStateController.notifyStateMachine();
 	}
 	
+	/***********************************************************************
+	 * Actions required to undo/redo a startNewHand event.
+	 * @param p_redoFlag		If true, redo.  Otherwise, undo.
+	 * @param p_undoEvent	the undo event created by the startNewHand event.
+	 * @param p_confirmed	if false this is the initial request (announce only),
+	 *  If true, the request has been confirmed and the undo actions should be processed.
+	 ***********************************************************************/
+	public void evt_startNewHand_undo ( boolean p_redoFlag, boolean p_confirmed )
+	{
+		if (p_confirmed)
+		{
+			if (p_redoFlag)
+			{
+				BridgeHand nextHand = m_undoneHands.poll();
+				if (nextHand == null)
+				{
+					s_cat.error("evt_startNewHand_undo: no next hand, ignoring redo");
+				}
+				
+				m_playedHands.push(m_bridgeHand);
+				m_bridgeHand = nextHand;
+			}
+			else
+			{
+				BridgeHand prevHand = m_playedHands.poll();
+				if (prevHand == null)
+				{
+					m_bridgeHand = new BridgeHand(this);
+				}
+				else
+				{
+					m_undoneHands.push(m_bridgeHand);
+					m_bridgeHand = prevHand;
+				}
+			}
+		}
+		
+		// notify listeners of event
+		for (GameListener gameListener : m_gameListeners)
+		{
+			gameListener.sig_gameReset_undo(p_redoFlag, p_confirmed);
+		}
+		
+		if (p_confirmed)
+			m_bridgeHandStateController.setForceNewState(BridgeHandState.NEW_HAND);
+	}
+
+	
+
 	/***********************************************************************
 	 * Quit program gracefully
 	 ***********************************************************************/

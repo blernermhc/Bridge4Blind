@@ -26,6 +26,7 @@ public interface GameListener
 	 * Called when beginning a new hand
 	 */
 	public void sig_gameReset();
+	public void sig_gameReset_undo ( boolean p_redoFlag, boolean p_confirmed );
 
 	/**
 	 * Called when waiting for all of the blind hands to be scanned in
@@ -44,8 +45,7 @@ public interface GameListener
 	 * @param p_handComplete true if card completes hand
 	 */
 	public void sig_cardScanned(Direction p_direction, Card p_card, boolean p_handComplete);
-
-	public void sig_cardScanned_undo ( boolean p_redoFlag, Direction p_direction, Card p_card, boolean p_handComplete, boolean p_confirmed );
+	public void sig_cardScanned_undo ( boolean p_redoFlag, boolean p_confirmed, Direction p_direction, Card p_card, boolean p_handComplete );
 	
 	/**
 	 * Called when all of the blind hands have been completely scanned in
@@ -67,6 +67,7 @@ public interface GameListener
 	 * @param contract the contract for the hand
 	 */
 	public void sig_contractSet(Contract contract);
+	public void sig_contractSet_undo ( boolean p_redoFlag, boolean p_confirmed, Contract p_contract );
 	
 	/***********************************************************************
 	 * Called when the dummy position has been determined.
@@ -92,6 +93,7 @@ public interface GameListener
 	 * @param card the card played
 	 */
 	public void sig_cardPlayed(Direction turn, Card card);
+	public void sig_cardPlayed_undo ( boolean p_redoFlag, boolean p_confirmed, Direction p_direction, Card p_card );
 
 	/**
 	 * Called at the end of a trick

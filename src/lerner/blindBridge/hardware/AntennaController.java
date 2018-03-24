@@ -393,6 +393,15 @@ public class AntennaController extends SerialController
 	}
 
 	/* (non-Javadoc)
+	 * @see lerner.blindBridge.model.GameListener#sig_gameReset_undo(boolean, boolean)
+	 */
+	@Override
+	public void sig_gameReset_undo ( boolean p_redoFlag, boolean p_confirmed )
+	{
+		// nothing to do
+	}
+	
+	/* (non-Javadoc)
 	 * @see model.GameListener#scanBlindHands()
 	 */
 	@Override
@@ -439,11 +448,19 @@ public class AntennaController extends SerialController
 	 * @see lerner.blindBridge.model.GameListener#sig_cardScanned_undo(boolean, lerner.blindBridge.model.Direction, lerner.blindBridge.model.Card, boolean, boolean)
 	 */
 	@Override
-	public void sig_cardScanned_undo ( boolean p_redoFlag, Direction p_direction, Card p_card, boolean p_handComplete, boolean p_confirmed )
+	public void sig_cardScanned_undo ( boolean p_redoFlag, boolean p_confirmed, Direction p_direction, Card p_card, boolean p_handComplete )
 	{
 		// nothing to do
 	}
 
+	/* (non-Javadoc)
+	 * @see lerner.blindBridge.model.GameListener#sig_cardPlayed_undo(boolean, boolean, lerner.blindBridge.model.Direction, lerner.blindBridge.model.Card)
+	 */
+	@Override
+	public void sig_cardPlayed_undo ( boolean p_redoFlag, boolean p_confirmed, Direction p_direction, Card p_card )
+	{
+		// nothing to do
+	}
 
 	/* (non-Javadoc)
 	 * @see model.GameListener#blindHandsScanned()
@@ -487,6 +504,15 @@ public class AntennaController extends SerialController
 		// nothing to do
 	}
 
+	/* (non-Javadoc)
+	 * @see lerner.blindBridge.model.GameListener#sig_contractSet_undo(boolean, boolean, lerner.blindBridge.model.Contract)
+	 */
+	@Override
+	public void sig_contractSet_undo ( boolean p_redoFlag, boolean p_confirmed, Contract p_contract )
+	{
+		// nothing to do
+	}
+	
 	/* (non-Javadoc)
 	 * @see model.GameListener#setDummyPosition(model.Direction)
 	 */
