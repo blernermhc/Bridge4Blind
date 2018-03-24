@@ -116,7 +116,8 @@ void setup(void)
     while (!Serial); // for Leonardo/Micro/Zero
   #endif
   
-    delay(250);
+  delay(1000);	// give time for game controller to prepare to read serial line 
+  
   // see if we know our position from an earlier run
   loadNonVolatilePosition();
   
@@ -131,8 +132,13 @@ void setup(void)
   if (! versiondata)
   {
 	  printSerialMessagePrefix();
-	  Serial.print("Did not find PN53x board");
-	  while (1); // halt
+	  Serial.println("Did not find PN53x board");
+	  while (1)
+	  {	  // halt, but allow Game Controller to connect
+		  delay(1000);
+		  printSerialMessagePrefix();
+		  Serial.println("Did not find PN53x board");
+	  }
   }
   
   // Got ok data, print it out!

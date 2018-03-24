@@ -60,10 +60,28 @@ public class Game
 	// CONFIGURATION MEMBER DATA
 	//--------------------------------------------------
 	
+	public class CandidatePort
+	{
+		/** the candidate port to try to open */
+		public CommPortIdentifier	m_portIdentifier;
+		
+		/**
+		 * Set of device types this port is known NOT to be.
+		 * For example, if this was rejected while opening one Antenna,
+		 * do not try this for subsequent Antennas.
+		 */
+		public Set<String>			m_skipTypes			= new HashSet<>();
+		
+		public CandidatePort (CommPortIdentifier p_portIdentifier)
+		{
+			m_portIdentifier = p_portIdentifier;
+		}
+	}
+	
 	int m_numAntennas					= 0;
 	int m_numKeyboards					= 0;
 	String m_devicePattern;
-	Set<CommPortIdentifier>	m_candidatePorts		= new HashSet<>();
+	Set<CandidatePort>	m_candidatePorts		= new HashSet<>();
 	
 	//--------------------------------------------------
 	// INTERNAL MEMBER DATA
@@ -254,11 +272,20 @@ public class Game
 			findUSBCommunicationPorts(m_devicePattern);
 			
 		    //------------------------------
-			// Add antennas (add simulated antennas, if real ones not defined)
+			// Add antennas (add simulated antennas later, if real ones not defined)
+			//------------------------------
+			for (int i = 0; i < m_numAntennas; ++i)
+			{
+				addAntennaController(null, true);	// if not remembered, use card scan to determine position
+			}
+			// add dummy antennas in sc_testDevicesReady
+
+			//------------------------------
+			// Add Keyboards
 			//------------------------------
 			for (int i = 0; i < m_numKeyboards; ++i)
 			{
-				addKeyboardController(null);	// use card scan to determine position
+				addKeyboardController(null);			// if not remembered, ask to determine position
 			}
 			
 			/*
@@ -283,14 +310,6 @@ public class Game
 			}
 			*/
 			
-		    //------------------------------
-			// Add antennas (add simulated antennas, if real ones not defined)
-			//------------------------------
-			for (int i = 0; i < m_numAntennas; ++i)
-			{
-				addAntennaController(null, true);	// use card scan to determine position
-			}
-			// add dummy antennas in sc_testDevicesReady
 			
 			/*
 			Properties props = line.getOptionProperties( "antenna" );
@@ -624,7 +643,7 @@ public class Game
             if (matcher.matches())
             {
             		if (s_cat.isDebugEnabled()) s_cat.debug("findUSBCommunicationPorts: matched port: " + portName + " of type: " + portTypeToString(portIdentifier.getPortType()));
-            		m_candidatePorts.add(portIdentifier);
+            		m_candidatePorts.add(new CandidatePort(portIdentifier));
             }
         }
     }
@@ -789,7 +808,7 @@ public class Game
 	 * The set of devices that may be connected to antenna or keyboard controllers.
 	 * @return set of device names
 	 ***********************************************************************/
-	public Set<CommPortIdentifier> getCandidatePorts ()
+	public Set<CandidatePort> getCandidatePorts ()
 	{
 		return m_candidatePorts;
 	}

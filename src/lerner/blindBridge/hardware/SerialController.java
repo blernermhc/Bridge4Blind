@@ -15,6 +15,7 @@ import gnu.io.CommPortIdentifier;
 import gnu.io.SerialPort;
 import gnu.io.SerialPortEventListener;
 import lerner.blindBridge.main.Game;
+import lerner.blindBridge.main.Game.CandidatePort;
 import lerner.blindBridge.model.BridgeHand;
 import lerner.blindBridge.model.Direction;
 import lerner.blindBridge.model.GameListener;
@@ -116,17 +117,30 @@ public abstract class SerialController implements SerialPortEventListener, GameL
 	protected boolean findDeviceToOpen ()
 	{
 		// use Iterator hasNext / next, because we also use remove
-		Iterator<CommPortIdentifier> candidatePortIdentifiers = m_game.getCandidatePorts().iterator(); 
-		while (candidatePortIdentifiers.hasNext())
+		Iterator<Game.CandidatePort> candidatePorts = m_game.getCandidatePorts().iterator(); 
+		while (candidatePorts.hasNext())
 		{
-			CommPortIdentifier portIdentifier = candidatePortIdentifiers.next();
+			CandidatePort candidatePort = candidatePorts.next();
+			CommPortIdentifier portIdentifier = candidatePort.m_portIdentifier;
+			
+			if (candidatePort.m_skipTypes.contains(getName()))
+			{
+				if (s_cat.isDebugEnabled())
+				{
+					s_cat.debug("findDeviceToOpen: already determined that this port is not: " + getName()
+								+ " port: " + portIdentifier.getName());
+				}
+				continue;
+			}
+			
 			if (tryOpen (portIdentifier))
 			{
-				candidatePortIdentifiers.remove();
+				candidatePorts.remove();
 				return true;
 			}
 			else
 			{
+				candidatePort.m_skipTypes.add(getName());
 				close();
 			}
 		}
