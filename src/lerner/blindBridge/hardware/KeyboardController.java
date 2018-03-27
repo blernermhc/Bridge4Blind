@@ -309,13 +309,16 @@ public class KeyboardController extends SerialController implements Runnable
 	/***********************************************************************
 	 * Configures and initializes a Keyboard Controller
 	 * @param p_game		The object managing the hands
-	 * @param p_direction		The player position of the player using this Keyboard Controller
+	 * @param p_direction		If non-null, the player position this controller is at.
+	 * 							If null, attempts to set position based on hardware settings.
+	 * @param p_deviceName		If non-empty, open the device with this name for this controller
+	 * 							If null or empty, try each device in turn until you find an appropriate one
 	 * @throws IOException if it cannot open a port for this controller.
 	 ***********************************************************************/
-	public KeyboardController(Game p_game, Direction p_direction)
+	public KeyboardController(Game p_game, Direction p_direction, String p_deviceName)
 		throws IOException
 	{
-		super(p_game, true);
+		super(p_game, p_direction, p_deviceName, true);
 
 		//--------------------------------------------------
 		// Start thread to send queued messages to keyboard controller hardware

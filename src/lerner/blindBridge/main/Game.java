@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -116,14 +117,9 @@ public class Game
 	//--------------------------------------------------
 	
 	/***********************************************************************
-	 *  Basic setup culminating in configuring according to the configuration file.
-	 *  CmdLine syntax is csmvcCommandDriver configName controllerName [flags & options including
-	 *     -d | -q | --logging={debug|info|warn|error}
-	 *     -n |--test
-	 *     --formset=<em>formsetName</em>
-	 *    -- csmvc=<em>configuration parameter name</em>
-	 *    --varname=<em>varValue</em> ...
-	 * @throw ConfigurationException if the configuration cannot be loaded
+	 *  Configure and run program.
+	 * @throw Exception if there are problems parsing the command line,
+	 * starting the hardware, or initializing the system.
 	 ***********************************************************************/
 	public void initialize (String[] p_args)
 		throws Exception
@@ -191,8 +187,7 @@ public class Game
 			    .build();
 		options.addOption(option);
 
-		/*
-		option  = Option.builder("K")
+		option  = Option.builder("k")
 				.longOpt( "keyboard" )
 				.argName( "position=device" )
 				.hasArg()
@@ -202,7 +197,7 @@ public class Game
                 .build();
 		options.addOption(option);
 		
-		option  = Option.builder("A")
+		option  = Option.builder("a")
 				.longOpt( "antenna" )
 				.argName( "position=device" )
 				.hasArg()
@@ -211,7 +206,6 @@ public class Game
                 .desc( "given device is at given position" )
                 .build();
 		options.addOption(option);
-		*/		
 		
 		// parse the options
 		CommandLineParser parser = new DefaultParser();
@@ -269,28 +263,39 @@ public class Game
 				m_numKeyboards = Integer.parseInt(line.getOptionValue("keyboards"));
 			}
 			
-			findUSBCommunicationPorts(m_devicePattern);
+			if (m_devicePattern != null && !m_devicePattern.isEmpty())
+				findUSBCommunicationPorts(m_devicePattern);
 			
 		    //------------------------------
-			// Add antennas (add simulated antennas later, if real ones not defined)
+			// Add antennas bound to known device names (add simulated antennas later, if real ones not defined)
+			//------------------------------
+			if ( line.hasOption( "antenna" ) )
+			{
+				Properties props = line.getOptionProperties( "antenna" );
+				for (Direction position : Direction.values())
+				{
+					String device = (String)props.get(position.name());
+					if (device != null)
+					{
+						if (s_cat.isDebugEnabled()) s_cat.debug("initialize: adding Antenna for position: " + position
+						                                        + " using device: " + device);
+						addAntennaController(position, device, true);
+					}
+				}
+			}
+			
+		    //------------------------------
+			// Add antennas with hardware but unknown device name
+			// (add simulated antennas later, if real ones not defined)
 			//------------------------------
 			for (int i = 0; i < m_numAntennas; ++i)
 			{
-				addAntennaController(null, true);	// if not remembered, use card scan to determine position
+				addAntennaController(null, null, true);	// if not remembered, use card scan to determine position
 			}
 			// add dummy antennas in sc_testDevicesReady
 
 			//------------------------------
-			// Add Keyboards
-			//------------------------------
-			for (int i = 0; i < m_numKeyboards; ++i)
-			{
-				addKeyboardController(null);			// if not remembered, ask to determine position
-			}
-			
-			/*
-			//------------------------------
-			// Add Keyboards
+			// Add Keyboards bound to known device names
 			//------------------------------
 			if ( line.hasOption( "keyboard" ) )
 			{
@@ -302,26 +307,21 @@ public class Game
 					if (device != null) 
 					{
 						if (s_cat.isDebugEnabled())
-							s_cat.debug("initialize: adding Keyboard for postion: " + position
+							s_cat.debug("initialize: adding Keyboard for position: " + position
 							            + " using device: " + device);
 						addKeyboardController(position, device);
 					}
 				}
 			}
-			*/
 			
-			
-			/*
-			Properties props = line.getOptionProperties( "antenna" );
-			String device;
-			for (Direction position : Direction.values())
+			//------------------------------
+			// Add Keyboards with hardware but unknown device name
+			//------------------------------
+			for (int i = 0; i < m_numKeyboards; ++i)
 			{
-				device = (props == null ? null : (String)props.get(position.name()));
-				if (s_cat.isDebugEnabled()) s_cat.debug("initialize: adding Antenna for postion: " + position
-				                                        + " using device: " + device);
-				addAntennaController(position, device);
+				addKeyboardController(null, null);			// if not remembered, ask to determine position
 			}
-			*/
+			
 	    }
 	    catch( ParseException exp )
 	    {
@@ -572,7 +572,7 @@ public class Game
 					AntennaController antController = null;
 					try
 					{
-						antController = addAntennaController(direction, false);
+						antController = addAntennaController(direction, null, false);
 					}
 					catch (Exception e)
 					{	// this should never happen for Virtual controllers
@@ -679,13 +679,14 @@ public class Game
 	/***********************************************************************
 	 * Adds a keyboard controller to the configuration
 	 * @param p_direction		the position of the controller, if known
-	 * @return the keybaord object
+	 * @param p_deviceName		the name of the device this controller is using, if known
+	 * @return the keyboard object
 	 * @throws IOException if it cannot open a port for this controller.
 	 ***********************************************************************/
-	public KeyboardController addKeyboardController (Direction p_direction)
+	public KeyboardController addKeyboardController (Direction p_direction, String p_deviceName)
 		throws IOException
 	{
-		KeyboardController kbdController = new KeyboardController(this, p_direction);
+		KeyboardController kbdController = new KeyboardController(this, p_direction, p_deviceName);
 		m_keyboardControllerList.add(kbdController);
 		m_gameListeners.add(kbdController);
 		return kbdController;
@@ -696,36 +697,19 @@ public class Game
 	 * NOTE: antenna will call back with antennaPositionDetermined once the
 	 * position has been determined (i.e., by scanning a card with the appropriate suit).
 	 * @param p_direction		Antenna position (null if using scan to determine position)
+	 * @param p_deviceName		the name of the device this controller is using, if known
 	 * @param p_hasHardware		If false, there is no hardware and the "antenna"
 	 * 	will be controlled from the command interpreter (for testing)
 	 * @return the new antenna object
 	 * @throws IOException if it cannot open a port for this controller.
 	 ***********************************************************************/
-	public AntennaController addAntennaController (Direction p_direction, boolean p_hasHardware)
+	public AntennaController addAntennaController (Direction p_direction, String p_deviceName, boolean p_hasHardware)
 		throws IOException
 	{
-		AntennaController antController = new AntennaController(this, p_direction, p_hasHardware);
+		AntennaController antController = new AntennaController(this, p_direction, p_deviceName, p_hasHardware);
 		m_antennaControllerList.add(antController);
 		m_gameListeners.add(antController);
 		return antController;
-	}
-	
-	/***********************************************************************
-	 * Record antenna's position once determined.
-	 * @param p_antController the antenna
-	 ***********************************************************************/
-	public void antennaPositionDeterminedXX (AntennaController p_antController)
-	{
-		m_antennaControllers.put(p_antController.getMyPosition(), p_antController);
-	}
-	
-	/***********************************************************************
-	 * Record keyboard's position once determined.
-	 * @param p_kbdController the keyboard
-	 ***********************************************************************/
-	public void keyboardPositionDeterminedXX (KeyboardController p_kbdController)
-	{
-		m_keyboardControllers.put(p_kbdController.getMyPosition(), p_kbdController);
 	}
 	
 	/***********************************************************************

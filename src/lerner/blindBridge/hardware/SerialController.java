@@ -78,14 +78,20 @@ public abstract class SerialController implements SerialPortEventListener, GameL
 	/***********************************************************************
 	 * Configures and initializes a Keyboard Controller
 	 * @param p_game				The game object managing the hands
+	 * @param p_direction		If non-null, the player position this controller is at.
+	 * 							If null, attempts to set position based on hardware settings.
+	 * @param p_deviceName		If non-empty, open the device with this name for this controller
+	 * 							If null or empty, try each device in turn until you find an appropriate one
 	 * @param p_hasHardware		If false, there is no hardware and the "antenna"
 	 * 	will be controlled from the command interpreter (for testing)
 	 * @throws IOException if it cannot open a port for this controller.
 	 ***********************************************************************/
-	public SerialController ( Game p_game, boolean p_hasHardware )
+	public SerialController ( Game p_game, Direction p_direction, String p_deviceName, boolean p_hasHardware )
 		throws IOException
 	{
 		m_game = p_game;
+		m_myPosition = p_direction;
+		
 		if (! p_hasHardware)
 		{
 			m_virtualController = true;
@@ -94,7 +100,16 @@ public abstract class SerialController implements SerialPortEventListener, GameL
 		else
 		{
 			m_virtualController = false;
-			if (! findDeviceToOpen()) throw new IOException("Unable to find a device for this controller");
+			if (p_deviceName == null || p_deviceName.isEmpty())
+			{
+				if (! findDeviceToOpen())
+					throw new IOException("Unable to find a device for this controller");
+			}
+			else
+			{
+				if (! openDevice(p_deviceName))
+					throw new IOException("Unable to open device " + p_deviceName + " for this controller");
+			}
 		}
 	}
 
@@ -150,6 +165,45 @@ public abstract class SerialController implements SerialPortEventListener, GameL
 	}
 	
 	/***********************************************************************
+	 * Attempts to open each candidate device until it finds one that responds as expected.
+	 * If a device is found, removes it from the candidate list.
+	 * @return true if 
+	 ***********************************************************************/
+	protected boolean openDevice ( String p_deviceName )
+	{
+		if (s_cat.isDebugEnabled()) s_cat.debug("openDevice(" + getName() + "): trying device: " + p_deviceName);
+
+		if (p_deviceName == null) return false;
+		
+		// use Iterator hasNext / next, because we also use remove
+		Iterator<Game.CandidatePort> candidatePorts = m_game.getCandidatePorts().iterator(); 
+		while (candidatePorts.hasNext())
+		{
+			CandidatePort candidatePort = candidatePorts.next();
+			CommPortIdentifier portIdentifier = candidatePort.m_portIdentifier;
+			
+			if (s_cat.isDebugEnabled()) s_cat.debug("openDevice(" + getName() + "):considering port: " + portIdentifier.getName()); 
+
+			if (p_deviceName.equals(candidatePort.m_portIdentifier.getName()))
+			{
+				if (tryOpen (portIdentifier))
+				{
+					candidatePorts.remove();
+					return true;
+				}
+				else
+				{
+					candidatePort.m_skipTypes.add(getName());
+					close();
+				}
+			}
+		}
+		
+		s_cat.error("openDevice: Could not open serial communication port with name: " + p_deviceName);
+		return false;
+	}
+	
+	/***********************************************************************
 	 * Attempts to open the given port and then sees if it is connected
 	 * to an instance of the expected hardware, by inspecting the lines
 	 * of text arriving on the serial line.
@@ -198,7 +252,10 @@ public abstract class SerialController implements SerialPortEventListener, GameL
 			if (s_cat.isDebugEnabled()) s_cat.debug("tryOpen(" + getName() + "): read full line from device:\n" + line);
 			if (line.startsWith(getIdentMsg()))
 			{
-				determinePositionFromInitializationMessage(line);
+				if (m_myPosition == null)
+				{
+					determinePositionFromInitializationMessage(line);
+				}
 
 				// add event listeners
 				m_serialPort.addEventListener(this);

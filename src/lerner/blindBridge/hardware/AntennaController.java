@@ -83,18 +83,20 @@ public class AntennaController extends SerialController
 	/***********************************************************************
 	 * Configures and initializes an Antenna Controller
 	 * @param p_game				The game object managing the hands
-	 * @param p_direction		Antenna position (null if using scan to determine position)
+	 * @param p_direction		If non-null, the player position this controller is at.
+	 * 							If null, attempts to set position based on hardware settings.
+	 * @param p_deviceName		If non-empty, open the device with this name for this controller
+	 * 							If null or empty, try each device in turn until you find an appropriate one
 	 * @param p_hasHardware		If false, there is no hardware and the "antenna"
 	 * 	will be controlled from the command interpreter (for testing)
 	 * @throws IOException if it cannot open a port for this controller.
 	 ***********************************************************************/
-	public AntennaController(Game p_game, Direction p_direction, boolean p_hasHardware)
+	public AntennaController(Game p_game, Direction p_direction, String p_deviceName, boolean p_hasHardware)
 		throws IOException
 	{
-		super(p_game, p_hasHardware);
+		super(p_game, p_direction, p_deviceName, p_hasHardware);
 		if (p_direction != null)
 		{
-			m_myPosition = p_direction;
 			m_controllerState = AntennaControllerState.CAPTURE_CARD;
 		}
 	}
