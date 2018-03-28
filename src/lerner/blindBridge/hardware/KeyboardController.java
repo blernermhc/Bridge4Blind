@@ -152,7 +152,7 @@ public class KeyboardController extends SerialController implements Runnable
 	//--------------------------------------------------
 
 	/** A name to describe this class */
-	private static final String CONTROLLER_NAME = "Keyboard";
+	public static final String CONTROLLER_NAME = "Keyboard";
 	
 	/** Milliseconds to block while waiting for port open */
 	private static final int TIME_OUT = 2000;

@@ -31,7 +31,7 @@ public class AntennaController extends SerialController
 	//--------------------------------------------------
 
 	/** A name to describe this class */
-	private static final String CONTROLLER_NAME = "Antenna";
+	public static final String CONTROLLER_NAME = "Antenna";
 	
 	/** Milliseconds to block while waiting for port open */
 	private static final int TIME_OUT = 2000;
