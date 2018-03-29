@@ -1,4 +1,4 @@
-package gui;
+package lerner.blindBridge.gui;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
@@ -13,37 +13,39 @@ import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
+import lerner.blindBridge.main.Game;
+import lerner.blindBridge.model.BridgeHand;
 import lerner.blindBridge.model.Direction;
-import model.Game;
 
 /**
- * Announces the winner of each hand and allows the players to move on to the
- * next hand.
+ * Announces the winner of each hand and allows the players to move on to the next hand.
  * 
  * @author Humaira Orchee
  * @version April 30, 2015
  *
  */
-public class NextHandGUI extends JPanel {
+public class NextHandGUI extends JPanel
+{
 
-	private GameGUI gameGUI;
+	private GameGUI	m_gameGUI;
 
-	private Game game;
+	private Game		m_game;
 
-	private JLabel winnerLabel;
+	private JLabel	m_winnerLabel;
 
-	private JLabel tricksLabel;
+	private JLabel	m_tricksLabel;
 
 	/**
 	 * 
-	 * @param gameGUI
-	 * @param game
+	 * @param m_gameGUI
+	 * @param m_game
 	 */
-	public NextHandGUI(GameGUI gameGUI, Game game) {
+	public NextHandGUI ( GameGUI p_gameGUI, Game p_game )
+	{
 
-		this.gameGUI = gameGUI;
+		m_gameGUI = p_gameGUI;
 
-		this.game = game;
+		m_game = p_game;
 
 		JPanel mainPanel = new JPanel();
 
@@ -52,18 +54,18 @@ public class NextHandGUI extends JPanel {
 		mainPanel.setLayout(boxLayout);
 
 		// add the JLabel that shows who the winners of the last hand are
-		winnerLabel = GUIUtilities.createTitleLabel("");
+		m_winnerLabel = GUIUtilities.createTitleLabel("");
 
-		winnerLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+		m_winnerLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-		mainPanel.add(winnerLabel);
+		mainPanel.add(m_winnerLabel);
 
 		// adds the JLabel that shows how many tricks the winning pair won
-		tricksLabel = GUIUtilities.createTitleLabel("");
+		m_tricksLabel = GUIUtilities.createTitleLabel("");
 
-		tricksLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+		m_tricksLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-		mainPanel.add(tricksLabel);
+		mainPanel.add(m_tricksLabel);
 
 		// add vertical glue before the buttons
 		mainPanel.add(Box.createRigidArea(new Dimension(500, 100)));
@@ -75,46 +77,43 @@ public class NextHandGUI extends JPanel {
 	}
 
 	/**
-	 * Returns a String[] announcing the winners of the last hand and the tricks
-	 * they won in the last hand
+	 * Returns a String[] announcing the winners of the last hand and the tricks they won in the
+	 * last hand
 	 * 
-	 * @return A String announcing the winners of the last hand and the tricks
-	 *         they won in the last hand
+	 * @return A String announcing the winners of the last hand and the tricks they won in the last
+	 *         hand
 	 */
-	private String[] getWinnerText() {
-
+	private String[] getWinnerText ()
+	{
 		// ask game who the winners are
 		String winnerText = "Hand is won by ";
-		int tricksWon = game.determineHandWinner();
+		
+		BridgeHand.HandWinner handWinner = m_game.getBridgeHand().determineHandWinner();
 
-		Direction winner = game.getLastHandWinner();
+		Direction winner = handWinner.direction;
+		int tricksWon = handWinner.tricksTaken;
+
 
 		// TODO : add sound here
-
 		// SoundManager soundManager = SoundManager.getInstance() ;
-		//
 		// soundManager.addSound(filename);
 
-		try {
-
+		try
+		{
 			// figure out what the text should be
-			if (winner.equals(Direction.NORTH)
-					|| winner.equals(Direction.SOUTH)) {
-
+			if (winner.equals(Direction.NORTH) || winner.equals(Direction.SOUTH))
+			{
 				winnerText += "North and South";
-
-			} else if (winner.equals(Direction.EAST)
-					|| winner.equals(Direction.WEST)) {
-
-				winnerText = "East and West";
-
 			}
-		} catch (NullPointerException e) {
-
+			else if (winner.equals(Direction.EAST) || winner.equals(Direction.WEST))
+			{
+				winnerText += "East and West";
+			}
+		}
+		catch (NullPointerException e)
+		{
 			new AssertionError("String text is null");
-
 			System.out.println("There should be no null pointer Exception");
-
 		}
 
 		String trickText = "They won " + tricksWon + " tricks in total.";
@@ -127,18 +126,21 @@ public class NextHandGUI extends JPanel {
 	 * 
 	 * @return
 	 */
-	private JButton createNextHandButton() {
+	private JButton createNextHandButton ()
+	{
 
 		JButton nextHandButton = GUIUtilities.createButton("Next Hand");
 
-		nextHandButton.addActionListener(new ActionListener() {
+		nextHandButton.addActionListener(new ActionListener()
+		{
 
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void actionPerformed ( ActionEvent e )
+			{
 
-				gameGUI.changeFrame();
+				m_gameGUI.changeFrame();
 
-				game.evt_startNewHand();
+				m_game.evt_startNewHand();
 
 				System.out.println("resetting game in Next Hand GUI");
 
@@ -153,25 +155,27 @@ public class NextHandGUI extends JPanel {
 	/**
 	 * Refreshes the display after each hand
 	 */
-	public void refreshDisplay() {
+	public void refreshDisplay ()
+	{
 
 		System.out.println("Refreshing display");
 
 		String[] text = getWinnerText();
 
-		winnerLabel.setText(text[0]);
+		m_winnerLabel.setText(text[0]);
 
-		tricksLabel.setText(text[1]);
+		m_tricksLabel.setText(text[1]);
 
 	}
-	
+
 	@Override
-	public void paintComponent(Graphics g){
-		
+	public void paintComponent ( Graphics g )
+	{
+
 		super.paintComponent(g);
-		
-		gameGUI.undoButtonSetEnabled(false);
-		gameGUI.backButtonSetEnabled(false);
+
+		m_gameGUI.undoButtonSetEnabled(false);
+		m_gameGUI.backButtonSetEnabled(false);
 	}
 
 }

@@ -196,6 +196,22 @@ public class BridgeHand
 		
 		boolean handComplete = hand.isComplete();
 		
+		// If hand is complete, remove single card scan events for this player position.
+		// Once a hand is complete, we don't want to undo one card at a time.
+		if (handComplete)
+		{
+			Iterator<UndoEvent> undoEvents = m_undoEvents.iterator();
+			while (undoEvents.hasNext())
+			{
+				UndoEvent undoEvt = undoEvents.next();
+				if ("evt_addScannedCard".equals(undoEvt.getEventName())
+						&& p_direction.equals(undoEvt.getObjects()[0]) )
+				{
+					undoEvents.remove();
+				}
+			}
+		}
+		
 		// insert undo event
 		Object[] objs = { p_direction, p_card };
 		int[] ints = { (handComplete ? 1 : 0) };
@@ -222,23 +238,6 @@ public class BridgeHand
 											);
 		
 		addUndoEvent(undoEvent);
-		
-		// If hand is complete, remove single card scan events for this player position.
-		// Once a hand is complete, we don't want to undo one card at a time.
-		if (handComplete)
-		{
-			Iterator<UndoEvent> undoEvents = m_undoEvents.iterator();
-			while (undoEvents.hasNext())
-			{
-				UndoEvent undoEvt = undoEvents.next();
-				if ("evt_addScannedCard".equals(undoEvt.getEventName())
-						&& p_direction.equals(undoEvt.getObjects()[0]) )
-				{
-					undoEvents.remove();
-				}
-			}
-		}
-
 		
 		// notify listeners of new card
 		for (GameListener gameListener : m_game.getGameListeners())
@@ -346,7 +345,6 @@ public class BridgeHand
 	 * Enters the current contract, if state is ENTER_CONTRACT
 	 * Sets m_nextPlayerId and m_dummyPosition
 	 * Changes state to WAIT_FOR_FIRST_PLAYER.
-	 * Logs an error and makes no changes, if the current state is not ENTER_CONTRACT, 
 	 * Logs an error and returns false without making any changes, if the current state is not ENTER_CONTRACT, 
 	 * @return true if processed event and false otherwise
 	 * @param p_contract current contract
@@ -364,6 +362,22 @@ public class BridgeHand
 		}
 		
 		m_contract = p_contract;
+		
+		// If contract is complete, remove individual events setting contract information
+		// Once a contract is complete, we don't want to undo one event at a time.
+		if (p_contract.isComplete())
+		{
+			Iterator<UndoEvent> undoEvents = m_undoEvents.iterator();
+			while (undoEvents.hasNext())
+			{
+				UndoEvent undoEvt = undoEvents.next();
+				if (undoEvt.getEventName() != null && undoEvt.getEventName().startsWith("evt_setContract"))
+				{
+					undoEvents.remove();
+				}
+			}
+		}
+
 		
 		// insert undo event
 		Object[] objs = { p_contract };
@@ -394,6 +408,180 @@ public class BridgeHand
 		m_game.getStateController().notifyStateMachine();
 		
 		if (s_cat.isDebugEnabled()) s_cat.debug("evt_setContract: finished.");
+
+		return true;
+	}
+
+	/***********************************************************************
+	 * Sets the number of tricks in the contract, if state is ENTER_CONTRACT.
+	 * If this makes the contract complete, invokes evt_setContract().
+	 * Logs an error and returns false without making any changes, if the current state is not ENTER_CONTRACT, 
+	 * @return true if processed event and false otherwise
+	 * @param p_numTricks number of tricks
+	 ***********************************************************************/
+	public boolean evt_setContractNum ( int p_numTricks )
+	{
+		if (s_cat.isDebugEnabled()) s_cat.debug("evt_setContractNum: entered for "
+		                                        + " numTricks: " + p_numTricks);
+
+		BridgeHandState currentState = m_game.getStateController().getCurrentState();
+		if (currentState != BridgeHandState.ENTER_CONTRACT)
+		{
+			s_cat.error("evt_setContractNum: ignoring event since state is not ENTER_CONTRACT.  State: " + currentState);
+			return false;
+		}
+
+		if (m_contract == null) m_contract = new Contract();
+
+		m_contract.setContractNum(p_numTricks);
+		
+		// insert undo event
+		Object[] objs = { m_contract };
+		
+		UndoEvent undoEvent = new UndoEvent(this
+		                                    , "evt_setContractNum"
+		                                    , objs
+											, null
+											, new UndoEvent.UndoMethod()
+											{
+												
+												@Override
+												public void undo ( UndoEvent p_event, boolean p_confirmed )
+												{
+													evt_setContract_undo(false, p_event, p_confirmed);
+												}
+												
+												@Override
+												public void redo ( UndoEvent p_event, boolean p_confirmed )
+												{
+													evt_setContract_undo(true, p_event, p_confirmed);
+												}
+											}
+											);
+		
+		addUndoEvent(undoEvent);
+		
+		if (m_contract.isComplete()) evt_setContract(m_contract);
+		
+		m_game.getStateController().notifyStateMachine();
+		
+		if (s_cat.isDebugEnabled()) s_cat.debug("evt_setContractNum: finished.");
+
+		return true;
+	}
+
+	/***********************************************************************
+	 * Sets the position of the winner of the contract, if state is ENTER_CONTRACT.
+	 * If this makes the contract complete, invokes evt_setContract().
+	 * Logs an error and returns false without making any changes, if the current state is not ENTER_CONTRACT, 
+	 * @return true if processed event and false otherwise
+	 * @param p_bidWinner position of winner of contract
+	 ***********************************************************************/
+	public boolean evt_setContractWinner ( Direction p_bidWinner )
+	{
+		if (s_cat.isDebugEnabled()) s_cat.debug("evt_setContractNum: entered for "
+		                                        + " contractWinner: " + p_bidWinner);
+
+		BridgeHandState currentState = m_game.getStateController().getCurrentState();
+		if (currentState != BridgeHandState.ENTER_CONTRACT)
+		{
+			s_cat.error("evt_setContractWinner: ignoring event since state is not ENTER_CONTRACT.  State: " + currentState);
+			return false;
+		}
+
+		if (m_contract == null) m_contract = new Contract();
+		
+		m_contract.setBidWinner(p_bidWinner);
+		
+		// insert undo event
+		Object[] objs = { m_contract };
+		
+		UndoEvent undoEvent = new UndoEvent(this
+		                                    , "evt_setContractWinner"
+		                                    , objs
+											, null
+											, new UndoEvent.UndoMethod()
+											{
+												
+												@Override
+												public void undo ( UndoEvent p_event, boolean p_confirmed )
+												{
+													evt_setContract_undo(false, p_event, p_confirmed);
+												}
+												
+												@Override
+												public void redo ( UndoEvent p_event, boolean p_confirmed )
+												{
+													evt_setContract_undo(true, p_event, p_confirmed);
+												}
+											}
+											);
+		
+		addUndoEvent(undoEvent);
+		
+		if (m_contract.isComplete()) evt_setContract(m_contract);
+		
+		m_game.getStateController().notifyStateMachine();
+		
+		if (s_cat.isDebugEnabled()) s_cat.debug("evt_setContractWinner: finished.");
+
+		return true;
+	}
+
+	/***********************************************************************
+	 * Sets the suit of the contract, if state is ENTER_CONTRACT.
+	 * If this makes the contract complete, invokes evt_setContract().
+	 * Logs an error and returns false without making any changes, if the current state is not ENTER_CONTRACT, 
+	 * @return true if processed event and false otherwise
+	 * @param p_suit contract suit
+	 ***********************************************************************/
+	public boolean evt_setContractSuit ( Suit p_suit )
+	{
+		if (s_cat.isDebugEnabled()) s_cat.debug("evt_setContractNum: entered for "
+		                                        + " suit: " + p_suit);
+
+		BridgeHandState currentState = m_game.getStateController().getCurrentState();
+		if (currentState != BridgeHandState.ENTER_CONTRACT)
+		{
+			s_cat.error("evt_setContractSuit: ignoring event since state is not ENTER_CONTRACT.  State: " + currentState);
+			return false;
+		}
+
+		if (m_contract == null) m_contract = new Contract();
+		
+		m_contract.setTrump(p_suit);
+		
+		// insert undo event
+		Object[] objs = { m_contract };
+		
+		UndoEvent undoEvent = new UndoEvent(this
+		                                    , "evt_setContractWinner"
+		                                    , objs
+											, null
+											, new UndoEvent.UndoMethod()
+											{
+												
+												@Override
+												public void undo ( UndoEvent p_event, boolean p_confirmed )
+												{
+													evt_setContract_undo(false, p_event, p_confirmed);
+												}
+												
+												@Override
+												public void redo ( UndoEvent p_event, boolean p_confirmed )
+												{
+													evt_setContract_undo(true, p_event, p_confirmed);
+												}
+											}
+											);
+		
+		addUndoEvent(undoEvent);
+		
+		if (m_contract.isComplete()) evt_setContract(m_contract);
+		
+		m_game.getStateController().notifyStateMachine();
+		
+		if (s_cat.isDebugEnabled()) s_cat.debug("evt_setContractSuit: finished.");
 
 		return true;
 	}
@@ -821,6 +1009,49 @@ public class BridgeHand
 			return false;
 	}
 	
+	public class HandWinner
+	{
+		public Direction		direction;
+		public int			tricksTaken;
+	}
+	
+	/***********************************************************************
+	 * Returns the winner of the hand, if complete.
+	 * Returns null if not complete.
+	 * @return the winner and number of tricks taken.
+	 ***********************************************************************/
+	public HandWinner determineHandWinner()
+	{
+		if (! testHandComplete()) return null;
+		
+		HandWinner handWinner = new HandWinner();
+		
+		// get the bid winner
+		Direction bidWinner = m_contract.getBidWinner();
+
+		// calculate the total number of tricks they won together
+		int totalTricksWon = m_tricksTaken.get(bidWinner).size(); 
+		
+		// check if they could fulfill their contract. If they did, they win.
+		// Otherwise, the other pair wins.
+		if (totalTricksWon >= 6 + m_contract.getContractNum())
+		{
+			handWinner.direction = bidWinner;
+			handWinner.tricksTaken = totalTricksWon;
+		}
+		else
+		{
+			// if the bid winner and their partner did not make the bid, then
+			// the other pair wins. So calculate the total tricks the winning
+			// pair won.
+
+			handWinner.direction = bidWinner.getNextDirection();
+			handWinner.tricksTaken = m_tricksTaken.get(handWinner.direction).size();
+		}
+
+		return handWinner;
+	}
+
 	/***********************************************************************
 	 * Activities that happen at the start of a trick.
 	 * Sets first player based on contract.

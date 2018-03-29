@@ -146,7 +146,7 @@ public class SoundManager {
 		debugMsg("Audio player is free.  ");
 
 		if (!ap.init(nextSoundFile)) {
-			debugMsg("Error initializing player: " + ap.error);
+			debugMsg("Error initializing player: " + ap.m_error);
 			return;
 		}
 

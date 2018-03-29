@@ -1,4 +1,4 @@
-package gui;
+package lerner.blindBridge.gui;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
@@ -14,41 +14,43 @@ import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
+import lerner.blindBridge.main.Game;
 import lerner.blindBridge.model.Contract;
-import model.Game;
 
 /**
- * The panel that allows the user to set the number of tricks to win for the
- * contract.
+ * The panel that allows the user to set the number of tricks to win for the contract.
  * 
  * @version March 12, 2015
  */
-public class BidNumberGUI extends JPanel implements ActionListener {
+public class BidNumberGUI extends JPanel implements ActionListener
+{
 
-	private JButton[] buttons;
-	private Game game;
-	private GameGUI gameGUI;
+	private JButton[]	m_buttons;
+
+	private Game			m_game;
+
+	private GameGUI		m_gameGUI;
 
 	// for test mode only. For now, hand number can be 1 or 2.
-	private int handNum = 1;
+	private int			m_handNum	= 1;
 
 	/**
 	 * Create the panel
 	 * 
-	 * @param game
+	 * @param m_game
 	 *            the game being played.
 	 */
-	public BidNumberGUI(GameGUI gameGUI, Game game) {
-		this.game = game;
-		this.gameGUI = gameGUI;
-		buttons = new JButton[Contract.MAX_BID];
+	public BidNumberGUI ( GameGUI p_gameGUI, Game p_game )
+	{
+		this.m_game = p_game;
+		this.m_gameGUI = p_gameGUI;
+		m_buttons = new JButton[Contract.MAX_BID];
 		// create a new JPanel that will contain everything in the center of the
 		// gui
 		JPanel boxPanel = new JPanel();
 		// set the new panel's layout
 		boxPanel.setLayout(new BoxLayout(boxPanel, BoxLayout.Y_AXIS));
-		JLabel titleLabel = GUIUtilities
-				.createTitleLabel("How many tricks in the bid?");
+		JLabel titleLabel = GUIUtilities.createTitleLabel("How many tricks in the bid?");
 		boxPanel.add(titleLabel);
 		// add vertical glue before the buttons
 		boxPanel.add(Box.createRigidArea(new Dimension(500, 100)));
@@ -62,7 +64,8 @@ public class BidNumberGUI extends JPanel implements ActionListener {
 	}
 
 	/** Creates the button panel. */
-	private JPanel createButtonPanel() {
+	private JPanel createButtonPanel ()
+	{
 
 		// create a JPanel to hold the buttons
 		JPanel mainPanel = new JPanel();
@@ -70,24 +73,26 @@ public class BidNumberGUI extends JPanel implements ActionListener {
 		mainPanel.setLayout(new GridLayout(3, 0, 20, 20));
 
 		// create the buttons
-		for (int i = 0; i < buttons.length; i++) {
+		for (int i = 0; i < m_buttons.length; i++)
+		{
 
 			String s = "" + (i + 1);
-			buttons[i] = GUIUtilities.createButton(s);
-			buttons[i].addActionListener(this);
-			mainPanel.add(GUIUtilities.packageButton(buttons[i],
-					FlowLayout.CENTER));
+			m_buttons[i] = GUIUtilities.createButton(s);
+			m_buttons[i].addActionListener(this);
+			mainPanel.add(GUIUtilities.packageButton(m_buttons[i], FlowLayout.CENTER));
 
 			// for testing, only 4 bids is allowed for first hand
-			if (Game.isTestMode()) {
+			if (Game.isTestMode())
+			{
 
-				buttons[i].setEnabled(false);
+				m_buttons[i].setEnabled(false);
 			}
 		}
 
 		// for testing, only 4 bids is allowed for first hand. 3 bids is allowed
 		// in the second hand
-		if (Game.isTestMode()) {
+		if (Game.isTestMode())
+		{
 
 			enableAndDisableButtons();
 		}
@@ -97,54 +102,64 @@ public class BidNumberGUI extends JPanel implements ActionListener {
 	}
 
 	/**
-	 * Depending on what hand it is, it only enables the button corresponding to
-	 * the appropriate bid number
+	 * Depending on what hand it is, it only enables the button corresponding to the appropriate bid
+	 * number
 	 * 
 	 * @throws AssertionError
 	 */
-	private void enableAndDisableButtons() throws AssertionError {
-		if (handNum == 1) {
+	private void enableAndDisableButtons () throws AssertionError
+	{
+		if (m_handNum == 1)
+		{
 
-			buttons[3].setEnabled(true);
+			m_buttons[3].setEnabled(true);
 
-		} else if (handNum == 2) {
+		}
+		else if (m_handNum == 2)
+		{
 
-			buttons[3].setEnabled(false);
-			buttons[2].setEnabled(true);
+			m_buttons[3].setEnabled(false);
+			m_buttons[2].setEnabled(true);
 
-		} else {
+		}
+		else
+		{
 
 			throw new AssertionError("BidNumberGUI : There are only two hands");
 		}
 	}
 
 	@Override
-	public void actionPerformed(ActionEvent e) {
-		if (game != null) {
+	public void actionPerformed ( ActionEvent e )
+	{
+		if (m_game != null)
+		{
 			int bidNumber = Integer.parseInt(e.getActionCommand());
-			game.setContractNum(bidNumber);
+			m_game.getBridgeHand().evt_setContractNum(bidNumber);
 		}
-		gameGUI.changeFrame();
+		m_gameGUI.changeFrame();
 
 	}
 
 	/**
 	 * 
-	 * @param handNum
+	 * @param m_handNum
 	 */
-	public void setHandNum(int handNum) {
-		this.handNum = handNum;
-		
+	public void setHandNum ( int p_handNum )
+	{
+		this.m_handNum = p_handNum;
+
 		enableAndDisableButtons();
 	}
-	
+
 	@Override
-	public void paintComponent(Graphics g){
-		
+	public void paintComponent ( Graphics g )
+	{
+
 		super.paintComponent(g);
-		
-		gameGUI.undoButtonSetEnabled(true);
-		gameGUI.backButtonSetEnabled(true);
+
+		m_gameGUI.undoButtonSetEnabled(true);
+		m_gameGUI.backButtonSetEnabled(true);
 	}
 
 }

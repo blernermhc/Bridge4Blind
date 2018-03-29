@@ -2,12 +2,19 @@ package lerner.blindBridge.model;
 
 import java.util.Comparator;
 
+import org.apache.log4j.Category;
+
 /***********************************************************************
  * Represents a playing card
  ***********************************************************************/
 public class Card implements Comparable<Card>
 {
 	
+	/**
+	 * Used to collect logging output for this class
+	 */
+	static Category s_cat = Category.getInstance(Card.class.getName());
+
 	//--------------------------------------------------
 	// CONSTANTS
 	//--------------------------------------------------
@@ -86,6 +93,9 @@ public class Card implements Comparable<Card>
 		{
 			throw new IllegalArgumentException("Card: number out of bounds: " + p_cardDecimal);
 		}
+		
+		//build the name of the file containing the sound
+		m_sound = SOUND_FOLDER + m_rank.toString() + m_suit.toString() + ".WAV";
 	}
 	
 	/***********************************************************************
@@ -130,6 +140,9 @@ public class Card implements Comparable<Card>
 			default:
 				throw new IllegalArgumentException("Card: invalid suit: " + suit);
 		}
+		
+		//build the name of the file containing the sound
+		m_sound = SOUND_FOLDER + m_rank.toString() + m_suit.toString() + ".WAV";
 	}
 
 	//--------------------------------------------------
@@ -271,6 +284,7 @@ public class Card implements Comparable<Card>
 	 ***********************************************************************/
 	public String getSound()
 	{
+		if (s_cat.isDebugEnabled()) s_cat.debug("getSound: for card: " + this.toString() + " sound: " + m_sound);
 		return m_sound;
 	}
 	

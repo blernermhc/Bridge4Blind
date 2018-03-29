@@ -3,7 +3,7 @@ package main;
 import java.io.IOException;
 
 import controller.TestAntennaHandler;
-import gui.GameGUI;
+import lerner.blindBridge.gui.GameGUI;
 import model.CardDatabase;
 import model.Game;
 import audio.AudibleGameListener;

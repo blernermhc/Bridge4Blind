@@ -1,4 +1,4 @@
-package gui;
+package lerner.blindBridge.gui;
 
 import java.awt.Component;
 import java.awt.Dimension;

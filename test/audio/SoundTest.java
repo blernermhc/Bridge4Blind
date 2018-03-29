@@ -14,7 +14,7 @@ public class SoundTest {
 			ap.play();			
 		}
 		else {
-			System.out.println(ap.error);
+			System.out.println(ap.m_error);
 		}
 		
 		

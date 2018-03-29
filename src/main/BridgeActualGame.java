@@ -1,7 +1,6 @@
 package main;
 
 import main.SyncPipe;
-import gui.GameGUI;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -12,6 +11,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import controller.AntennaHandler;
+import lerner.blindBridge.gui.GameGUI;
 import model.CardDatabase;
 import model.Game;
 import audio.AudibleGameListener;

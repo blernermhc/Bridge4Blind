@@ -24,7 +24,9 @@ import org.apache.commons.cli.ParseException;
 import org.apache.log4j.Category;
 import org.apache.logging.log4j.Level;
 
+import audio.AudibleGameListener;
 import gnu.io.CommPortIdentifier;
+import lerner.blindBridge.gui.GameGUI;
 import lerner.blindBridge.hardware.AntennaController;
 import lerner.blindBridge.hardware.CommandController;
 import lerner.blindBridge.hardware.KeyboardController;
@@ -51,11 +53,6 @@ public class Game
 	//--------------------------------------------------
 	// CONSTANTS
 	//--------------------------------------------------
-
-	private Map<Direction, KeyboardController> m_keyboardControllers = new HashMap<>();
-	private Map<Direction, AntennaController> m_antennaControllers = new HashMap<>();
-	private CommandController m_commandController;
-	
 
 	//--------------------------------------------------
 	// CONFIGURATION MEMBER DATA
@@ -91,6 +88,21 @@ public class Game
 	/** the object containing the data for the current hand */
 	private BridgeHand 					m_bridgeHand; 
 	
+	/** the keyboard controller assigned to each position.  Null for positions of sighted players. */
+	private Map<Direction, KeyboardController> m_keyboardControllers = new HashMap<>();
+	
+	/** the antenna controller assigned to each position.  All positions have antenna controllers, unless using command line for some positions. */
+	private Map<Direction, AntennaController> m_antennaControllers = new HashMap<>();
+
+	/** The command line controller */
+	private CommandController m_commandController;
+	
+	/** The GUI controller */
+	private 	GameGUI m_gameGUI;
+
+	/** Handles audio announcements for everyone to hear (Keyboard controller manages audio for blind players) */
+	private 	AudibleGameListener m_audibleGameListener;
+
 	/** internal list to support moving keyboards to new positions */
 	private List<KeyboardController>		m_keyboardControllerList = new ArrayList<>();
 
@@ -237,6 +249,25 @@ public class Game
 			Logger.initialize(logLevel);
 
 			//------------------------------
+			// Create the command line input controller and start it
+			//------------------------------
+			m_commandController = new CommandController(this, System.in, System.out);
+			m_commandController.start();
+			
+			//------------------------------
+			// Create the Audio generator and add it as an event listener
+			//------------------------------
+			m_audibleGameListener = new AudibleGameListener();
+			addGameListener(m_audibleGameListener);
+			
+			//------------------------------
+			// Create the GUI and start it
+			//------------------------------
+			m_gameGUI = new GameGUI(this);
+			addGameListener(m_gameGUI);
+			// do we need something to run it?  maybe m_gameGUI.validate();?  Start a new thread?
+		
+			//------------------------------
 			// Read card libraries
 			//------------------------------
 			for (String cardFile : line.getOptionValues("cardFile"))
@@ -330,12 +361,6 @@ public class Game
 	    }
 
 		//------------------------------
-		// Create the command line input controller and start it
-		//------------------------------
-		m_commandController = new CommandController(this, System.in, System.out);
-		m_commandController.start();
-		
-		//------------------------------
 		// Start the game
 		//------------------------------
 		m_bridgeHandStateController.runStateMachine();
@@ -374,6 +399,16 @@ public class Game
 	// METHODS
 	//--------------------------------------------------
 	
+    /***********************************************************************
+     * Returns true if running in test mode.
+     * Not implemented yet.
+     * @return true if in test mode
+     ***********************************************************************/
+    public static boolean isTestMode()
+    {
+    		return false;	// Rick did not implement this
+    }
+
 	/***********************************************************************
 	 * Starts a new hand, pushing previous hand onto the stack of played hands.
 	 * Since all other objects access BridgeHand with Game.getBridgeHand(), they
@@ -440,7 +475,7 @@ public class Game
 		}
 		
 		// notify listeners of event
-		for (GameListener gameListener : m_gameListeners)
+		for (GameListener gameListener : getGameListeners())
 		{
 			gameListener.sig_gameReset_undo(p_redoFlag, p_confirmed);
 		}
@@ -587,7 +622,8 @@ public class Game
 
 		return (! reconfigRequired);
 	}
-	//--------------------------------------------------
+
+    //--------------------------------------------------
 	// INTERNAL METHODS
 	//--------------------------------------------------
 
@@ -688,7 +724,7 @@ public class Game
 	{
 		KeyboardController kbdController = new KeyboardController(this, p_direction, p_deviceName);
 		m_keyboardControllerList.add(kbdController);
-		m_gameListeners.add(kbdController);
+		addGameListener(kbdController);
 		return kbdController;
 	}
 	
@@ -708,7 +744,7 @@ public class Game
 	{
 		AntennaController antController = new AntennaController(this, p_direction, p_deviceName, p_hasHardware);
 		m_antennaControllerList.add(antController);
-		m_gameListeners.add(antController);
+		addGameListener(antController);
 		return antController;
 	}
 	
@@ -755,6 +791,15 @@ public class Game
 	public List<GameListener> getGameListeners ()
 	{
 		return m_gameListeners;
+	}
+
+	/***********************************************************************
+	 * The objects to be notified of various events.
+	 * @param p_listener the listener to add
+	 ***********************************************************************/
+	public void addGameListener (GameListener p_listener)
+	{
+		m_gameListeners.add(p_listener);
 	}
 
 	//--------------------------------------------------

@@ -3,6 +3,7 @@ package gui;
 import javax.swing.JFrame;
 
 import controller.AntennaHandler;
+import lerner.blindBridge.gui.GameGUI;
 import model.CardDatabase;
 import model.Game;
 
