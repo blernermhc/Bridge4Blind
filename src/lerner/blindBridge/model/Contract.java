@@ -77,7 +77,7 @@ public class Contract
 
 	public String toString()
 	{
-		return "" + m_contractNum + " " + m_trumpSuit.toString() + " " + m_bidWinner;
+		return "" + m_contractNum + " " + m_trumpSuit + " " + m_bidWinner;
 	}
 
 	//--------------------------------------------------
