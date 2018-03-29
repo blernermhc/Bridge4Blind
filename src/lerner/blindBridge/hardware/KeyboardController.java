@@ -47,23 +47,23 @@ public class KeyboardController extends SerialController implements Runnable
 	 **********************************************************************
 	 */
 	public enum KBD_MESSAGE {
-		NOOP					(0, 0)
-		, SCAN_HAND			(1, 1500)
-		, SCAN_DUMMY			(2, 1500)
+		NOOP						(0, 0)
+		, SCAN_HAND				(1, 1500)
+		, SCAN_DUMMY				(2, 1500)
 		// 3 not used
-		, REMIND_PLAY		(4, 1000)
-		, REMIND_DUMMY		(5, 1000)
-		, HAND_COMPLETE		(6, 1500)
-		// 7 not used
+		, REMIND_PLAY			(4, 1000)
+		, REMIND_DUMMY			(5, 1000)
+		, HAND_SCAN_COMPLETE		(6, 1500)
+		, HAND_COMPLETE			(7, 4000)
 		// 8 not used
-		, NEW_GAME			(9, 0)
-		, NEW_HAND			(10, 0)
-		, START_RELOAD		(11, 1500)
-		, FINISH_RELOAD		(12, 1500)
-		, ENTER_CONTRACT		(13, 1500)
+		, NEW_GAME				(9, 0)
+		, NEW_HAND				(10, 0)
+		, START_RELOAD			(11, 1500)
+		, FINISH_RELOAD			(12, 1500)
+		, ENTER_CONTRACT			(13, 1500)
 		, CANNOT_PLAY_ALREADY_PLAYED		(14, 1500)
 		, CANNOT_PLAY_NOT_IN_HAND		(15, 1500)
-		, SEND_POSITION		(16, 1500)
+		, SEND_POSITION			(16, 1500)
 		;
 		
 		private int m_msgId;
@@ -1254,7 +1254,7 @@ public class KeyboardController extends SerialController implements Runnable
 			send_multiByteMessage(MULTIBYTE_MESSAGE.ADD_CARD_TO_HAND, p_direction, p_card);
 			if (p_handComplete)
 			{
-				send_simpleMessage(KBD_MESSAGE.HAND_COMPLETE);
+				send_simpleMessage(KBD_MESSAGE.HAND_SCAN_COMPLETE);
 			}
 		}
 	}

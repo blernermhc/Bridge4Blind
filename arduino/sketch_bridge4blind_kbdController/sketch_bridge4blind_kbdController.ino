@@ -368,7 +368,8 @@ void processInput1 (uint8_t p_input0, uint8_t p_repeat)
     case 2:	phrases.playMessage(SND_SCAN_DUMMY, NEW_AUDIO); eventList.addEvent(p_input0, p_repeat); break;
     case 4:	phrases.playMessage(SND_IN_HAND, NEW_AUDIO); eventList.addEvent(p_input0, p_repeat); break;
     case 5:	phrases.playMessage(SND_ON_BOARD, NEW_AUDIO); eventList.addEvent(p_input0, p_repeat); break;
-    case 6:	bridgeHand.handComplete(p_repeat); eventList.addEvent(p_input0, p_repeat); break;
+    case 6:	phrases.playMessage(SND_HAND_IS_COMPLETE, NEW_AUDIO); eventList.addEvent(p_input0, p_repeat); break;
+    case 7:	bridgeHand.handComplete(p_repeat); eventList.addEvent(p_input0, p_repeat); break;
     case 9:	eventList.resetEventList(p_repeat); bridgeHand.newGame(); break;
     case 10:	eventList.resetEventList(p_repeat); bridgeHand.newHand(); break;
     case 11:	eventList.resetEventList(false); keyboardRestartInitiate(); break;
@@ -683,6 +684,7 @@ void btn_down()
 }  
 
 //----------------------------------------------------------------------
+// Repeats last audio from Game Controller event (resets mode to play, if not already in that mode)
 //----------------------------------------------------------------------
 void btn_repeat()
 {
@@ -710,12 +712,14 @@ void btn_repeat()
 }
 
 //----------------------------------------------------------------------
-// press a 2nd time to stop audio
+// press a 2nd time to stop audio (resets mode to play, if not already in that mode)
 //----------------------------------------------------------------------
 void btn_state(uint8_t p_isSecondPress)
 {
     if (s_mode != MODE_PLAY_HAND)
-    {
+    {	// if in a function mode, restore normal PLAY HAND mode
+    		s_mode = MODE_PLAY_HAND;
+    		s_submode = 0;
     		announce_mode();
     		return;
     }
