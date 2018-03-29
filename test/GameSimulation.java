@@ -8,9 +8,9 @@ import java.net.UnknownHostException;
 import model.CardDatabase;
 import model.Game;
 import server.StubCSharpServer;
-import audio.AudibleGameListener;
 import controller.AntennaHandler;
 import controller.Handler;
+import lerner.blindBridge.audio.AudibleGameListener;
 import lerner.blindBridge.model.Direction;
 import lerner.blindBridge.model.Suit;
 

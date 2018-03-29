@@ -7,8 +7,8 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-import audio.SoundManager;
 import controller.TestAntennaHandler;
+import lerner.blindBridge.audio.SoundManager;
 import lerner.blindBridge.model.Card;
 import lerner.blindBridge.model.Contract;
 import lerner.blindBridge.model.Direction;
@@ -83,12 +83,12 @@ public class Game {
 	 * 
 	 * @param handler
 	 *            TODO
-	 * @param isTestMode
+	 * @param p_isTestMode
 	 *            TODO
 	 */
-	public Game(boolean isTestMode) {
+	public Game(boolean p_isTestMode) {
 
-		Game.isTestMode = isTestMode;
+		Game.isTestMode = p_isTestMode;
 
 		// construct the four hands
 		players = new Player[NUM_PLAYERS];
@@ -795,8 +795,8 @@ public class Game {
 	}
 
 	@SuppressWarnings("javadoc")
-	public void setGameState(GameState gameState) {
-		this.gameState = gameState;
+	public void setGameState(GameState p_gameState) {
+		this.gameState = p_gameState;
 		//System.out.println("State set to " + gameState);
 	}
 

@@ -1,4 +1,4 @@
-package audio;
+package lerner.blindBridge.audio;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
@@ -57,6 +57,7 @@ public class AudioPlayer implements Runnable
 
 	private boolean				m_loop				= false;
 
+	@SuppressWarnings("unused")
 	private BooleanControl		m_mute;
 
 	private int					m_externalBuffer		= 10000;

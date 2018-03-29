@@ -1,4 +1,4 @@
-package audio;
+package lerner.blindBridge.audio;
 
 import java.util.ArrayList;
 

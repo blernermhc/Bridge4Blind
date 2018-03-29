@@ -24,8 +24,8 @@ import org.apache.commons.cli.ParseException;
 import org.apache.log4j.Category;
 import org.apache.logging.log4j.Level;
 
-import audio.AudibleGameListener;
 import gnu.io.CommPortIdentifier;
+import lerner.blindBridge.audio.AudibleGameListener;
 import lerner.blindBridge.gui.GameGUI;
 import lerner.blindBridge.hardware.AntennaController;
 import lerner.blindBridge.hardware.CommandController;

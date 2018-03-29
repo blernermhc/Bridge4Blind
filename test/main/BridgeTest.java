@@ -3,10 +3,10 @@ package main;
 import java.io.IOException;
 
 import controller.TestAntennaHandler;
+import lerner.blindBridge.audio.AudibleGameListener;
 import lerner.blindBridge.gui.GameGUI;
 import model.CardDatabase;
 import model.Game;
-import audio.AudibleGameListener;
 
 public class BridgeTest implements BridgeMode {
 	

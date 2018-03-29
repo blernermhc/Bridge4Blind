@@ -1,7 +1,5 @@
 package main;
 
-import main.SyncPipe;
-
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.ConnectException;
@@ -10,11 +8,9 @@ import java.net.UnknownHostException;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import controller.AntennaHandler;
+import lerner.blindBridge.audio.AudibleGameListener;
 import lerner.blindBridge.gui.GameGUI;
-import model.CardDatabase;
 import model.Game;
-import audio.AudibleGameListener;
 
 public class BridgeActualGame implements BridgeMode {
 
@@ -55,11 +51,11 @@ public class BridgeActualGame implements BridgeMode {
 		try {
 			Game game = new Game(false);
 			game.activateAntennas();
-			GameGUI gui = new GameGUI(game);
+			GameGUI gui = null; //new GameGUI(game);  RICK: commented this out so we do not have compile errors.  This class is no longer used...
 			game.addListener(new AudibleGameListener());
 			game.addListener(gui);
 
-			gui.sig_debugMsg("main run");
+			// gui.sig_debugMsg("main run"); RICK: commented out to avoid null ptr warning
 
 		} catch (UnknownHostException e) {
 			System.err.println("Could not connect to server.  Host unknown.");

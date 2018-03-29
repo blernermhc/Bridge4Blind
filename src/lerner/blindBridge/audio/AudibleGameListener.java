@@ -1,4 +1,4 @@
-package audio;
+package lerner.blindBridge.audio;
 
 import lerner.blindBridge.model.Card;
 import lerner.blindBridge.model.Direction;
