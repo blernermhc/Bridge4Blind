@@ -52,7 +52,7 @@ public class BridgeActualGame implements BridgeMode {
 			Game game = new Game(false);
 			game.activateAntennas();
 			GameGUI gui = null; //new GameGUI(game);  RICK: commented this out so we do not have compile errors.  This class is no longer used...
-			game.addListener(new AudibleGameListener());
+			//game.addListener(new AudibleGameListener()); RICK: commented this out 
 			game.addListener(gui);
 
 			// gui.sig_debugMsg("main run"); RICK: commented out to avoid null ptr warning

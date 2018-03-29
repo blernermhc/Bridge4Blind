@@ -257,7 +257,7 @@ public class Game
 			//------------------------------
 			// Create the Audio generator and add it as an event listener
 			//------------------------------
-			m_audibleGameListener = new AudibleGameListener();
+			m_audibleGameListener = new AudibleGameListener(this);
 			addGameListener(m_audibleGameListener);
 			
 			//------------------------------
