@@ -30,17 +30,25 @@ public class BidPositionGUI extends DirectionGUI
 	 * @param m_game
 	 *            the game being played
 	 */
-	public BidPositionGUI ( GameGUI p_gameGUI, Game p_game )
+	public BidPositionGUI ( )
 	{
 		super("What position is the Bid Winner?");
+	}
+
+	/* (non-Javadoc)
+	 * @see lerner.blindBridge.gui.BridgeJPanel#initialize(lerner.blindBridge.gui.GameGUI, lerner.blindBridge.main.Game)
+	 */
+	public void initialize ( GameGUI p_gameGUI, Game p_game )
+	{
 		m_game = p_game;
 		m_gameGUI = p_gameGUI;
-
+		
 		if (Game.isTestMode())
 		{
 			enableAndDisableButtons();
 		}
 	}
+	
 
 	/**
 	 * Depending on what hand it is, it only enables the button corresponding to the appropriate bid
@@ -85,7 +93,7 @@ public class BidPositionGUI extends DirectionGUI
 			Direction bidWinner = Direction.valueOf(e.getActionCommand().toUpperCase());
 			m_game.getBridgeHand().evt_setContractWinner(bidWinner);
 		}
-		m_gameGUI.changeFrame();
+		m_gameGUI.changeFrame(GameGUIs.BID_NUMBER_GUI);
 	}
 
 	/**
@@ -102,12 +110,11 @@ public class BidPositionGUI extends DirectionGUI
 	@Override
 	public void paintComponent ( Graphics g )
 	{
-
 		super.paintComponent(g);
-
-		m_gameGUI.undoButtonSetEnabled(true);
-		m_gameGUI.backButtonSetEnabled(true);
-
-		// gameGUI.getGame().setGameState(GameState.FIRSTCARD);
 	}
+	
+	//--------------------------------------------------
+	// Game Event Signal Handlers
+	//--------------------------------------------------
+
 }

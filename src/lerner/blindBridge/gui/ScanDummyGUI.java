@@ -3,22 +3,21 @@ package lerner.blindBridge.gui;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Graphics;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.TreeSet;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
+import org.apache.log4j.Category;
+
 import lerner.blindBridge.main.Game;
 import lerner.blindBridge.model.Card;
-import lerner.blindBridge.model.Contract;
 import lerner.blindBridge.model.Direction;
 import lerner.blindBridge.model.GameListener_sparse;
-import lerner.blindBridge.model.Rank;
+import lerner.blindBridge.model.PlayerHand;
 import lerner.blindBridge.model.Suit;
-import lerner.blindBridge.stateMachine.BridgeHandState;
 
 /**
  * The GUI that is displayed while the dummy's cards are being scanned in.
@@ -28,14 +27,17 @@ import lerner.blindBridge.stateMachine.BridgeHandState;
  *
  * @version March 12, 2015
  */
-public class ScanDummyGUI extends JPanel implements GameListener_sparse
+public class ScanDummyGUI extends BridgeJPanel implements GameListener_sparse
 {
+	/**
+	 * Used to collect logging output for this class
+	 */
+	private static Category s_cat = Category.getInstance(ScanDummyGUI.class.getName());
+
 
 	private GameGUI	m_gameGUI;
 
 	private Game		m_game;
-
-	// private Player	m_dummy;		// did not appear to be used
 
 	private JLabel	m_clubsScanned		= new JLabel("Clubs: ");
 
@@ -53,12 +55,8 @@ public class ScanDummyGUI extends JPanel implements GameListener_sparse
 	 * @param m_game
 	 *            the game being played
 	 */
-	public ScanDummyGUI ( GameGUI p_gameGUI, Game p_game )
+	public ScanDummyGUI ( )
 	{
-		m_gameGUI = p_gameGUI;
-		m_game = p_game;
-		m_game.addGameListener(this);
-
 		JPanel infoPanel = new JPanel();
 		infoPanel.setLayout(new BoxLayout(infoPanel, BoxLayout.Y_AXIS));
 		// add(GUIUtilities.createTitleLabel("Please scan dummy cards"));
@@ -81,189 +79,123 @@ public class ScanDummyGUI extends JPanel implements GameListener_sparse
 		add(infoPanel);
 	}
 
-	@Override
-	public void sig_gameReset ()
+	/* (non-Javadoc)
+	 * @see lerner.blindBridge.gui.BridgeJPanel#initialize(lerner.blindBridge.gui.GameGUI, lerner.blindBridge.main.Game)
+	 */
+	public void initialize ( GameGUI p_gameGUI, Game p_game )
 	{
+		m_game = p_game;
+		m_gameGUI = p_gameGUI;
+		
+		m_game.addGameListener(this);
+	}
+	
+	//--------------------------------------------------
+	// Game Event Signal Handlers
+	//--------------------------------------------------
 
-		m_clubsScanned.setText("Clubs: ");
-		m_diamondsScanned.setText("Diamonds: ");
-		m_heartsScanned.setText("Hearts: ");
-		m_spadesScanned.setText("Spades: ");
-		repaint();
+	/***********************************************************************
+	 * Indicates that the system is now waiting for the dummy to scan their hand.
+	 * NOTE: this is invoked after undo, so display the current dummy hand.
+	 ***********************************************************************/
+	@Override
+	public void sig_scanDummyHand ()
+	{
+		if (s_cat.isDebugEnabled()) s_cat.debug("sig_scanDummyHand: entered");
+		displayHand();
 	}
 
+	/***********************************************************************
+	 * Indicates that the card in the dummy's hand has been scanned.
+	 ***********************************************************************/
 	@Override
 	public void sig_cardScanned ( Direction p_direction, Card p_card, boolean p_handComplete )
 	{
-		if (m_game.getStateController().getCurrentState() == BridgeHandState.SCAN_DUMMY)
+		if (s_cat.isDebugEnabled()) s_cat.debug("sig_cardScanned: entered");
+
+		displayHand();
+	}
+
+	/***********************************************************************
+	 * Removes or restores a scanned card.
+	 ***********************************************************************/
+	@Override
+	public void sig_cardScanned_undo (	boolean p_redoFlag,
+										boolean p_confirmed,
+										Direction p_direction,
+										Card p_card,
+										boolean p_handComplete )
+	{
+		if (s_cat.isDebugEnabled()) s_cat.debug("sig_cardScanned_undo: entered");
+
+		if (! p_confirmed) return;
+		
+		displayHand();
+	}
+
+	/***********************************************************************
+	 * Displays the dummy hand, as known by the Bridge Hand object.
+	 ***********************************************************************/
+	public void displayHand ()
+	{
+		PlayerHand hand = m_game.getBridgeHand().getHands().get(m_game.getBridgeHand().getDummyPosition());
+		
+		for (Suit suit : Suit.values())
 		{
-			switch (p_card.getSuit())
-			{
-				case CLUBS:
-					updateCardsScanned(p_card, m_clubsScanned);
-					break;
-				case DIAMONDS:
-					updateCardsScanned(p_card, m_diamondsScanned);
-					break;
-				case HEARTS:
-					updateCardsScanned(p_card, m_heartsScanned);
-					break;
-				case SPADES:
-					updateCardsScanned(p_card, m_spadesScanned);
-					break;
-				case NOTRUMP:
-					break;
-			}
+			updateCardsScanned(suit, (hand == null ? null : hand.getSuitCards().get(suit)));
 		}
+		repaint();
 	}
 
-	private void updateCardsScanned ( Card card, JLabel suitCards )
+	/***********************************************************************
+	 * Updates the display with the modified list of cards for a suit
+	 * @param p_suit		the suit being modified
+	 * @param p_cards	an ordered set of cards in that suit that have been scanned so far
+	 ***********************************************************************/
+	private void updateCardsScanned ( Suit p_suit, TreeSet<Card> p_cards )
 	{
-		suitCards.setText(suitCards.getText() + "  " + card.getRank());
-	}
-
-	@Override
-	public void sig_contractSet ( Contract contract )
-	{
-		// m_dummy = m_game.getBridgeHand().getDummyPosition();
-	}
-
-	@Override
-	public void sig_blindHandsScanned ()
-	{
-	}
-
-	/**
-	 * Advances to the next GUI frame
-	 */
-	@Override
-	public void sig_dummyHandScanned ()
-	{
-
-		// wait 2 seconds before switching screen so that the last dummy card is
-		// visible
-		TimerTask timertask = new TimerTask()
+		JLabel suitLabel;
+		String prefix;
+		switch (p_suit)
 		{
-
-			@Override
-			public void run ()
-			{
-
-				m_gameGUI.changeFrame();
-
-			}
-		};
-
-		Timer timer = new Timer(true);
-		timer.schedule(timertask, 2000);
-
-	}
-
-	public void undo ( Card toRemove )
-	{
-
-		System.out.println("Scan Dummy GUI umdo ");
-
-		Suit suit = toRemove.getSuit();
-
-		Rank rank = toRemove.getRank();
-
-		System.out.println("rank is -" + rank + "-");
-
-		String ranks = "";
-		JLabel label = null;
-
-		switch (suit)
-		{
-
 			case CLUBS:
-				ranks = m_clubsScanned.getText();
-				label = m_clubsScanned;
+				suitLabel = m_clubsScanned;
+				prefix = "Clubs:";
 				break;
-
 			case DIAMONDS:
-				ranks = m_diamondsScanned.getText();
-				label = m_diamondsScanned;
+				suitLabel = m_diamondsScanned;
+				prefix = "Diamonds:";
 				break;
-
 			case HEARTS:
-				ranks = m_heartsScanned.getText();
-				label = m_heartsScanned;
+				suitLabel = m_heartsScanned;
+				prefix = "Hearts:";
 				break;
-
 			case SPADES:
-				ranks = m_spadesScanned.getText();
-				label = m_spadesScanned;
+				suitLabel = m_spadesScanned;
+				prefix = "Spades:";
 				break;
-
 			default:
-				System.err.println("There should not be a fifth suit");
 				return;
 		}
-
-		// getting rid of that rank
-
-		// separate text before and after the ":"
-		int colonIndex = ranks.indexOf(":");
-
-		String beforeColon = ranks.substring(0, colonIndex + 1);
-
-		String afterColon = ranks.substring(colonIndex + 1);
-
-		// split into array to find the appropriate rank
-		String[] rankArray = afterColon.split(" ");
-
-		String newAfterColon = "";
-
-		for (int i = 0; i < rankArray.length; i++)
+		
+		StringBuilder text = new StringBuilder();
+		text.append(prefix);
+		if (p_cards != null)
 		{
-
-			// dont want to add the rank to be removed
-			if (!rankArray[i].equals(rank.toString()))
+			for (Card card : p_cards.descendingSet())
 			{
-
-				newAfterColon += " " + rankArray[i];
+				text.append(' ');
+				text.append(card.getRank().toString());
 			}
 		}
-
-		label.setText(beforeColon + newAfterColon);
-
-		System.out.println("should say " + beforeColon + newAfterColon);
-
-		repaint();
-
+		suitLabel.setText(text.toString());
 	}
+
 
 	@Override
 	public void paintComponent ( Graphics g )
 	{
-
 		super.paintComponent(g);
-
-		m_gameGUI.backButtonSetEnabled(false);
-
-		boolean noClubs = m_clubsScanned.getText().trim()
-				.charAt(m_clubsScanned.getText().trim().length() - 1) == ':';
-		boolean noDiamonds = m_diamondsScanned.getText().trim()
-				.charAt(m_diamondsScanned.getText().trim().length() - 1) == ':';
-		boolean noHearts = m_heartsScanned.getText().trim()
-				.charAt(m_heartsScanned.getText().trim().length() - 1) == ':';
-		boolean noSpades = m_spadesScanned.getText().trim()
-				.charAt(m_spadesScanned.getText().trim().length() - 1) == ':';
-
-		if (noClubs && noDiamonds && noHearts && noSpades)
-		{
-
-			m_gameGUI.undoButtonSetEnabled(false);
-
-		}
-		else
-		{
-
-			m_gameGUI.undoButtonSetEnabled(true);
-
-		}
-
 		m_gameGUI.repaint();
 	}
 }

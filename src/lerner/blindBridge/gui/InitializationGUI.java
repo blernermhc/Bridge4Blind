@@ -11,15 +11,14 @@ import lerner.blindBridge.model.Card;
 import lerner.blindBridge.model.Direction;
 import lerner.blindBridge.model.GameListener_sparse;
 
-public class ScanningBlindGUI extends BridgeJPanel implements GameListener_sparse
+public class InitializationGUI extends BridgeJPanel implements GameListener_sparse
 {
 	private GameGUI m_gameGUI;
 
-	public ScanningBlindGUI ( )
+	public InitializationGUI ( )
 	{
 		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-		addInstructions("Please scan in the blind player's cards.");
-		addInstructions("Use BACK button to change position of blind player.");
+		addInstructions("Please wait while the system hardware is set up.");
 	}
 
 	/* (non-Javadoc)
@@ -27,9 +26,10 @@ public class ScanningBlindGUI extends BridgeJPanel implements GameListener_spars
 	 */
 	public void initialize ( GameGUI p_gameGUI, Game p_game )
 	{
-		//m_game = p_game;
+		// m_game = p_game;
 		m_gameGUI = p_gameGUI;
 		p_game.addGameListener(this);
+
 	}
 	
 	private void addInstructions ( String text )

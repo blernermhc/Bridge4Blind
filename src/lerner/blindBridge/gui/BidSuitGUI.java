@@ -24,7 +24,7 @@ import lerner.blindBridge.model.Suit;
  * @version March 12, 2015
  */
 
-public class BidSuitGUI extends JPanel
+public class BidSuitGUI extends BridgeJPanel
 {
 
 	private Game		m_game;
@@ -52,10 +52,8 @@ public class BidSuitGUI extends JPanel
 	 * @param m_game
 	 *            the game being played
 	 */
-	public BidSuitGUI ( GameGUI p_gameGUI, Game p_game )
+	public BidSuitGUI ( )
 	{
-		m_game = p_game;
-		m_gameGUI = p_gameGUI;
 		// create a panel with the suit buttons
 		JPanel buttonPanel = createSuitButtons();
 		// create a new JPanel that will hold the direction buttons
@@ -77,6 +75,16 @@ public class BidSuitGUI extends JPanel
 		this.add(boxPanel, BorderLayout.CENTER);
 
 	}
+
+	/* (non-Javadoc)
+	 * @see lerner.blindBridge.gui.BridgeJPanel#initialize(lerner.blindBridge.gui.GameGUI, lerner.blindBridge.main.Game)
+	 */
+	public void initialize ( GameGUI p_gameGUI, Game p_game )
+	{
+		m_game = p_game;
+		m_gameGUI = p_gameGUI;
+	}
+	
 
 	private JPanel createSuitButtons ()
 	{

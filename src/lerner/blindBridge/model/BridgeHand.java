@@ -310,6 +310,8 @@ public class BridgeHand
 		Card			card			= (Card) p_undoEvent.getObjects()[1];
 		boolean		handComplete	= (p_undoEvent.getInts()[0] == 1);
 		
+		if (s_cat.isDebugEnabled()) s_cat.debug("evt_addScannedCard_undo: handComplete: " + handComplete + " card: " + card );
+
 		if (p_confirmed)
 		{
 			if (handComplete)
@@ -862,9 +864,9 @@ public class BridgeHand
 		if (s_cat.isDebugEnabled()) s_cat.debug("evt_dealHands: entered.  p_testHand: " + p_testHand);
 
 		BridgeHandState currentState = m_game.getStateController().getCurrentState();
-		if (currentState != BridgeHandState.SCAN_BLIND_HANDS)
+		if (currentState != BridgeHandState.SCAN_BLIND_HANDS && currentState != BridgeHandState.WAIT_FOR_FIRST_PLAYER)
 		{
-			s_cat.error("evt_dealHands: ignoring event since state is not SCAN_BLIND_HANDS. State: " + currentState);
+			s_cat.error("evt_dealHands: ignoring event since state is not at start of hand. State: " + currentState);
 			return false;
 		}
 		
@@ -922,7 +924,7 @@ public class BridgeHand
 			
 		if (p_confirmed) m_undoEvents.push(evt);
 
-		if (s_cat.isDebugEnabled()) s_cat.debug("evt_undo: redoing event (" + (p_confirmed ? "confirmed" : "requested") + "): " + evt);
+		if (s_cat.isDebugEnabled()) s_cat.debug("evt_redo: redoing event (" + (p_confirmed ? "confirmed" : "requested") + "): " + evt);
 		
 		evt.redo(p_confirmed);
 	}

@@ -9,30 +9,38 @@ import javax.swing.BoxLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
+import lerner.blindBridge.main.Game;
+
 /**
  * Displays help message describing how the keypad buttons work.
  *
  */
-public class HelpGUI extends JPanel
+public class HelpGUI extends BridgeJPanel
 {
 
-	private GameGUI m_gameGUI;
+	// private GameGUI m_gameGUI;
 
 	/**
 	 * Create the gui
 	 * 
 	 * @param m_gameGUI	the gui
 	 */
-	public HelpGUI ( GameGUI p_gameGUI )
+	public HelpGUI ( )
 	{
-
-		this.m_gameGUI = p_gameGUI;
-
 		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 		add(GUIUtilities.createTitleLabel("Help"));
 		add(createHelpPanel(), BorderLayout.CENTER);
 	}
 
+	/* (non-Javadoc)
+	 * @see lerner.blindBridge.gui.BridgeJPanel#initialize(lerner.blindBridge.gui.GameGUI, lerner.blindBridge.main.Game)
+	 */
+	public void initialize ( GameGUI p_gameGUI, Game p_game )
+	{
+		// m_game = p_game;
+		// m_gameGUI = p_gameGUI;
+	}
+	
 	private JPanel createHelpPanel ()
 	{
 
@@ -67,11 +75,7 @@ public class HelpGUI extends JPanel
 	@Override
 	public void paintComponent ( Graphics g )
 	{
-
 		super.paintComponent(g);
-
-		m_gameGUI.backButtonSetEnabled(true);
-		m_gameGUI.undoButtonSetEnabled(true);
 	}
 
 }

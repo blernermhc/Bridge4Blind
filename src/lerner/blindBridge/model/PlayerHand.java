@@ -4,7 +4,8 @@
 
 package lerner.blindBridge.model;
 
-import java.util.Set;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.TreeSet;
 
 import org.apache.log4j.Category;
@@ -32,7 +33,10 @@ public class PlayerHand
 	private Direction	m_myPlayer;
 
 	/** Cards in the player's hand */
-	private Set<Card>	m_cards			= new TreeSet<>();
+	private TreeSet<Card>	m_cards			= new TreeSet<>();
+	
+	/** Alternate view broken down by suit */
+	private Map<Suit, TreeSet<Card>>		m_suitCards	= new HashMap<>();
 
 	//--------------------------------------------------
 	// INTERNAL MEMBER DATA
@@ -58,15 +62,33 @@ public class PlayerHand
 	public void addCard (Card p_card)
 	{
 		m_cards.add(p_card);
+		
+		TreeSet<Card> cards = m_suitCards.get(p_card.getSuit());
+		if (cards == null)
+		{
+			cards = new TreeSet<>();
+			m_suitCards.put(p_card.getSuit(), cards);
+		}
+		cards.add(p_card);
 	}
 	
 	/***********************************************************************
 	 * Removes a card from the hand (invoked by undo)
 	 * @param p_card the card
 	 ***********************************************************************/
-	public void removeCard (Card p_card)
+	public boolean removeCard (Card p_card)
 	{
-		m_cards.remove(p_card);
+		boolean removed = m_cards.remove(p_card);
+		
+		TreeSet<Card> cards = m_suitCards.get(p_card.getSuit());
+		if (cards == null)
+		{
+			cards = new TreeSet<>();
+			m_suitCards.put(p_card.getSuit(), cards);
+		}
+		cards.remove(p_card);
+		
+		return removed;
 	}
 	
 	/***********************************************************************
@@ -76,7 +98,7 @@ public class PlayerHand
 	 ***********************************************************************/
 	public boolean useCard (Card p_card)
 	{
-		if (! m_cards.remove(p_card))
+		if (! removeCard(p_card))
 		{
 			s_cat.error("useCard: something is wrong, played card: " + p_card + " was not in hand for player: " + m_myPlayer);
 			s_cat.error("useCard: hand is:" + this.toString());
@@ -136,7 +158,7 @@ public class PlayerHand
 	{
 		StringBuilder out = new StringBuilder();
 		String sep = "";
-		for (Card card : m_cards)
+		for (Card card : m_cards.descendingSet())
 		{
 			out.append(sep + card.abbreviation());
 			sep = " ";
@@ -161,9 +183,18 @@ public class PlayerHand
 	 * Cards in the hand
 	 * @return set of cards
 	 ***********************************************************************/
-	public Set<Card> getCards ()
+	public TreeSet<Card> getCards ()
 	{
 		return m_cards;
+	}
+	
+	/***********************************************************************
+	 * Cards in the hand
+	 * @return set of cards
+	 ***********************************************************************/
+	public Map<Suit, TreeSet<Card>> getSuitCards ()
+	{
+		return m_suitCards;
 	}
 	
 }

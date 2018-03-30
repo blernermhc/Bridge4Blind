@@ -24,7 +24,7 @@ import lerner.blindBridge.model.Direction;
  * @version April 30, 2015
  *
  */
-public class NextHandGUI extends JPanel
+public class NextHandGUI extends BridgeJPanel
 {
 
 	private GameGUI	m_gameGUI;
@@ -40,12 +40,8 @@ public class NextHandGUI extends JPanel
 	 * @param m_gameGUI
 	 * @param m_game
 	 */
-	public NextHandGUI ( GameGUI p_gameGUI, Game p_game )
+	public NextHandGUI ( )
 	{
-
-		m_gameGUI = p_gameGUI;
-
-		m_game = p_game;
 
 		JPanel mainPanel = new JPanel();
 
@@ -76,6 +72,15 @@ public class NextHandGUI extends JPanel
 		add(mainPanel, BorderLayout.CENTER);
 	}
 
+	/* (non-Javadoc)
+	 * @see lerner.blindBridge.gui.BridgeJPanel#initialize(lerner.blindBridge.gui.GameGUI, lerner.blindBridge.main.Game)
+	 */
+	public void initialize ( GameGUI p_gameGUI, Game p_game )
+	{
+		m_game = p_game;
+		m_gameGUI = p_gameGUI;
+	}
+	
 	/**
 	 * Returns a String[] announcing the winners of the last hand and the tricks they won in the
 	 * last hand
@@ -171,11 +176,7 @@ public class NextHandGUI extends JPanel
 	@Override
 	public void paintComponent ( Graphics g )
 	{
-
 		super.paintComponent(g);
-
-		m_gameGUI.undoButtonSetEnabled(false);
-		m_gameGUI.backButtonSetEnabled(false);
 	}
 
 }

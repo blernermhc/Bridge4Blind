@@ -55,6 +55,10 @@ public class PlayerStatusGUI extends JComponent
 
 	private boolean				m_trickOver			= true;
 
+	/***********************************************************************
+	 * Creates the status GUI for a single player
+	 * @param p_dir player's position
+	 ***********************************************************************/
 	public PlayerStatusGUI ( Direction p_dir )
 	{
 		setBorder(PLAYER_BORDER);
@@ -65,6 +69,50 @@ public class PlayerStatusGUI extends JComponent
 		setPreferredSize();
 	}
 
+	/***********************************************************************
+	 * Sets the state of this player's GUI.
+	 * @param p_card				the card, if played
+	 * @param p_isNextPlayer		true if this is the next player to play
+	 ***********************************************************************/
+	public void setState ( Card p_card, boolean p_isNextPlayer )
+	{
+		if (p_isNextPlayer)
+			setBorder(NEXT_PLAYER_BORDER);
+		else
+			setBorder(PLAYER_BORDER);
+		
+		if (p_card == null)
+		{
+			m_suitPlayed = "";
+			m_rankPlayed = "";
+		}
+		else
+		{
+			m_rankPlayed = p_card.getRank().toString();
+	
+			switch (p_card.getSuit())
+			{
+				case DIAMONDS:
+					m_suitPlayed = DIAMONDS;
+					break;
+				case HEARTS:
+					m_suitPlayed = HEARTS;
+					break;
+				case CLUBS:
+					m_suitPlayed = CLUBS;
+					break;
+				case SPADES:
+					m_suitPlayed = SPADES;
+					break;
+				default:
+					throw new AssertionError(
+							"Should not have come here since only 4 suits are available");
+	
+			}
+		}
+		repaint();
+	}
+	
 	public void paintComponent ( Graphics g )
 	{
 

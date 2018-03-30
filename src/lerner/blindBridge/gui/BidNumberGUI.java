@@ -22,7 +22,7 @@ import lerner.blindBridge.model.Contract;
  * 
  * @version March 12, 2015
  */
-public class BidNumberGUI extends JPanel implements ActionListener
+public class BidNumberGUI extends BridgeJPanel implements ActionListener
 {
 
 	private JButton[]	m_buttons;
@@ -40,10 +40,8 @@ public class BidNumberGUI extends JPanel implements ActionListener
 	 * @param m_game
 	 *            the game being played.
 	 */
-	public BidNumberGUI ( GameGUI p_gameGUI, Game p_game )
+	public BidNumberGUI ( )
 	{
-		this.m_game = p_game;
-		this.m_gameGUI = p_gameGUI;
 		m_buttons = new JButton[Contract.MAX_BID];
 		// create a new JPanel that will contain everything in the center of the
 		// gui
@@ -63,6 +61,17 @@ public class BidNumberGUI extends JPanel implements ActionListener
 
 	}
 
+	/* (non-Javadoc)
+	 * @see lerner.blindBridge.gui.BridgeJPanel#initialize(lerner.blindBridge.gui.GameGUI, lerner.blindBridge.main.Game)
+	 */
+	public void initialize ( GameGUI p_gameGUI, Game p_game )
+	{
+		m_game = p_game;
+		m_gameGUI = p_gameGUI;
+	}
+	
+	
+	
 	/** Creates the button panel. */
 	private JPanel createButtonPanel ()
 	{
@@ -137,8 +146,7 @@ public class BidNumberGUI extends JPanel implements ActionListener
 			int bidNumber = Integer.parseInt(e.getActionCommand());
 			m_game.getBridgeHand().evt_setContractNum(bidNumber);
 		}
-		m_gameGUI.changeFrame();
-
+		m_gameGUI.changeFrame(GameGUIs.TRUMP_SUIT_GUI);
 	}
 
 	/**
@@ -155,11 +163,7 @@ public class BidNumberGUI extends JPanel implements ActionListener
 	@Override
 	public void paintComponent ( Graphics g )
 	{
-
 		super.paintComponent(g);
-
-		m_gameGUI.undoButtonSetEnabled(true);
-		m_gameGUI.backButtonSetEnabled(true);
 	}
 
 }

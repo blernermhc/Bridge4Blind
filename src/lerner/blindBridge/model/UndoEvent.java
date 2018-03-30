@@ -88,7 +88,7 @@ public class UndoEvent
 	 ***********************************************************************/
 	public void redo(boolean p_confirmed)
 	{
-		m_undoMethod.undo(this, p_confirmed);
+		m_undoMethod.redo(this, p_confirmed);
 	}
 	
 

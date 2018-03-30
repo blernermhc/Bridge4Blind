@@ -20,7 +20,7 @@ import javax.swing.JPanel;
  * 
  **/
 
-public abstract class DirectionGUI extends JPanel implements ActionListener
+public abstract class DirectionGUI extends BridgeJPanel implements ActionListener
 {
 
 	private JPanel		buttonPanel;
