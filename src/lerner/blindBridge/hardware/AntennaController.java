@@ -540,6 +540,10 @@ public class AntennaController extends SerialController
 				if (cardPlayed) m_currentCard = null;
 			}
 		}
+		else
+		{
+			m_controllerState = AntennaControllerState.CAPTURE_CARD;
+		}
 		if (s_cat.isDebugEnabled()) s_cat.debug("setNextPlayer(out): " + this.toString());
 	}
 

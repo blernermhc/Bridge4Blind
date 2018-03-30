@@ -93,10 +93,8 @@ public class NextHandGUI extends BridgeJPanel
 		// ask game who the winners are
 		String winnerText = "Hand is won by ";
 		
-		BridgeHand.HandWinner handWinner = m_game.getBridgeHand().determineHandWinner();
-
-		Direction winner = handWinner.direction;
-		int tricksWon = handWinner.tricksTaken;
+		Direction winner = m_game.getBridgeHand().getTricksTaken().getWinner();
+		int tricksWon = m_game.getBridgeHand().getTricksTaken().getNumTricksWon(winner);
 
 
 		// TODO : add sound here

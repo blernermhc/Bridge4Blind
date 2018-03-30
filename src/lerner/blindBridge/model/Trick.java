@@ -4,8 +4,8 @@
 
 package lerner.blindBridge.model;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.ArrayDeque;
+import java.util.Deque;
 
 /***********************************************************************
  * Represents a round of play (the four cards played and other information)
@@ -27,10 +27,13 @@ public class Trick
 	//--------------------------------------------------
 	
 	/** The cards played in the current trick, in order of play */
-	private List<CardPlay> 					m_cardsPlayed = new ArrayList<>();
+	private Deque<CardPlay> 					m_cardsPlayed = new ArrayDeque<>();
 
 	/** The suit of the trick. Set from first card played. */
 	private Suit								m_currentSuit;
+
+	/** The contract suit used in determining the winner of the trick. */
+	private Suit								m_contractSuit;
 
 	/** The position of the player that must play a card next. */
 	private Direction						m_nextPlayer;
@@ -50,14 +53,24 @@ public class Trick
 	 * Creates a new trick
 	 * @param p_firstPlayer	position of the first player
 	 ***********************************************************************/
-	public Trick ( Direction p_firstPlayer )
+	public Trick ( Suit p_contractSuit, Direction p_firstPlayer )
 	{
+		m_contractSuit = p_contractSuit;
 		m_nextPlayer = p_firstPlayer;
 	}
 
 	//--------------------------------------------------
 	// METHODS
 	//--------------------------------------------------
+	
+	/***********************************************************************
+	 * Returns true if no cards have been played in the current trick.
+	 * @return true if empty, false otherwise
+	 ***********************************************************************/
+	public boolean isEmpty ()
+	{
+		return (m_cardsPlayed.size() == 0);
+	}
 	
 	/***********************************************************************
 	 * Adds a card to the trick.
@@ -67,9 +80,27 @@ public class Trick
 	public void playCard ( Direction p_direction, Card p_card )
 	{
 		CardPlay cardPlay = new CardPlay(p_direction, p_card);
-		m_cardsPlayed.add(cardPlay);
+		m_cardsPlayed.push(cardPlay);
 		if (m_currentSuit == null) m_currentSuit = p_card.getSuit();
 		m_nextPlayer = m_nextPlayer.getNextDirection();
+	}
+	
+	/***********************************************************************
+	 * Removes a card from the trick.
+	 * Ignores the parameters.
+	 * @param p_direction	position of player playing card 
+	 * @param p_card			the card played
+	 * @return	the played card removed from the trick, or null if the trick was empty.
+	 ***********************************************************************/
+	public CardPlay unplayCard ( Direction p_direction, Card p_card )
+	{
+		CardPlay cardPlay = m_cardsPlayed.poll();
+		if (cardPlay != null)
+		{
+			m_nextPlayer = m_nextPlayer.getPreviousDirection();
+			m_winner = null;
+		}
+		return cardPlay;
 	}
 	
 	/***********************************************************************
@@ -95,19 +126,22 @@ public class Trick
 		return (m_cardsPlayed.size() == BridgeHand.NUMBER_OF_PLAYERS);
 	}
 	
+	//--------------------------------------------------
+	// HELPER METHODS
+	//--------------------------------------------------
+	
 	/***********************************************************************
 	 * Completes the trick and determines the winner
-	 * @param p_trump	the Trump suit
 	 * @return the winner
 	 ***********************************************************************/
-	public Direction completeTrick ( Suit p_trump )
+	private Direction completeTrick ( )
 	{
 		// determine winner
 		CardPlay best = null;
 		
 		for (CardPlay cardPlay : m_cardsPlayed)
 		{
-			if (best == null || (compareCards(best.getCard(), cardPlay.getCard(), p_trump) > 0))
+			if (best == null || (compareCards(best.getCard(), cardPlay.getCard(), m_contractSuit) > 0))
 			{
 				best = cardPlay;
 			}
@@ -118,10 +152,6 @@ public class Trick
 		return m_winner;
 	}
 
-	//--------------------------------------------------
-	// HELPER METHODS
-	//--------------------------------------------------
-	
 	/***********************************************************************
 	 * Compares a card played against the current best in the trick.
 	 * @param p_curBest		Current best card (assumes first card played is first curBest)
@@ -182,7 +212,7 @@ public class Trick
 	 * The cards played in the current trick, in order of play.
 	 * @return list of cards played
 	 ***********************************************************************/
-	public List<CardPlay> getCardsPlayed ()
+	public Deque<CardPlay> getCardsPlayed ()
 	{
 		return m_cardsPlayed;
 	}
@@ -215,12 +245,35 @@ public class Trick
 	}
 
 	/***********************************************************************
-	 * Position of player winning trick (null until complete.
+	 * Position of player winning trick (null until complete).
 	 * @return winner
 	 ***********************************************************************/
 	public Direction getWinner ()
 	{
+		if (! isComplete()) return null;
+		
+		if (m_winner == null) completeTrick();
+		
 		return m_winner;
 	}
 	
+	/***********************************************************************
+	 * The contract suit used in determining the winner of the trick.
+	 * @return the contract suit
+	 ***********************************************************************/
+	public Suit getContractSuit ()
+	{
+		return m_contractSuit;
+	}
+
+	/***********************************************************************
+	 * The contract suit used in determining the winner of the trick.
+	 * @param p_trumpSuit the contract suit
+	 ***********************************************************************/
+	public void setContractSuit ( Suit p_trumpSuit )
+	{
+		m_contractSuit = p_trumpSuit;
+	}
+
+
 }

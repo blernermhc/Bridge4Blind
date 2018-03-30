@@ -86,16 +86,16 @@ public class BridgeHand
 	/** for dealing complete hands to all players for testing */
 	private Map<Direction, PlayerHand> 		m_testHands;
 	
-	/** Tricks taken by each team (N and S have the same list, E and W have the same list) */
-	private Map<Direction, List<Trick>>		m_tricksTaken;
-	
 	/** The contract for the hand */
 	private Contract							m_contract;
 
 	/** The position of the dummy */
 	private Direction						m_dummyPosition;
 	
-	/** The current round */
+	/** Tricks taken by each team */
+	private TrickSet							m_tricksTaken;
+	
+	/** The cards played in the current round */
 	private Trick		 					m_currentTrick;
 	
 	/** The current score of the bridge game */
@@ -147,18 +147,9 @@ public class BridgeHand
 		m_hands			= new HashMap<>();
 		m_testHands		= new HashMap<>();
 		m_contract		= null;
+		m_tricksTaken	= null;
 		m_currentTrick	= null;
 		m_dummyPosition	= null;
-		
-		m_tricksTaken = new HashMap<>();
-		
-		List<Trick> list = new ArrayList<>();
-		m_tricksTaken.put(Direction.NORTH, list);
-		m_tricksTaken.put(Direction.SOUTH, list);	// N and S use the same list
-		
-		list = new ArrayList<>();
-		m_tricksTaken.put(Direction.EAST, list);
-		m_tricksTaken.put(Direction.WEST, list);	// E and W use the same list
 		
 		if (s_cat.isDebugEnabled()) s_cat.debug("initializeHand: finished");
 	}
@@ -364,6 +355,7 @@ public class BridgeHand
 		}
 		
 		m_contract = p_contract;
+		m_tricksTaken = new TrickSet(m_contract);
 		
 		// If contract is complete, remove individual events setting contract information
 		// Once a contract is complete, we don't want to undo one event at a time.
@@ -382,7 +374,7 @@ public class BridgeHand
 
 		
 		// insert undo event
-		Object[] objs = { p_contract };
+		Object[] objs = { p_contract, m_tricksTaken };
 		
 		UndoEvent undoEvent = new UndoEvent(this
 		                                    , "evt_setContract"
@@ -598,16 +590,19 @@ public class BridgeHand
 	public void evt_setContract_undo ( boolean p_redoFlag, UndoEvent p_undoEvent, boolean p_confirmed )
 	{
 		Contract		contract		= (Contract) p_undoEvent.getObjects()[0];
+		TrickSet		tricksTaken	= (TrickSet) p_undoEvent.getObjects()[1];
 
 		if (p_confirmed)
 		{
 			if (p_redoFlag)
 			{
 				m_contract = contract;
+				m_tricksTaken = tricksTaken;
 			}
 			else
 			{
 				m_contract = null;
+				m_tricksTaken = null;
 			}
 		}
 		
@@ -669,19 +664,6 @@ public class BridgeHand
 					listener.sig_error(ErrorCode.CANNOT_PLAY_WRONG_SUIT, p_direction, p_card, m_currentTrick.getCurrentSuit(), 0);
 				}
 
-				// TODO: move the following code to keyboard controller
-				/*
-				for (KeyboardController kbdController : m_keyboardControllers.values())
-				{
-					if ((p_direction != m_dummyPosition && p_direction == kbdController.getMyPosition())
-						||
-						(p_direction == m_dummyPosition && p_direction == kbdController.getMyPartnersPosition()))
-					{
-						kbdController.send_cannotPlay(p_card, m_currentTrick.getCurrentSuit());
-						return true;
-					}
-				}
-				*/
 				return true;
 			}
 
@@ -743,16 +725,46 @@ public class BridgeHand
 	{
 		Direction	direction	= (Direction) p_undoEvent.getObjects()[0];
 		Card			card			= (Card) p_undoEvent.getObjects()[1];
+		
+		if (s_cat.isDebugEnabled()) s_cat.debug("evt_playCard_undo: entered: direction: " + direction + " card: " + card);
 
 		if (p_confirmed)
 		{
+			// adjust player hand, if this is a managed hand (blind or dummy)
 			PlayerHand playerHand = m_hands.get(direction);
 			if (playerHand != null)
 			{
 				if (p_redoFlag)
-					playerHand.addCard(card);
-				else
+				{
 					playerHand.removeCard(card);
+					if (s_cat.isDebugEnabled()) s_cat.debug("evt_playCard_undo: after redo, playerHand: " + playerHand); 
+				}
+				else
+				{
+					playerHand.addCard(card);
+					if (s_cat.isDebugEnabled()) s_cat.debug("evt_playCard_undo: after undo, playerHand: " + playerHand); 
+				}
+			}
+			
+			// for all positions, adjust the trick
+			if (p_redoFlag)
+			{
+				m_currentTrick.playCard(direction, card);
+				if (s_cat.isDebugEnabled()) s_cat.debug("evt_playCard_undo: after redo, trick: " + m_currentTrick); 
+			}
+			else
+			{
+				if (m_currentTrick.isEmpty())
+				{
+					// currentTrick is empty, undoing the last card in a completed trick
+					m_currentTrick = m_tricksTaken.undoTrick();
+					if (s_cat.isDebugEnabled()) s_cat.debug("evt_playCard_undo: trick was empty, now: " + m_currentTrick);
+				}
+				if (m_currentTrick != null)
+				{
+					m_currentTrick.unplayCard(direction, card);
+					if (s_cat.isDebugEnabled()) s_cat.debug("evt_playCard_undo: trick was not empty, now: " + m_currentTrick);
+				}
 			}
 		}
 		
@@ -811,19 +823,9 @@ public class BridgeHand
 		if (hand != null) resendHand(p_kbdController, direction, hand);
 		
 		//send tricks taken
-		List<Trick> tricksTaken = m_tricksTaken.get(Direction.NORTH);
-		if (tricksTaken != null)
+		if (m_tricksTaken != null)
 		{
-			for (Trick trick : tricksTaken)
-			{
-				p_kbdController.send_multiByteMessage(MULTIBYTE_MESSAGE.TRICK_TAKEN, trick.getWinner());
-			}
-		}
-
-		tricksTaken = m_tricksTaken.get(Direction.EAST);
-		if (tricksTaken != null)
-		{
-			for (Trick trick : tricksTaken)
+			for (Trick trick : m_tricksTaken.getTrickSequence())
 			{
 				p_kbdController.send_multiByteMessage(MULTIBYTE_MESSAGE.TRICK_TAKEN, trick.getWinner());
 			}
@@ -1005,55 +1007,9 @@ public class BridgeHand
 	 ***********************************************************************/
 	public boolean testHandComplete ()
 	{
-		if (m_tricksTaken.get(Direction.NORTH).size() + m_tricksTaken.get(Direction.EAST).size() >= 13)
-			return true;
-		else
-			return false;
+		return (m_tricksTaken != null && m_tricksTaken.isComplete());
 	}
 	
-	public class HandWinner
-	{
-		public Direction		direction;
-		public int			tricksTaken;
-	}
-	
-	/***********************************************************************
-	 * Returns the winner of the hand, if complete.
-	 * Returns null if not complete.
-	 * @return the winner and number of tricks taken.
-	 ***********************************************************************/
-	public HandWinner determineHandWinner()
-	{
-		if (! testHandComplete()) return null;
-		
-		HandWinner handWinner = new HandWinner();
-		
-		// get the bid winner
-		Direction bidWinner = m_contract.getBidWinner();
-
-		// calculate the total number of tricks they won together
-		int totalTricksWon = m_tricksTaken.get(bidWinner).size(); 
-		
-		// check if they could fulfill their contract. If they did, they win.
-		// Otherwise, the other pair wins.
-		if (totalTricksWon >= 6 + m_contract.getContractNum())
-		{
-			handWinner.direction = bidWinner;
-			handWinner.tricksTaken = totalTricksWon;
-		}
-		else
-		{
-			// if the bid winner and their partner did not make the bid, then
-			// the other pair wins. So calculate the total tricks the winning
-			// pair won.
-
-			handWinner.direction = bidWinner.getNextDirection();
-			handWinner.tricksTaken = m_tricksTaken.get(handWinner.direction).size();
-		}
-
-		return handWinner;
-	}
-
 	/***********************************************************************
 	 * Activities that happen at the start of a trick.
 	 * Sets first player based on contract.
@@ -1063,7 +1019,8 @@ public class BridgeHand
 	public Direction sc_startFirstTrick ()
 	{
 		Direction firstPlayer = m_contract.getBidWinner().getNextDirection();
-		m_currentTrick = new Trick(firstPlayer);
+		m_currentTrick = new Trick(m_contract.getTrump(), firstPlayer);
+		m_tricksTaken = new TrickSet(m_contract);
 		return firstPlayer;
 	}
 	
@@ -1073,10 +1030,11 @@ public class BridgeHand
 	 ***********************************************************************/
 	public Direction sc_finishTrick ()
 	{
-		Direction winner = m_currentTrick.completeTrick(m_contract.getTrump());
-		m_tricksTaken.get(winner).add(m_currentTrick);
-		
-		m_currentTrick = new Trick(winner);
+		Direction winner = m_currentTrick.getWinner();
+
+		m_tricksTaken.addCompletedTrick(m_currentTrick);
+
+		m_currentTrick = new Trick(m_contract.getTrump(), winner);
 		
 		return winner;
 	}
@@ -1255,13 +1213,11 @@ public class BridgeHand
 
 		out.append(m_currentTrick == null ? "\n No Current Trick" : m_currentTrick.toString());
 
-		List<Trick> tricksTaken = m_tricksTaken.get(Direction.NORTH);
-		int numTricks = (tricksTaken == null ? 0 : tricksTaken.size());
-		out.append("\n  Tricks Taken (NS): " + numTricks);
-
-		tricksTaken = m_tricksTaken.get(Direction.EAST);
-		numTricks = (tricksTaken == null ? 0 : tricksTaken.size());
-		out.append("\n  Tricks Taken (EW): " + numTricks);
+		if (m_tricksTaken != null)
+		{
+			out.append("\n  Tricks Taken (NS): " + m_tricksTaken.getNumTricksWon(Direction.NORTH));
+			out.append("\n  Tricks Taken (EW): " + m_tricksTaken.getNumTricksWon(Direction.EAST));
+		}
 		
 		out.append("\n\nAntennas");
 		for (AntennaController antController : m_game.getAntennaControllers().values())
@@ -1375,6 +1331,15 @@ public class BridgeHand
 	public Game getGame ()
 	{
 		return m_game;
+	}
+
+	/***********************************************************************
+	 * Tricks taken by each team.
+	 * @return tricks taken
+	 ***********************************************************************/
+	public TrickSet getTricksTaken ()
+	{
+		return m_tricksTaken;
 	}
 
 }

@@ -35,6 +35,7 @@ public class GameStatusGUI extends BridgeJPanel implements GameListener_sparse
 	//--------------------------------------------------
 	// CONSTANTS
 	//--------------------------------------------------
+
 	public static Font			STATUS_FONT			= new Font("Helvetica", Font.BOLD, 60);
 
 	//--------------------------------------------------
@@ -154,6 +155,8 @@ public class GameStatusGUI extends BridgeJPanel implements GameListener_sparse
 	{
 		m_game = p_game;
 		// m_gameGUI = p_gameGUI;
+
+		m_tricksWonPanel.initialize (p_gameGUI, p_game);
 		
 		m_game.addGameListener(this);
 		m_game.addGameListener(m_tricksWonPanel);

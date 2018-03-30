@@ -39,6 +39,25 @@ public enum Direction
 	}
 
 	/***********************************************************************
+	 * Returns the canonical direction of the team (i.e., NORTH for the
+	 * NORTH/SOUTH team and EAST for the EAST/WEST team).
+	 * @return the team
+	 ***********************************************************************/
+	public Direction getTeam()
+	{
+		switch (this)
+		{
+			case NORTH:	return NORTH;
+			case SOUTH:	return NORTH;
+			
+			case EAST:	return EAST;
+			case WEST:	return EAST;
+			
+			default: return null;		// should never happen
+		}
+	}
+
+	/***********************************************************************
 	 * Returns the player position following this position
 	 * @return the position
 	 ***********************************************************************/
