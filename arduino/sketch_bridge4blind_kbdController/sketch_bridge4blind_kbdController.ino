@@ -151,8 +151,10 @@ void saveNonVolatilePosition ()
 void loadNonVolatileVolume ()
 {
 	uint8_t val = EEPROM.read(NON_VOLATILE_VOLUME_ADDR);
-	if (val > PLAYERID_NOT_SET) val = PLAYERID_NOT_SET;
-	wave.volume = val;
+	if (val >= 12) val = 11;
+	if (val <= 0) val = 1;
+	val = 5;
+	//wave.volume = val;
 }
 
 //-------------------------------------------------------------
@@ -162,10 +164,10 @@ void loadNonVolatileVolume ()
 void saveNonVolatileVolume ()
 {
 	uint8_t val = EEPROM.read(NON_VOLATILE_VOLUME_ADDR);
-	if (val != wave.volume)
-	{
-	  EEPROM.write(NON_VOLATILE_VOLUME_ADDR, wave.volume);
-	}
+	//if (val != wave.volume)
+	//{
+//	  EEPROM.write(NON_VOLATILE_VOLUME_ADDR, wave.volume);
+	//}
 }
 
 void printSerialMessagePrefix ()
@@ -636,8 +638,8 @@ void btn_up()
     }
     else if (s_mode == MODE_VOLUME)
     {
-    		++wave.volume;
-    		if (wave.volume >= 12) wave.volume = 0;
+    		//++wave.volume;
+    		//if (wave.volume >= 12) wave.volume = 1;
     		//TODO remember value
     		return;
     }
@@ -703,8 +705,8 @@ void btn_down()
     }
     else if (s_mode == MODE_VOLUME)
     {
-    		--wave.volume;
-    		if (wave.volume < 0) wave.volume = 11;
+    		//--wave.volume;
+    		//if (wave.volume < 0) wave.volume = 11;
     		//TODO remember value
     		return;
     }

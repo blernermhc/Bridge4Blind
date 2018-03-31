@@ -135,10 +135,11 @@ const char SND_MODE_RESYNCHRONIZE[]    PROGMEM = "MODESYNC";
 const char SND_MODE_START_NEW_HAND[]   PROGMEM = "MODENEWH";
 const char SND_MODE_DEAL_HANDS[]       PROGMEM = "MODEDEAL";
 
-#define NUMMODES 8
+#define NUMMODES 9
 const char* const SND_MODES[] PROGMEM = { SND_MODE_PLAY
 		      , SND_MODE_UNDO
 		      , SND_MODE_REDO
+		      , SND_VOID
               , SND_MODE_SET_POSITION
               , SND_MODE_ENTER_CONTRACT
 			  , SND_MODE_RESYNCHRONIZE
