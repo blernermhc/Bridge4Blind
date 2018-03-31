@@ -49,12 +49,14 @@ volatile uint8_t		m_previousButtonId = 0;	// Used to detect pressing same button
 #define MODE_PLAY_HAND 0
 #define MODE_UNDO 1
 #define MODE_REDO 2
-#define MODE_SET_POSITION 3
-#define MODE_ENTER_CONTRACT 4
-#define MODE_RESYNCHRONIZE 5
-#define MODE_START_NEW_HAND 6
-#define MODE_DEAL_HANDS 7
-// #define MODE_SET_OPTIONS 6
+#define MODE_VOLUME 3
+#define MODE_SET_POSITION 4
+#define MODE_ENTER_CONTRACT 5
+#define MODE_RESYNCHRONIZE 6
+#define MODE_START_NEW_HAND 7
+#define MODE_DEAL_HANDS 8
+#define MODE_HELP 9
+// #define MODE_SET_OPTIONS 10
 
 #define SUBMODE_ENTER_CONTRACT_WINNER 0
 #define SUBMODE_ENTER_CONTRACT_TRICKS 1
@@ -115,6 +117,7 @@ void sdErrorCheck(void)
 
 // Address we will use to store the position
 #define NON_VOLATILE_POSITION_ADDR 0
+#define NON_VOLATILE_VOLUME_ADDR 0
 
 //-------------------------------------------------------------
 // Copies the position for non-volatile storage into variable storage.
@@ -138,6 +141,30 @@ void saveNonVolatilePosition ()
 	if (val != bridgeHand.m_myPlayerId)
 	{
 	  EEPROM.write(NON_VOLATILE_POSITION_ADDR, bridgeHand.m_myPlayerId);
+	}
+}
+
+//-------------------------------------------------------------
+// Copies the position for non-volatile storage into variable storage.
+// Sets variable to PLAYERID_NOT_SET if the non-volatile value is out of range.
+//-------------------------------------------------------------
+void loadNonVolatileVolume ()
+{
+	uint8_t val = EEPROM.read(NON_VOLATILE_VOLUME_ADDR);
+	if (val > PLAYERID_NOT_SET) val = PLAYERID_NOT_SET;
+	wave.volume = val;
+}
+
+//-------------------------------------------------------------
+// Copies the current position into non-volatile storage, if different.
+// Assumes the current value is "valid".
+//-------------------------------------------------------------
+void saveNonVolatileVolume ()
+{
+	uint8_t val = EEPROM.read(NON_VOLATILE_VOLUME_ADDR);
+	if (val != wave.volume)
+	{
+	  EEPROM.write(NON_VOLATILE_VOLUME_ADDR, wave.volume);
 	}
 }
 
@@ -232,6 +259,9 @@ void setup()
   phrases.setWave(&wave);
   bridgeHand.setPhrases(&phrases);
   
+  // restore volume
+  loadNonVolatileVolume();
+
   // Whew! We got past the tough parts.
   printSerialMessagePrefix();
   putstring_nl("Ready!");
@@ -591,11 +621,24 @@ void btn_up()
     Serial.print(bridgeHand.m_dummyPlayerId);
     putstring_nl("");
 
+    if (s_mode == MODE_HELP)
+    {
+    	    // phrases.playMessage(SND_UP, NEW_AUDIO);
+  	    return;
+    }
+
     if (s_mode == MODE_ENTER_CONTRACT && s_submode == SUBMODE_ENTER_CONTRACT_TRICKS)
     {
     		s_contract_tricks = s_contract_tricks + 1;
     		if (s_contract_tricks > 7) s_contract_tricks = 7;
     		phrases.playNumber(0, s_contract_tricks, NEW_AUDIO);
+    		return;
+    }
+    else if (s_mode == MODE_VOLUME)
+    {
+    		++wave.volume;
+    		if (wave.volume >= 12) wave.volume = 0;
+    		//TODO remember value
     		return;
     }
     else if (s_mode != MODE_PLAY_HAND)
@@ -645,11 +688,24 @@ void btn_down()
     Serial.print(bridgeHand.m_dummyPlayerId);
     putstring_nl("");
 
+    if (s_mode == MODE_HELP)
+    {
+    	    // phrases.playMessage(SND_DOWN, NEW_AUDIO);
+  	    return;
+    }
+
     if (s_mode == MODE_ENTER_CONTRACT && s_submode == SUBMODE_ENTER_CONTRACT_TRICKS)
     {
     		s_contract_tricks = s_contract_tricks - 1;
     		if (s_contract_tricks < 1) s_contract_tricks = 1;
     		phrases.playNumber(0, s_contract_tricks, NEW_AUDIO);
+    		return;
+    }
+    else if (s_mode == MODE_VOLUME)
+    {
+    		--wave.volume;
+    		if (wave.volume < 0) wave.volume = 11;
+    		//TODO remember value
     		return;
     }
     else if (s_mode != MODE_PLAY_HAND)
@@ -688,8 +744,15 @@ void btn_down()
 //----------------------------------------------------------------------
 void btn_repeat()
 {
+    if (s_mode == MODE_HELP)
+    {
+    	    // phrases.playMessage(SND_REPEAT, NEW_AUDIO);
+  	    return;
+    }
+
     if (s_mode != MODE_PLAY_HAND)
     {	// if in a function mode, restore normal PLAY HAND mode
+		if (s_mode == MODE_VOLUME) saveNonVolatileVolume();
     		s_mode = MODE_PLAY_HAND;
     		s_submode = 0;
     		announce_mode();
@@ -716,8 +779,15 @@ void btn_repeat()
 //----------------------------------------------------------------------
 void btn_state(uint8_t p_isSecondPress)
 {
+    if (s_mode == MODE_HELP)
+    {
+    	    // phrases.playMessage(SND_STATE, NEW_AUDIO);
+  	    return;
+    }
+
     if (s_mode != MODE_PLAY_HAND)
     {	// if in a function mode, restore normal PLAY HAND mode
+		if (s_mode == MODE_VOLUME) saveNonVolatileVolume();
     		s_mode = MODE_PLAY_HAND;
     		s_submode = 0;
     		announce_mode();
@@ -766,6 +836,14 @@ void btn_play()
 		}
 		break;
 
+		case (MODE_VOLUME):
+		{
+			saveNonVolatileVolume();
+			s_mode = MODE_PLAY_HAND;
+			return;
+		}
+		break;
+		
 	    case (MODE_SET_POSITION):
 		{
 			  Serial.write(START_SEND_MSG);  // tell Game Controller to read to next newline
@@ -844,6 +922,13 @@ void btn_play()
 			  return;
 		}
 	    break;
+	    
+	    case (MODE_HELP):
+	    {
+    	    // phrases.playMessage(SND_PLAY, NEW_AUDIO);
+	    	    return;
+	    }
+	    break;
 
 	    default: break;
 	}
@@ -915,6 +1000,18 @@ void btn_announceHand (uint8_t p_playerId, uint8_t p_buttonId)
 				announce_mode();
 			}
 		    return;
+		}
+		break;
+		
+		case (MODE_HELP):
+		{
+			if (p_playerId == 0)
+				// phrases.playMessage(SND_YOUR, NEW_AUDIO);
+				;
+			else
+				// phrases.playMessage(SND_DUMMYS, NEW_AUDIO);
+				;
+			
 		}
 		break;
 		
@@ -993,7 +1090,7 @@ void sendPosition (uint8_t p_repeat)
 		return;
 	}
 	
-	s_mode = MODE_REDO;		// mode prior to MODE_SET_POSITION, since btn_function advances s_mode
+	s_mode = MODE_VOLUME;		// mode prior to MODE_SET_POSITION, since btn_function advances s_mode
 	btn_function();
 }
 
