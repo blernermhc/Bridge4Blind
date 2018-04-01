@@ -14,6 +14,7 @@ import org.apache.log4j.Category;
 import lerner.blindBridge.main.Game;
 import lerner.blindBridge.model.Direction;
 import lerner.blindBridge.model.GameListener_sparse;
+import lerner.blindBridge.model.Trick;
 
 /**
  * The Game class controls the UI for a game of bridge
@@ -517,7 +518,7 @@ public class GameGUI extends JFrame implements GameListener_sparse
 	 * Indicates that the hand is complete.
 	 ***********************************************************************/
 	@Override
-	public void sig_trickWon ( Direction p_direction )
+	public void sig_trickWon ( Trick p_direction )
 	{
 		if (s_cat.isDebugEnabled()) s_cat.debug("sig_trickWon: entered");
 

@@ -825,10 +825,17 @@ public class BridgeHand
 		//send tricks taken
 		if (m_tricksTaken != null)
 		{
+			// send the tricks
 			for (Trick trick : m_tricksTaken.getTrickSequence())
 			{
-				p_kbdController.send_multiByteMessage(MULTIBYTE_MESSAGE.TRICK_TAKEN, trick.getWinner());
+				CardPlay cardPlay = trick.hasPlayed(trick.getWinner());
+				Card card = (cardPlay == null ? null : cardPlay.getCard());
+				p_kbdController.send_multiByteMessage(MULTIBYTE_MESSAGE.TRICK_TAKEN, trick.getWinner(), card);
 			}
+			// send number of tricks
+			int nsTricks = m_tricksTaken.getNumTricksWon(Direction.NORTH);
+			int ewTricks = m_tricksTaken.getNumTricksWon(Direction.EAST);
+			p_kbdController.send_multiByteMessage(MULTIBYTE_MESSAGE.TRICKS_TAKEN, 0, nsTricks, ewTricks);
 		}
 
 		// send current play
@@ -1028,15 +1035,16 @@ public class BridgeHand
 	 * Activities that happen at the end of a trick.
 	 * @return The position of the winner of the trick 
 	 ***********************************************************************/
-	public Direction sc_finishTrick ()
+	public Trick sc_finishTrick ()
 	{
-		Direction winner = m_currentTrick.getWinner();
+		Trick completedTrick = m_currentTrick;
+		Direction winner = completedTrick.getWinner();
 
-		m_tricksTaken.addCompletedTrick(m_currentTrick);
+		m_tricksTaken.addCompletedTrick(completedTrick);
 
 		m_currentTrick = new Trick(m_contract.getTrump(), winner);
 		
-		return winner;
+		return completedTrick;
 	}
 
 	/***********************************************************************

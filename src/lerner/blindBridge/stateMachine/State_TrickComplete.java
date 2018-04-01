@@ -5,8 +5,8 @@
 package lerner.blindBridge.stateMachine;
 
 import lerner.blindBridge.main.Game;
-import lerner.blindBridge.model.Direction;
 import lerner.blindBridge.model.GameListener;
+import lerner.blindBridge.model.Trick;
 
 /***********************************************************************
  * Entered when the last card of a trick has been played.
@@ -48,11 +48,11 @@ public class State_TrickComplete extends ControllerState
 	{
 		m_game = p_game;
 		
-		Direction winner = m_game.getBridgeHand().sc_finishTrick();
+		Trick completedTrick = m_game.getBridgeHand().sc_finishTrick();
 
 		for (GameListener gameListener : m_game.getGameListeners())
 		{
-			gameListener.sig_trickWon(winner);
+			gameListener.sig_trickWon(completedTrick);
 		}
 	}
 	

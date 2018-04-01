@@ -160,6 +160,9 @@ WaveHCL::WaveHCL(void) {
   Channels = 1;
   BitsPerSample = 8;
   fdroot = 0;
+#if DVOLUME
+  volume = 0;
+#endif //DVOLUME
 }
 //------------------------------------------------------------------------------
 /**
@@ -395,7 +398,7 @@ uint8_t WaveHCL::create(char * p_fileName)
   remainingBytesInChunk = 0;
   
 #if DVOLUME
-  volume = 0;
+  //volume = 0;  Avoid resetting volume for each file
 #endif //DVOLUME
   // position to data
   return readWaveData(0, 0) < 0 ? false: true;

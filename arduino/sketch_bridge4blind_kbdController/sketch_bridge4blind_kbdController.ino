@@ -40,6 +40,11 @@ uint8_t s_options = 0;
 uint8_t s_selectedSuitId = SUITID_NOT_SET;
 uint8_t s_selectedCardId = CARDID_NOT_SET;  // 13: void; 0: two; 1: three, etc.
 
+// allow pressing play again to say what card was played
+uint8_t s_playedPlayerId = PLAYERID_NOT_SET;
+uint8_t s_playedSuitId = SUITID_NOT_SET;
+uint8_t s_playedCardId = CARDID_NOT_SET;
+
 volatile uint8_t		Button    = 0;			// Required for 64 Button Shield (SPI Only)
 volatile uint8_t		m_previousButtonId = 0;	// Used to detect pressing same button twice (e.g., State)
 
@@ -117,10 +122,10 @@ void sdErrorCheck(void)
 
 // Address we will use to store the position
 #define NON_VOLATILE_POSITION_ADDR 0
-#define NON_VOLATILE_VOLUME_ADDR 0
+#define NON_VOLATILE_VOLUME_ADDR 1
 
 //-------------------------------------------------------------
-// Copies the position for non-volatile storage into variable storage.
+// Copies the position from non-volatile storage into variable storage.
 // Sets variable to PLAYERID_NOT_SET if the non-volatile value is out of range.
 //-------------------------------------------------------------
 uint8_t loadNonVolatilePosition ()
@@ -145,29 +150,32 @@ void saveNonVolatilePosition ()
 }
 
 //-------------------------------------------------------------
-// Copies the position for non-volatile storage into variable storage.
-// Sets variable to PLAYERID_NOT_SET if the non-volatile value is out of range.
+// Copies the volume from non-volatile storage into variable storage.
+// Wave.volume is a number from 0 (loudest) to 8 (silent).
 //-------------------------------------------------------------
 void loadNonVolatileVolume ()
 {
 	uint8_t val = EEPROM.read(NON_VOLATILE_VOLUME_ADDR);
-	if (val >= 12) val = 11;
-	if (val <= 0) val = 1;
-	val = 5;
-	//wave.volume = val;
+	if (val > 8) val = 5;
+	if (val < 0) val = 5;
+	wave.volume = val;
+
+	Serial.write(START_SEND_MSG);  // tell Game Controller to read to next newline
+	putstring("Volume (load): ");
+	Serial.println(wave.volume,DEC);
 }
 
 //-------------------------------------------------------------
-// Copies the current position into non-volatile storage, if different.
+// Copies the current volume into non-volatile storage, if different.
 // Assumes the current value is "valid".
 //-------------------------------------------------------------
 void saveNonVolatileVolume ()
 {
 	uint8_t val = EEPROM.read(NON_VOLATILE_VOLUME_ADDR);
-	//if (val != wave.volume)
-	//{
-//	  EEPROM.write(NON_VOLATILE_VOLUME_ADDR, wave.volume);
-	//}
+	if (val != wave.volume)
+	{
+	  EEPROM.write(NON_VOLATILE_VOLUME_ADDR, wave.volume);
+	}
 }
 
 void printSerialMessagePrefix ()
@@ -368,9 +376,10 @@ void processInput2 (uint8_t p_input0, uint8_t p_input1, uint8_t p_repeat)
     case 5:	resetKeyboard(playerId); bridgeHand.addCardToHand(playerId, suitId, cardId, p_repeat); eventList.addEvent(p_input0, p_input1, p_repeat); break;
     case 6:	resetKeyboard(playerId); bridgeHand.useCard(playerId, suitId, cardId, p_repeat); eventList.addEvent(p_input0, p_input1, p_repeat); break;
     case 7:	resetKeyboard(playerId); bridgeHand.unuseCard(playerId, suitId, cardId, p_repeat); eventList.addEvent(p_input0, p_input1, p_repeat); break;
-    case 8:	bridgeHand.trickFinished(playerId, p_repeat); eventList.addEvent(p_input0, p_input1, p_repeat); break;
+    case 8:	bridgeHand.trickFinished(playerId, suitId, cardId, p_repeat); eventList.addEvent(p_input0, p_input1, p_repeat); break;
     case 9:	bridgeHand.cannotPlay(suitId, p_repeat); eventList.addEvent(p_input0, p_input1, p_repeat); break;
-    case 10:    setOptions(p_input0, p_input1, p_repeat); break;
+    case 10:	setOptions(p_input0, p_input1, p_repeat); break;
+    case 11:	bridgeHand.tricksTaken(playerId, cardId); break;
     default:
       phrases.playNumber(SND_UNEXPECTED_OP_2, opId, NEW_AUDIO);
       eventList.addEvent(p_input0, p_input1, p_repeat);
@@ -625,7 +634,7 @@ void btn_up()
 
     if (s_mode == MODE_HELP)
     {
-    	    // phrases.playMessage(SND_UP, NEW_AUDIO);
+    	    phrases.playMessage(SND_UP, NEW_AUDIO);
   	    return;
     }
 
@@ -638,10 +647,15 @@ void btn_up()
     }
     else if (s_mode == MODE_VOLUME)
     {
-    		//++wave.volume;
-    		//if (wave.volume >= 12) wave.volume = 1;
-    		//TODO remember value
-    		return;
+    		Serial.write(START_SEND_MSG);  // tell Game Controller to read to next newline
+    		putstring("Volume (up): ");
+    		Serial.println(wave.volume,DEC);
+
+    		if (wave.volume > 0) --wave.volume;
+
+		phrases.playMessage(SND_UP, NEW_AUDIO);
+
+		return;
     }
     else if (s_mode != MODE_PLAY_HAND)
     {
@@ -692,7 +706,7 @@ void btn_down()
 
     if (s_mode == MODE_HELP)
     {
-    	    // phrases.playMessage(SND_DOWN, NEW_AUDIO);
+    	    phrases.playMessage(SND_DOWN, NEW_AUDIO);
   	    return;
     }
 
@@ -705,10 +719,15 @@ void btn_down()
     }
     else if (s_mode == MODE_VOLUME)
     {
-    		//--wave.volume;
-    		//if (wave.volume < 0) wave.volume = 11;
-    		//TODO remember value
-    		return;
+		Serial.write(START_SEND_MSG);  // tell Game Controller to read to next newline
+		putstring("Volume (down): ");
+		Serial.println(wave.volume,DEC);
+
+		if (wave.volume < 8) ++wave.volume;
+
+		phrases.playMessage(SND_DOWN, NEW_AUDIO);
+
+		return;
     }
     else if (s_mode != MODE_PLAY_HAND)
     {
@@ -748,7 +767,7 @@ void btn_repeat()
 {
     if (s_mode == MODE_HELP)
     {
-    	    // phrases.playMessage(SND_REPEAT, NEW_AUDIO);
+    	    phrases.playMessage(SND_REPEAT, NEW_AUDIO);
   	    return;
     }
 
@@ -783,7 +802,7 @@ void btn_state(uint8_t p_isSecondPress)
 {
     if (s_mode == MODE_HELP)
     {
-    	    // phrases.playMessage(SND_STATE, NEW_AUDIO);
+    	    phrases.playMessage(SND_STATE, NEW_AUDIO);
   	    return;
     }
 
@@ -927,7 +946,7 @@ void btn_play()
 	    
 	    case (MODE_HELP):
 	    {
-    	    // phrases.playMessage(SND_PLAY, NEW_AUDIO);
+	    		phrases.playMessage(SND_PLAY, NEW_AUDIO);
 	    	    return;
 	    }
 	    break;
@@ -943,7 +962,12 @@ void btn_play()
 
   if (s_selectedCardId == CARDID_NOT_SET || s_selectedSuitId == SUITID_NOT_SET)
   {
-	  phrases.playMessage(SND_SELECT_CARD, NEW_AUDIO);
+	  if (s_playedCardId == CARDID_NOT_SET || s_playedSuitId == SUITID_NOT_SET)
+	  {
+		  phrases.playMessage(SND_SELECT_CARD, NEW_AUDIO);
+		  return;
+	  }
+      phrases.playCardPlayed(bridgeHand.adjustPlayerId(s_playedPlayerId), SND_PLAYED, s_playedCardId, s_playedSuitId, NEW_AUDIO);
 	  return;
   }
 
@@ -953,14 +977,23 @@ void btn_play()
   Serial.write(START_SEND_MSG);  // tell Game Controller to read to next newline
   putstring("CMD: PLAY ");
   if (bridgeHand.m_currentHandId == PLAYER_DUMMY)
+  {
 	  Serial.print(bridgeHand.m_dummyPlayerId);
+	  s_playedPlayerId = bridgeHand.m_dummyPlayerId;
+  }
   else
+  {
 	  Serial.print(bridgeHand.m_myPlayerId);
+	  s_playedPlayerId = bridgeHand.m_myPlayerId;
+  }
   putstring(" ");
   Serial.print(s_selectedCardId);
   putstring(" ");
   Serial.print(s_selectedSuitId);
   putstring_nl("");
+  
+  s_playedSuitId = s_selectedSuitId;
+  s_playedCardId = s_selectedCardId;
 }  
 
 //----------------------------------------------------------------------
@@ -1007,13 +1040,19 @@ void btn_announceHand (uint8_t p_playerId, uint8_t p_buttonId)
 		
 		case (MODE_HELP):
 		{
+			phrases.playNewAudio();
 			if (p_playerId == 0)
-				// phrases.playMessage(SND_YOUR, NEW_AUDIO);
-				;
+			{
+				phrases.playMessage(SND_YOUR, APPEND_AUDIO);
+			}
 			else
-				// phrases.playMessage(SND_DUMMYS, NEW_AUDIO);
-				;
+			{
+				phrases.playMessage(SND_DUMMYS, APPEND_AUDIO);
+			}
+			phrases.playSuit(p_buttonId, true, APPEND_AUDIO);
+			phrases.playNext();
 			
+			return;
 		}
 		break;
 		
@@ -1043,12 +1082,15 @@ void btn_announceHand (uint8_t p_playerId, uint8_t p_buttonId)
   else
 	  suitId = p_buttonId;
 
-  // reset selected card if changing suit
-  if (suitId != s_selectedSuitId)
-  {
-    s_selectedSuitId = suitId;
-    s_selectedCardId = CARDID_NOT_SET;
-  }
+  // reset selected card whenever clicking on a suit button (even the same one)
+  s_selectedSuitId = suitId;
+  s_selectedCardId = CARDID_NOT_SET;
+  
+  uint8_t lowCardId  = lowCard(bridgeHand.getHand(bridgeHand.getCurrentHandId(), s_selectedSuitId));
+  uint8_t highCardId = highCard(bridgeHand.getHand(bridgeHand.getCurrentHandId(), s_selectedSuitId));
+
+  // if only one card, select it
+  if (lowCardId == highCardId) s_selectedCardId = lowCardId;
 
   uint16_t hand = bridgeHand.getHand(p_playerId, suitId);
   phrases.playHandSuit(p_playerId, suitId, hand, NEW_AUDIO);
@@ -1058,13 +1100,35 @@ void btn_D1() { btn_announceHand (PLAYER_DUMMY, 0); }
 void btn_D2() { btn_announceHand (PLAYER_DUMMY, 1); }
 void btn_D3() { btn_announceHand (PLAYER_DUMMY, 2); }
 void btn_D4() { btn_announceHand (PLAYER_DUMMY, 3); }
-void btn_DC() { btn_announceHand (PLAYER_DUMMY, bridgeHand.getCurrentSuitId()); }
+void btn_DC()
+{
+	if (s_mode == MODE_HELP)
+	{
+		phrases.playNewAudio();
+		phrases.playMessage(SND_DUMMYS, APPEND_AUDIO);
+		phrases.playMessage(SND_CURRENT_SUIT, APPEND_AUDIO);
+		phrases.playNext();
+		return;
+	}
+	btn_announceHand (PLAYER_DUMMY, bridgeHand.getCurrentSuitId());
+}
 
 void btn_H1() { btn_announceHand (PLAYER_ME, 0); }
 void btn_H2() { btn_announceHand (PLAYER_ME, 1); }
 void btn_H3() { btn_announceHand (PLAYER_ME, 2); }
 void btn_H4() { btn_announceHand (PLAYER_ME, 3); }
-void btn_HC() { btn_announceHand (PLAYER_ME, bridgeHand.getCurrentSuitId()); }
+void btn_HC()
+{
+	if (s_mode == MODE_HELP)
+	{
+		phrases.playNewAudio();
+		phrases.playMessage(SND_YOUR, APPEND_AUDIO);
+		phrases.playMessage(SND_CURRENT_SUIT, APPEND_AUDIO);
+		phrases.playNext();
+		return;
+	}
+	btn_announceHand (PLAYER_ME, bridgeHand.getCurrentSuitId());
+}
 
 
 /** if card was played by me or my dummy, clear currently selected suit and card */
@@ -1080,6 +1144,13 @@ void resetKeyboard(uint8_t p_playerId)
   {
     s_selectedSuitId = SUITID_NOT_SET;
     s_selectedCardId = CARDID_NOT_SET;
+  }
+  
+  // if card played by other team, clear my last played card
+  if (p_playerId != bridgeHand.m_myPlayerId && p_playerId != bridgeHand.m_myPartnersId)
+  {
+	  s_playedSuitId = SUITID_NOT_SET;
+	  s_playedCardId = CARDID_NOT_SET;
   }
 }
 
@@ -1198,10 +1269,15 @@ void checkButton()
     // pressed button
 	Button = Button - 128;              // A pressd button is the button number + 128
     
-    Serial.write(START_SEND_MSG);
+	Serial.write(START_SEND_MSG);
     putstring("Button: ");
     Serial.print(Button, DEC);
     putstring_nl(" - Pressed");
+
+    Serial.write(START_SEND_MSG);
+	putstring("Free RAM: ");       // This can help with debugging, running out of RAM is bad
+	Serial.println(freeRam());      // if this is under 150 bytes it may spell trouble!
+
 
     switch (Button)
     {

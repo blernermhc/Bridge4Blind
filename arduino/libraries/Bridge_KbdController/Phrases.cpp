@@ -509,14 +509,16 @@ void Phrases::playHandComplete (uint8_t p_playerId, uint8_t p_appendAudio)
 }
 
 
-void Phrases::playTrickTaken(uint8_t p_playerId, uint8_t p_appendAudio)
+void Phrases::playTrickTaken(uint8_t p_playerId, uint8_t p_suitId, uint8_t p_cardId, uint8_t p_appendAudio)
 {
   if (s_silent) return;
 
   if (! p_appendAudio) m_wave->clearSequence();
 
   pPlayer(p_playerId);
-  m_wave->addSequence(SND_TOOK_TRICK);
+  m_wave->addSequence(SND_TOOK_TRICK_WITH);
+  pCard(p_cardId);
+  pSuit(p_suitId, true);
 
   if (! p_appendAudio) m_wave->playNext();
 }

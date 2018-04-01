@@ -95,11 +95,11 @@ public interface GameListener
 	public void sig_cardPlayed(Direction turn, Card card);
 	public void sig_cardPlayed_undo ( boolean p_redoFlag, boolean p_confirmed, Direction p_direction, Card p_card );
 
-	/**
+	/***********************************************************************
 	 * Called at the end of a trick
-	 * @param winner the player who won the trick
-	 */
-	public void sig_trickWon(Direction winner);
+	 * @param p_trick the completed trick
+	 ***********************************************************************/
+	public void sig_trickWon(Trick p_trick);
 	
 	/***********************************************************************
 	 * The current score of the bridge game

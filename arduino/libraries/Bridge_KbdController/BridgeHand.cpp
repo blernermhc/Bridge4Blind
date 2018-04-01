@@ -196,18 +196,28 @@ void BridgeHand::handComplete(uint8_t p_repeat)
 	m_phrases->playNext();
 }
 
-void BridgeHand::trickFinished(uint8_t p_playerId, uint8_t p_repeat)
+void BridgeHand::trickFinished(uint8_t p_playerId, uint8_t p_suitId, uint8_t p_cardId, uint8_t p_repeat)
 {
   if (! p_repeat)
   {
     m_firstPlayerId = PLAYERID_NOT_SET;
     m_currentSuitId = SUITID_NOT_SET;
   }
-  m_phrases->playTrickTaken(adjustPlayerId(p_playerId), NEW_AUDIO);
-  if (p_playerId == m_myPlayerId || p_playerId == m_myPartnersId)
-    ++m_ourTricks;
-  else
-    ++m_theirTricks;
+  m_phrases->playTrickTaken(adjustPlayerId(p_playerId), p_suitId, p_cardId, NEW_AUDIO);
+}
+
+void BridgeHand::tricksTaken(uint8_t p_nsTricks, uint8_t p_ewTricks)
+{
+	if (m_myPlayerId == 0 || m_myPartnersId == 0)
+	{
+		m_ourTricks = p_nsTricks;
+		m_theirTricks = p_ewTricks;
+	}
+    else
+    {
+		m_ourTricks = p_ewTricks;
+		m_theirTricks = p_nsTricks;
+    }
 }
 
 void BridgeHand::newGame()

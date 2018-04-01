@@ -11,6 +11,7 @@ import javax.swing.JPanel;
 import lerner.blindBridge.main.Game;
 import lerner.blindBridge.model.Direction;
 import lerner.blindBridge.model.GameListener_sparse;
+import lerner.blindBridge.model.Trick;
 
 public class TricksWonPanel extends BridgeJPanel implements GameListener_sparse
 {
@@ -85,7 +86,7 @@ public class TricksWonPanel extends BridgeJPanel implements GameListener_sparse
 	}
 
 	@Override
-	public void sig_trickWon ( Direction winner )
+	public void sig_trickWon ( Trick p_trick )
 	{
 		updateDisplay();
 	}

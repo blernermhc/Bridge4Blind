@@ -55,7 +55,8 @@ class BridgeHand
 	void unuseCard(uint8_t p_playerId, uint8_t p_suitId, uint8_t p_cardId, uint8_t p_repeat);
 	void handComplete(uint8_t p_repeat);
 	void cannotPlay(uint8_t p_suitId, uint8_t p_repeat);
-	void trickFinished(uint8_t p_playerId, uint8_t p_repeat);
+	void trickFinished(uint8_t p_playerId, uint8_t p_suitId, uint8_t p_cardId, uint8_t p_repeat);
+	void tricksTaken(uint8_t p_nsTricks, uint8_t p_ewTricks);
 	void newGame();
 	void newHand();
 	void playState();

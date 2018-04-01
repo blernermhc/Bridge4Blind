@@ -10,11 +10,14 @@ import gnu.io.SerialPortEvent;
 import lerner.blindBridge.main.Game;
 import lerner.blindBridge.model.BridgeScore;
 import lerner.blindBridge.model.Card;
+import lerner.blindBridge.model.CardPlay;
 import lerner.blindBridge.model.Contract;
 import lerner.blindBridge.model.Direction;
 import lerner.blindBridge.model.ErrorCode;
 import lerner.blindBridge.model.Rank;
 import lerner.blindBridge.model.Suit;
+import lerner.blindBridge.model.Trick;
+import lerner.blindBridge.model.TrickSet;
 
 /**********************************************************************
  * Communicates with a Blind players' Keyboard Controller 
@@ -98,8 +101,9 @@ public class KeyboardController extends SerialController implements Runnable
 		, ADD_CARD_TO_HAND	(5, 1500)
 		, PLAY_CARD			(6, 3000)
 		, UNPLAY_CARD		(7, 3000)
-		, TRICK_TAKEN		(8, 1500)
+		, TRICK_TAKEN		(8, 3500)
 		, CANNOT_PLAY_WRONG_SUIT		(9, 4000)
+		, TRICKS_TAKEN		(11, 0)
 		, UNDO				(15, 4000)
 		;
 		
@@ -1368,9 +1372,22 @@ public class KeyboardController extends SerialController implements Runnable
 	 * @see model.GameListener#trickWon(model.Direction)
 	 */
 	@Override
-	public void sig_trickWon ( lerner.blindBridge.model.Direction p_winner )
+	public void sig_trickWon ( Trick p_trick )
 	{
-		send_multiByteMessage(MULTIBYTE_MESSAGE.TRICK_TAKEN, p_winner);
+		Direction winner = p_trick.getWinner();
+		CardPlay cardPlay = p_trick.hasPlayed(winner);
+		Card card = null;
+		if (cardPlay != null) card = cardPlay.getCard();
+		send_multiByteMessage(MULTIBYTE_MESSAGE.TRICK_TAKEN, winner, card);
+
+		// send number of tricks
+		TrickSet trickSet = m_game.getBridgeHand().getTricksTaken();
+		if (trickSet != null)
+		{
+			int nsTricks = trickSet.getNumTricksWon(Direction.NORTH);
+			int ewTricks = trickSet.getNumTricksWon(Direction.EAST);
+			send_multiByteMessage(MULTIBYTE_MESSAGE.TRICKS_TAKEN, 0, nsTricks, ewTricks);
+		}
 	}
 
 	/* (non-Javadoc)

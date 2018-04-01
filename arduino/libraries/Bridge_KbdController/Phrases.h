@@ -116,6 +116,14 @@ const char SND_DUMMY[]   PROGMEM = "DUMMY";
 const char SND_DUMMYS[]   PROGMEM = "DUMMYS";
 const char SND_WE[]   PROGMEM = "WE";
 const char SND_THEY[]   PROGMEM = "THEY";
+const char SND_UP[]   PROGMEM = "UP";
+const char SND_DOWN[]   PROGMEM = "DOWN";
+const char SND_REPEAT[]   PROGMEM = "REPEAT";
+const char SND_STATE[]   PROGMEM = "STATE";
+const char SND_FUNCTION[]   PROGMEM = "FUNCTION";
+const char SND_CURRENT_SUIT[]   PROGMEM = "CURSUIT";
+const char SND_PLAY[]   PROGMEM = "PLAY";
+
 
 #define NUMPLAYERS 6
 const char* const SND_PLAYERS[] PROGMEM = { SND_NORTH
@@ -129,22 +137,25 @@ const char* const SND_PLAYERS[] PROGMEM = { SND_NORTH
 const char SND_MODE_PLAY[]             PROGMEM = "MODEPLAY";
 const char SND_MODE_UNDO[]             PROGMEM = "MODEUNDO";
 const char SND_MODE_REDO[]             PROGMEM = "MODEREDO";
+const char SND_MODE_VOLUME[]           PROGMEM = "MODEVOL";
 const char SND_MODE_SET_POSITION[]     PROGMEM = "MODEPOS";
 const char SND_MODE_ENTER_CONTRACT[]   PROGMEM = "MODECONT";
 const char SND_MODE_RESYNCHRONIZE[]    PROGMEM = "MODESYNC";
 const char SND_MODE_START_NEW_HAND[]   PROGMEM = "MODENEWH";
 const char SND_MODE_DEAL_HANDS[]       PROGMEM = "MODEDEAL";
+const char SND_MODE_HELP[]             PROGMEM = "MODEHELP";
 
-#define NUMMODES 9
+#define NUMMODES 10
 const char* const SND_MODES[] PROGMEM = { SND_MODE_PLAY
 		      , SND_MODE_UNDO
 		      , SND_MODE_REDO
-		      , SND_VOID
+		      , SND_MODE_VOLUME
               , SND_MODE_SET_POSITION
               , SND_MODE_ENTER_CONTRACT
 			  , SND_MODE_RESYNCHRONIZE
 			  , SND_MODE_START_NEW_HAND
 			  , SND_MODE_DEAL_HANDS
+			  , SND_MODE_HELP
               };
 
 const char SND_MODE_ENTER_CONTRACT_WINNER[]   PROGMEM = "CONTWIN";
@@ -185,6 +196,7 @@ const char SND_UNEXPECTED_OP_2[] PROGMEM = "UNXOP2";
 const char SND_YOU_ARE_PLAYING[] PROGMEM = "YOUPLAY";
 const char SND_IS_DUMMY[] PROGMEM = "ISDUMMY";
 const char SND_TOOK_TRICK[] PROGMEM = "TOOKTRK";
+const char SND_TOOK_TRICK_WITH[] PROGMEM = "TOOKTRKW";
 const char SND_HAVE_TAKEN[] PROGMEM = "HAVETAKE";
 const char SND_IN_HAND[] PROGMEM = "INHAND";
 const char SND_ON_BOARD[] PROGMEM = "ONBOARD";
@@ -277,7 +289,7 @@ class Phrases
 	void playContract (uint8_t p_playerId, uint8_t p_suitId, uint8_t p_numTricks, uint8_t p_appendAudio);
 	void playCardPlayed (uint8_t p_playerId, PGM_P p_action, uint8_t p_cardId, uint8_t p_suitId, uint8_t p_appendAudio);
 	void playHandComplete (uint8_t p_playerId, uint8_t p_appendAudio);
-	void playTrickTaken(uint8_t p_playerId, uint8_t p_appendAudio);
+	void playTrickTaken(uint8_t p_playerId, uint8_t p_suitId, uint8_t p_cardId, uint8_t p_appendAudio);
 	void playTricksWon(PGM_P p_players, uint8_t p_numTricks, uint8_t p_appendAudio);
 	void playMode (uint8_t p_modeId, uint8_t p_appendAudio);
 	void playContractMode (uint8_t p_contractModeId, uint8_t p_appendAudio);

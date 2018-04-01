@@ -95,6 +95,7 @@ public enum Rank
 	@Override
 	public String toString()
 	{
+		if (this == TEN) return "10";	// Output as "10" rather than "T"
 		return m_rankValue;
 	}
 

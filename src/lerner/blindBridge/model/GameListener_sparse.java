@@ -190,7 +190,7 @@ public interface GameListener_sparse extends GameListener
 	 * @see lerner.blindBridge.model.GameListener#sig_trickWon(lerner.blindBridge.model.Direction)
 	 */
 	@Override
-	public default void sig_trickWon ( Direction p_winner )
+	public default void sig_trickWon ( Trick p_winner )
 	{
 		// nothing to do
 	}

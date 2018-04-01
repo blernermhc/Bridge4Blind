@@ -14,7 +14,6 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import lerner.blindBridge.main.Game;
-import lerner.blindBridge.model.BridgeHand;
 import lerner.blindBridge.model.Direction;
 
 /**

@@ -13,6 +13,7 @@ import lerner.blindBridge.model.Contract;
 import lerner.blindBridge.model.Direction;
 import lerner.blindBridge.model.ErrorCode;
 import lerner.blindBridge.model.Suit;
+import lerner.blindBridge.model.Trick;
 
 /**********************************************************************
  * Communicates with an RFID Antenna Controller 
@@ -572,7 +573,7 @@ public class AntennaController extends SerialController
 	 * @see model.GameListener#trickWon(model.Direction)
 	 */
 	@Override
-	public void sig_trickWon ( Direction p_winner )
+	public void sig_trickWon ( Trick p_winner )
 	{
 		// nothing to do
 	}

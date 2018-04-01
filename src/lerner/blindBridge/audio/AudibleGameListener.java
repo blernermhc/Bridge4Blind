@@ -4,6 +4,7 @@ import lerner.blindBridge.main.Game;
 import lerner.blindBridge.model.Card;
 import lerner.blindBridge.model.Direction;
 import lerner.blindBridge.model.GameListener_sparse;
+import lerner.blindBridge.model.Trick;
 import lerner.blindBridge.stateMachine.BridgeHandState;
 
 /***********************************************************************
@@ -113,18 +114,15 @@ public class AudibleGameListener implements GameListener_sparse
 
 
 	/***********************************************************************
-	 * Speaks which direction one the trick
+	 * Speaks which direction won the trick
 	 * 
-	 * @param p_winner
-	 *            the winner of the trick
+	 * @param p_trick	the trick
 	 ***********************************************************************/
 	@Override
-	public synchronized void sig_trickWon ( Direction p_winner )
+	public synchronized void sig_trickWon ( Trick p_trick )
 	{
-		// System.out.println("SoundManager.addSound: Thread " + Thread.currentThread().getName() +
-		// " trying to get lock");
 		m_soundMgr.addSound("/sounds/warnings/trickover.WAV");
-		switch (p_winner)
+		switch (p_trick.getWinner())
 		{
 
 			case NORTH:
