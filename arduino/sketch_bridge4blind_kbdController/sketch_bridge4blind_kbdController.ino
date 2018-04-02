@@ -1288,12 +1288,14 @@ void checkButton()
       case 63:	btn_H2(); break;
       case 26:	btn_H3(); break;
       case 18:	btn_H4(); break;
-      case 54:	btn_HC(); break;
+      //case 54:	btn_HC(); break;
+      case 54:	btn_state(Button == m_previousButtonId); break;
       case 56:	btn_D1(); break;
       case 64:	btn_D2(); break;
       case 25:	btn_D3(); break;
       case 17:	btn_D4(); break;
-      case 62:	btn_DC(); break;
+      // case 62:	btn_DC(); break;
+      case 62:	btn_state(Button == m_previousButtonId); break;
       case 40:	btn_up(); break;
       case 39:	btn_down(); break;
       case 37:	btn_repeat(); break;
