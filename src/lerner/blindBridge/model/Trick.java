@@ -137,6 +137,7 @@ public class Trick
 	/***********************************************************************
 	 * Completes the trick and determines the winner
 	 * @return the winner
+	 * @throws IllegalStateException if there are no cards played into the trick
 	 ***********************************************************************/
 	private Direction completeTrick ( )
 	{
@@ -145,6 +146,7 @@ public class Trick
 		
 		// NOTE compareCards assumes that first "best" card is the first card
 		// played, as it uses that to determine the first lead suit.
+		assert !m_cardsPlayed.isEmpty();
 		for (CardPlay cardPlay : m_cardsPlayed)
 		{
 			if (best == null || (compareCards(best.getCard(), cardPlay.getCard(), m_contractSuit) > 0))
@@ -153,6 +155,7 @@ public class Trick
 			}
 		}
 		
+		if (best == null) throw new IllegalStateException ("completeTrick: m_cardsPlayed is empty");
 		m_winner = best.getPlayer();
 		
 		return m_winner;
