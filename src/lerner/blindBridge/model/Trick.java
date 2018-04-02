@@ -26,7 +26,11 @@ public class Trick
 	// CONFIGURATION MEMBER DATA
 	//--------------------------------------------------
 	
-	/** The cards played in the current trick, in order of play */
+	/** 
+	 * The cards played in the current trick, in order of play.
+	 * Use add (add last) to insert new elements or redo removals.
+	 * Use pollLast (remove last) to pop off elements during undo.
+	 */
 	private Deque<CardPlay> 					m_cardsPlayed = new ArrayDeque<>();
 
 	/** The suit of the trick. Set from first card played. */
@@ -80,7 +84,7 @@ public class Trick
 	public void playCard ( Direction p_direction, Card p_card )
 	{
 		CardPlay cardPlay = new CardPlay(p_direction, p_card);
-		m_cardsPlayed.push(cardPlay);
+		m_cardsPlayed.addLast(cardPlay);
 		if (m_currentSuit == null) m_currentSuit = p_card.getSuit();
 		m_nextPlayer = m_nextPlayer.getNextDirection();
 	}
@@ -94,7 +98,7 @@ public class Trick
 	 ***********************************************************************/
 	public CardPlay unplayCard ( Direction p_direction, Card p_card )
 	{
-		CardPlay cardPlay = m_cardsPlayed.poll();
+		CardPlay cardPlay = m_cardsPlayed.pollLast();
 		if (cardPlay != null)
 		{
 			m_nextPlayer = m_nextPlayer.getPreviousDirection();
@@ -139,6 +143,8 @@ public class Trick
 		// determine winner
 		CardPlay best = null;
 		
+		// NOTE compareCards assumes that first "best" card is the first card
+		// played, as it uses that to determine the first lead suit.
 		for (CardPlay cardPlay : m_cardsPlayed)
 		{
 			if (best == null || (compareCards(best.getCard(), cardPlay.getCard(), m_contractSuit) > 0))
@@ -157,7 +163,7 @@ public class Trick
 	 * @param p_curBest		Current best card (assumes first card played is first curBest)
 	 * @param p_testCard		Subsequent card played
 	 * @param p_trumpSuit	Current trump
-	 * @return 1 if test card is better, 0 otherwise
+	 * @return 1 if test card is better, 0 if they are the same and -1 otherwise
 	 ***********************************************************************/
 	private int compareCards (Card p_curBest, Card p_testCard, Suit p_trumpSuit)
 	{
@@ -174,7 +180,7 @@ public class Trick
 			else if (p_testCard.getSuit() == p_trumpSuit) return 1;	// trump better than non-trump 
 		}
 		
-		// neither card is trump (assume current suit is the suit of cur best
+		// neither card is trump (assume current suit is the suit of cur best)
 		if (p_curBest.getSuit() != p_testCard.getSuit()) return -1;	// test is not the right suit
 		
 		// suits match
