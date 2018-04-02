@@ -648,6 +648,7 @@ public class BridgeHand
 			{
 				listener.sig_error(ErrorCode.CANNOT_PLAY_ALREADY_PLAYED, p_direction, p_card, null, 0);
 			}
+			return true;
 		}
 		
 		PlayerHand hand = m_hands.get(p_direction);
@@ -680,6 +681,7 @@ public class BridgeHand
 		}
 
 		m_currentTrick.playCard(p_direction, p_card);
+		m_cardsPlayed.add(p_card);
 		
 		// insert undo event
 		Object[] objs = { p_direction, p_card };
@@ -737,11 +739,13 @@ public class BridgeHand
 				if (p_redoFlag)
 				{
 					playerHand.removeCard(card);
+					m_cardsPlayed.add(card);
 					if (s_cat.isDebugEnabled()) s_cat.debug("evt_playCard_undo: after redo, playerHand: " + playerHand); 
 				}
 				else
 				{
 					playerHand.addCard(card);
+					m_cardsPlayed.remove(card);
 					if (s_cat.isDebugEnabled()) s_cat.debug("evt_playCard_undo: after undo, playerHand: " + playerHand); 
 				}
 			}
