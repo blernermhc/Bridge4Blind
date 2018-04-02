@@ -13,7 +13,7 @@ public enum Rank
 	, SEVEN	("7") 
 	, EIGHT	("8") 
 	, NINE	("9")
-	, TEN	("T") 
+	, TEN	("10") 
 	, JACK	("J") 
 	, QUEEN	("Q") 
 	, KING	("K")
@@ -63,6 +63,7 @@ public enum Rank
 	 * @param p_c the Letter 
 	 * @return the Rank.  Returns null if an unexpected character is passed in.
 	 */
+	/* not used?
 	public static Rank findValue(char p_c)
 	{
 		switch(p_c) 
@@ -84,6 +85,7 @@ public enum Rank
 		assert false;
 		return null;
 	}
+	*/
 
 	//--------------------------------------------------
 	// HELPER METHODS
@@ -95,7 +97,6 @@ public enum Rank
 	@Override
 	public String toString()
 	{
-		if (this == TEN) return "10";	// Output as "10" rather than "T"
 		return m_rankValue;
 	}
 

@@ -28,7 +28,7 @@ public class Trick
 	
 	/** 
 	 * The cards played in the current trick, in order of play.
-	 * Use add (add last) to insert new elements or redo removals.
+	 * Use addLast (add last) to insert new elements or redo removals.
 	 * Use pollLast (remove last) to pop off elements during undo.
 	 */
 	private Deque<CardPlay> 					m_cardsPlayed = new ArrayDeque<>();

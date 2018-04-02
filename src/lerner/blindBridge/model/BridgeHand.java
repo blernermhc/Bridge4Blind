@@ -69,10 +69,10 @@ public class BridgeHand
 	public static String[][][] m_testHand =
 		{ // hand 0
 		 {
-			   { "5C", "7C", "9C", "JC", "4D", "7D", "9D", "JD", "TH", "2S", "5S", "9S", "QS" }	// north
-			 , { "4C", "6C", "8C", "8D", "QD", "AD", "3H", "4H", "KH", "4S", "6S", "8S", "TS" }	// east
-			 , { "3C", "QC", "KC", "3D", "6D", "TD", "KD", "7H", "8H", "JH", "AH", "7S", "AS" }	// south
-			 , { "2C", "TC", "AC", "2D", "5D", "2H", "5H", "6H", "9H", "QH", "3S", "JS", "KS" }	// west
+			   { "5C", "7C",  "9C", "JC", "4D", "7D",  "9D", "JD", "10H", "2S", "5S", "9S", "QS"  }	// north
+			 , { "4C", "6C",  "8C", "8D", "QD", "AD",  "3H", "4H", "KH",  "4S", "6S", "8S", "10S" }	// east
+			 , { "3C", "QC",  "KC", "3D", "6D", "10D", "KD", "7H", "8H",  "JH", "AH", "7S", "AS"  }	// south
+			 , { "2C", "10C", "AC", "2D", "5D", "2H",  "5H", "6H", "9H",  "QH", "3S", "JS", "KS"  }	// west
 		 }
 		};
 

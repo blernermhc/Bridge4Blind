@@ -106,13 +106,32 @@ public class Card implements Comparable<Card>
 	public Card (String p_abbreviation)
 		throws IllegalArgumentException
 	{
-		if (p_abbreviation == null || p_abbreviation.length() != 2)
+		if (p_abbreviation == null || p_abbreviation.length() < 2)
 			throw new IllegalArgumentException("Card: invalid abbrev: " + p_abbreviation);
 
 		String abbreviation = p_abbreviation.toUpperCase();
 		
-		char num = abbreviation.charAt(0);
-		switch (num)
+		char rankAbbrev;
+		char suitAbbrev;
+		switch (abbreviation.length())
+		{
+			case 2:
+				rankAbbrev = abbreviation.charAt(0);
+				suitAbbrev = abbreviation.charAt(1);
+				break;
+
+			case 3:
+				if (! abbreviation.startsWith("10"))
+					throw new IllegalArgumentException("Card: invalid abbrev (3): " + abbreviation);
+				rankAbbrev = 'T';
+				suitAbbrev = abbreviation.charAt(2);
+				break;
+
+			default:
+				throw new IllegalArgumentException("Card: invalid abbrev length: " + abbreviation);
+		}
+		
+		switch (rankAbbrev)
 		{
 			case '2':	m_rank = Rank.TWO; break; 
 			case '3':	m_rank = Rank.THREE; break; 
@@ -128,17 +147,17 @@ public class Card implements Comparable<Card>
 			case 'K':	m_rank = Rank.KING; break; 
 			case 'A':	m_rank = Rank.ACE; break;
 			default:
-				throw new IllegalArgumentException("Card: invalid number: " + num);
+				throw new IllegalArgumentException("Card: invalid number: " + rankAbbrev);
 		}
-		char suit = abbreviation.charAt(1);
-		switch (suit)
+
+		switch (suitAbbrev)
 		{
 			case 'C':	m_suit = Suit.CLUBS; break; 
 			case 'D':	m_suit = Suit.DIAMONDS; break; 
 			case 'H':	m_suit = Suit.HEARTS; break; 
 			case 'S':	m_suit = Suit.SPADES; break; 
 			default:
-				throw new IllegalArgumentException("Card: invalid suit: " + suit);
+				throw new IllegalArgumentException("Card: invalid suit: " + suitAbbrev);
 		}
 		
 		//build the name of the file containing the sound
@@ -234,14 +253,14 @@ public class Card implements Comparable<Card>
 		if (m_rank == null) return "?" + suit;
 		
 		int num = m_rank.ordinal() + 2;
-		if (num < 10)
+		if (num < 11)
 		{
 			return "" + num + suit;
 		}
 		else
 		{
 			num -= 10;
-			char cards[] = { 'T', 'J', 'Q', 'K', 'A' };
+			char cards[] = { 'J', 'Q', 'K', 'A' };
 			return "" + cards[num] + suit;
 		}
 	}
