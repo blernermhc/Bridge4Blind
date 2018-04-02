@@ -27,8 +27,10 @@ public class BidNumberGUI extends BridgeJPanel implements ActionListener
 
 	private JButton[]	m_buttons;
 
+	/** the Game object associated with this GUI */
 	private Game			m_game;
 
+	/** the GUI manager object */
 	private GameGUI		m_gameGUI;
 
 	// for test mode only. For now, hand number can be 1 or 2.

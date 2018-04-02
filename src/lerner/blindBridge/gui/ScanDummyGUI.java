@@ -35,8 +35,10 @@ public class ScanDummyGUI extends BridgeJPanel implements GameListener_sparse
 	private static Category s_cat = Category.getInstance(ScanDummyGUI.class.getName());
 
 
+	/** the GUI manager object */
 	private GameGUI	m_gameGUI;
 
+	/** the Game object associated with this GUI */
 	private Game		m_game;
 
 	private JLabel	m_clubsScanned		= new JLabel("Clubs: ");

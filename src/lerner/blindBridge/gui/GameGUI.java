@@ -4,7 +4,6 @@ import java.awt.BorderLayout;
 import java.awt.Font;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.util.Stack;
 
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
@@ -41,9 +40,6 @@ public class GameGUI extends JFrame implements GameListener_sparse
 	// INTERNAL MEMBER DATA
 	//--------------------------------------------------
 
-	/** remembers to which screen should be displayed if GameStatusGUI invokes changeFrame() */
-	private GameGUIs				m_switchFromGameStatusGUI	= GameGUIs.NONE;
-
 	/** Holds the actual GUI components */
 	private GameGUI_builder		m_gameGUI_builder;
 	
@@ -53,9 +49,20 @@ public class GameGUI extends JFrame implements GameListener_sparse
 	/** the currently visible GUI */
 	private static GameGUIs		m_currentScreen;
 
-	/** The history of screens viewed, used for the back button */
-	private Stack<GameGUIs>		m_screensViewed			= new Stack<GameGUIs>();
+	/** Maximum delay to insert to ensure requested minimum GUI display time (in milliseconds) */
+	private static final long MAX_DISPLAY_DELAY_MILLIS = 5000;  
 
+	/**
+	 * Time of the previous GUI change.
+	 * This is used to enforce requested minimum GUI display times.
+	 */
+	private long m_timeOfLastDisplayChange = System.currentTimeMillis();
+	
+	/**
+	 * The minimum display time requested for the currently displayed GUI.
+	 */
+	private long m_minimumDisplayMillis = 0;
+	
 
 	//--------------------------------------------------
 	// CONSTRUCTORS
@@ -85,7 +92,6 @@ public class GameGUI extends JFrame implements GameListener_sparse
 		m_gameGUI_builder.show(GameGUIs.INITIALIZING_GUI);
 
 		m_currentScreen = GameGUIs.INITIALIZING_GUI;
-		m_screensViewed.push(GameGUIs.INITIALIZING_GUI);
 
 		add(m_gameGUI_builder.getMainPanel(), BorderLayout.CENTER);
 		
@@ -135,13 +141,16 @@ public class GameGUI extends JFrame implements GameListener_sparse
 	
 	/***********************************************************************
 	 * Changes the display to a new GUI.
-	 * @param p_gui the gui
+	 * When changing GUIs, ensures that the requested minimum display time for
+	 * the current GUI has been met
+	 * @param p_gui the new GUI to display
 	 ***********************************************************************/
 	protected void changeFrame ( GameGUIs p_gui )
 	{
 		if (s_cat.isDebugEnabled()) s_cat.debug("changeFrame: change frame current screen " + m_currentScreen + " to " + p_gui);
-		m_screensViewed.push(m_currentScreen);
 
+		ensureMinimumDisplayTime(p_gui.getMinDisplayTimeMillis(), m_currentScreen == p_gui);
+		
 		m_currentScreen = p_gui;
 
 		m_gameGUI_builder.show(m_currentScreen);
@@ -150,160 +159,54 @@ public class GameGUI extends JFrame implements GameListener_sparse
 		
 	}
 	
-	public boolean disableChangeFrame = true;
-
-	/** Advances to the next GUI in line. */
-	@SuppressWarnings("boxing")
-	protected void changeFrame ()
+	/***********************************************************************
+	 * Ensures that the minimum display time requested for the current GUI is
+	 * met before changing to a new, different, GUI.
+	 * @param p_newReserve	time to reserve for next display, in milliseconds.
+	 * @param p_sameGUI		if true, reset the timer, but do not introduce a delay.
+	 * 						The current GUI is just being updated (e.g., a new
+	 * 						card play is shown).
+	 * @return true if a delay was introduced and false otherwise
+	 ***********************************************************************/
+	private boolean ensureMinimumDisplayTime (int p_newReserve, boolean p_sameGUI)
 	{
-		if (disableChangeFrame) return;
-		if (s_cat.isDebugEnabled()) s_cat.debug("changeFrame: change frame current screen " + m_currentScreen.getName());
-
-		// System.out.println("before change frame currentScreen " +
-		// currentScreen);
-
-		// advance to the appropriate screen
-		m_screensViewed.push(m_currentScreen);
-
-		// If the current gui is the scan dummy gui, then change frame to the
-		// game status gui. Otherwise, increment value of current screen
-		// by 1
-		if (m_currentScreen == GameGUIs.SCAN_DUMMY_GUI)
+		boolean delayed = false;
+		
+		if (! p_sameGUI)
 		{
-
-			m_currentScreen = GameGUIs.GAME_STATUS_GUI;
-
-		}
-		else if (m_currentScreen == GameGUIs.GAME_STATUS_GUI)
-		{
-
-			// System.out.println("current screen is game status gui");
-
-			// if a new hand is started, then screen should change from
-			// GameStatusGUI to NEXT_HAND_GUI. If, after the first card has
-			// been played and blind person is not dummy, then screen needs to
-			// switch
-			// from GameStatusGUI to SCAN_DUMMY_GUI.
-
-			if (m_switchFromGameStatusGUI == GameGUIs.SWITCH_TO_SCAN_DUMMY)
+			long curTime = System.currentTimeMillis();
+			long delayTime = ((m_timeOfLastDisplayChange + m_minimumDisplayMillis) - curTime);
+			if (delayTime > 0)
 			{
-
-				m_currentScreen = GameGUIs.SCAN_DUMMY_GUI;
-
+				if (delayTime > MAX_DISPLAY_DELAY_MILLIS) delayTime = MAX_DISPLAY_DELAY_MILLIS;
+				try
+				{
+					if (s_cat.isDebugEnabled()) s_cat.debug("ensureMinimumDisplayTime: about to delay: " + delayTime);
+		            Thread.sleep(delayTime);
+					if (s_cat.isDebugEnabled()) s_cat.debug("ensureMinimumDisplayTime: back from delay");
+		        }
+				catch (InterruptedException e)
+				{
+		            e.printStackTrace();
+		        }
+				delayed = true;
 			}
-			else if (m_switchFromGameStatusGUI == GameGUIs.SWITCH_TO_NEXT_HAND)
-			{
-
-				if (s_cat.isDebugEnabled()) s_cat.debug("changeFrame: switching to Next Hand GUI");
-
-				// refresh the display before switching screens
-
-				// nextHandGUI.refreshDisplay();
-
-				m_currentScreen = GameGUIs.NEXT_HAND_GUI;
-
-			}
-
-			// else, do nothing
-
 		}
-		else if (m_currentScreen == GameGUIs.NEXT_HAND_GUI)
-		{
-
-			m_currentScreen = GameGUIs.SCANNING_BLIND_GUI;
-
-		}
-		else
-		{
-
-			m_currentScreen = m_currentScreen.nextGUI();
-		}
-
-		// update text on refresh display
-		if (m_currentScreen == GameGUIs.NEXT_HAND_GUI)
-		{
-			((NextHandGUI)GameGUIs.NEXT_HAND_GUI.getPanel()).refreshDisplay();
-		}
-
-		sig_debugMsg("Switching to screen " + m_currentScreen.getName());
-
-		if (s_cat.isDebugEnabled()) s_cat.debug("changeFrame: Switching to screen " + m_currentScreen.getName());
-
-		// Note : its position/order is important
-		/*
-		 * rick if (Game.isTestMode()) { determineIfRightGUI(); }
-		 */
-
-		m_gameGUI_builder.show(m_currentScreen);
-		requestFocusInWindow();
-
-		// System.out.println("after change frame currentScreen " +
-		// currentScreen);
-
-		// debugMsg("currentScreen " + currentScreen);
+		
+		m_timeOfLastDisplayChange = System.currentTimeMillis();
+		m_minimumDisplayMillis = p_newReserve;
+		return delayed;
 	}
 
-	/** Returns to the last card viewed. */
-	@SuppressWarnings("boxing")
-	public void reverse ()
+	/***********************************************************************
+	 * Resets the last display time.
+	 * Invoked when changing the content of displays without changing GUIs.
+	 * This ensures that the latest information will be shown for at least
+	 * the minimum amount of time requested by the current GUI.
+	 ***********************************************************************/
+	public void resetTimeOfLastDisplayChange()
 	{
-
-		if (s_cat.isDebugEnabled()) s_cat.debug("reverse: GameGUI undo");
-
-		// if user wants to change position of blind player
-		// if(game.blindPayerHasNoCard()){
-
-		// if the user wants to change position of blind player by goinf from
-		// scanning blind cards gui to choose VI position gui
-		if (m_currentScreen == GameGUIs.SCANNING_BLIND_GUI)
-		{
-
-			/**
-			 * IMPORTANT : When "Back" is pressed and screen changes from SCANNING_BLIND_GUI to
-			 * VI_PLAYER_GUI, the handler is still active. So do not scan cards until the position
-			 * of the blind player has been chosen. Not sure what happens if you do.
-			 */
-			/*
-			 * rick - should not need this anymore game.resetVIPlayer();
-			 */
-
-		}
-		else if (m_currentScreen == GameGUIs.BID_POSITION_GUI)
-		{
-			// TODO: implement this
-			/*
-			 * rick - probably need to implement this game.reverseBidPosition();
-			 */
-
-		}
-
-		if (!m_screensViewed.isEmpty())
-		{
-			m_currentScreen = m_screensViewed.pop();
-
-			if (s_cat.isDebugEnabled()) s_cat.debug("reverse: current screen is " + m_currentScreen);
-
-			// something extra is needed to revert to SCAN_DUMMY_GUI
-			if (m_currentScreen == GameGUIs.SCAN_DUMMY_GUI)
-			{
-
-				reverseToScanDummy();
-
-				// if(Game.isTestMode()){
-				//
-				// TestAntennaHandler.undo();
-				// }
-
-			}
-
-			m_gameGUI_builder.show(m_currentScreen);
-
-			/*
-			 * rick determineIfRightGUI();
-			 */
-
-			requestFocusInWindow();
-		}
+		m_timeOfLastDisplayChange = System.currentTimeMillis();
 	}
 
 	/**
@@ -312,116 +215,7 @@ public class GameGUI extends JFrame implements GameListener_sparse
 	public void undo ()
 	{
 		m_game.getBridgeHand().evt_undo(true);
-		
-		// TODO: this should be implemented with m_game.evt_undo();
-		/* rick: 
-
-		// if the user wants to change position of blind player
-		if (m_currentScreen == SCANNING_BLIND_GUI && m_game.blindPayerHasNoCard())
-		{
-
-			reverse();
-
-		}
-		else if (m_currentScreen == SCANNING_BLIND_GUI)
-		{
-
-			// This is when user wants to remove the most recent cards blind
-			// player' cards during dealing stage
-
-			m_game.undoBlindPlayerCard();
-
-			if (Game.isTestMode())
-			{
-
-				TestAntennaHandler.undo();
-			}
-
-		}
-		else if (m_currentScreen == SCAN_DUMMY_GUI)
-		{
-
-			Card toRemove = m_game.undoDummyPlayerCard();
-
-			if (toRemove == null)
-			{
-
-				// allow the user to change gui
-				reverse();
-
-			}
-			else
-			{
-
-				// remove the most recent card scanned for the dummy player
-				m_scanDummyGUI.undo(toRemove);
-
-				if (Game.isTestMode())
-				{
-
-					TestAntennaHandler.undo();
-				}
-			}
-
-		}
-		else if (m_currentScreen == GAME_STATUS_GUI)
-		{
-
-			Direction undoTurn = m_game.getTurn();
-
-			Direction currentTurn = m_game.undo();
-
-			if (currentTurn != null)
-			{
-
-				m_gameStatusGUI.undoCardPlayed(currentTurn.ordinal(), undoTurn.ordinal());
-
-				if (Game.isTestMode())
-				{
-
-					TestAntennaHandler.undo();
-				}
-
-				if (m_game.getCurrentTrick().getTrickSize() == 0)
-				{
-
-					undoButtonSetEnabled(false);
-
-				}
-				else
-				{
-
-					undoButtonSetEnabled(true);
-				}
-
-			}
-			else
-			{
-
-				undoButtonSetEnabled(false);
-			}
-
-		}
-		else
-		{
-
-			reverse();
-		}
-		 */
 	}
-
-	/*
-	 * rick private void determineIfRightGUI() { // figure out if it is the right gui for listening
-	 * to key press if (currentScreen == VI_PLAYER_GUI || currentScreen == HELP_GUI || currentScreen
-	 * == TRUMP_SUIT_GUI || currentScreen == BID_NUMBER_GUI || currentScreen == BID_POSITION_GUI ||
-	 * currentScreen == NEXT_HAND_GUI) {
-	 * 
-	 * ((TestAntennaHandler) game.getHandler()).setRightGUI(false);
-	 * 
-	 * } else {
-	 * 
-	 * ((TestAntennaHandler) game.getHandler()).setRightGUI(true); } }
-	 */
 
 	//--------------------------------------------------
 	// Game Event Signal Handlers
@@ -445,7 +239,6 @@ public class GameGUI extends JFrame implements GameListener_sparse
 	{
 		if (s_cat.isDebugEnabled()) s_cat.debug("sig_initializing: entered");
 
-		m_screensViewed.clear();
 		changeFrame(GameGUIs.INITIALIZING_GUI);
 	}
 
@@ -457,11 +250,8 @@ public class GameGUI extends JFrame implements GameListener_sparse
 	{
 		if (s_cat.isDebugEnabled()) s_cat.debug("sig_gameReset: Game reset");
 
-		m_screensViewed.clear();
 		changeFrame(GameGUIs.SCANNING_BLIND_GUI);
 
-		m_switchFromGameStatusGUI = GameGUIs.NONE;
-		
 		// Rick: you cannot create a new listener within a listener signal handler
 		// since you cannot change the list of listeners while iterating over them.
 		// If necessary, add a "reset" method to GameStatusGUI, so we do not have to
@@ -509,7 +299,7 @@ public class GameGUI extends JFrame implements GameListener_sparse
 	@Override
 	public void sig_setNextPlayer ( Direction p_direction )
 	{
-		if (s_cat.isDebugEnabled()) s_cat.debug("sig_setNextPlayer: entered");
+		if (s_cat.isDebugEnabled()) s_cat.debug("sig_setNextPlayer: entered. Direction: " + p_direction);
 
 		changeFrame(GameGUIs.GAME_STATUS_GUI);
 	}
@@ -534,13 +324,6 @@ public class GameGUI extends JFrame implements GameListener_sparse
 		changeFrame(GameGUIs.HELP_GUI);
 	}
 
-	public void setSwitchFromGameStatusGUI ( GameGUIs p_switchFromGameStatusGUI )
-	{
-		m_switchFromGameStatusGUI = p_switchFromGameStatusGUI;
-
-		if (s_cat.isDebugEnabled()) s_cat.debug("switchFromGameStatusGUI: " + m_switchFromGameStatusGUI);
-	}
-
 	public void undoButtonSetEnabled ( boolean enabled )
 	{
 
@@ -553,21 +336,6 @@ public class GameGUI extends JFrame implements GameListener_sparse
 
 		// TODO: is this needed? m_redoButton.setEnabled(enabled);
 		repaint();
-	}
-
-	public void reverseToScanBlind ()
-	{
-
-		// TODO: implement this in BridgeHand
-		// game.setGameState(GameState.DEALING);
-
-	}
-
-	public void reverseToScanDummy ()
-	{
-		// TODO: implement this in BridgeHand
-		// game.setGameState(GameState.SCANNING_DUMMY);
-
 	}
 
 }

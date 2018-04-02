@@ -17,18 +17,15 @@ import lerner.blindBridge.main.Game;
  ***********************************************************************/
 public enum GameGUIs
 {
-	INITIALIZING_GUI   		("initializingGUI",		new InitializationGUI())
-	, SCANNING_BLIND_GUI		("scanningGUI",			new ScanningBlindGUI())
-	, BID_POSITION_GUI		("bidPosGUI",			new BidPositionGUI())
-	, BID_NUMBER_GUI			("bidNumGUI",			new BidNumberGUI())
-	, TRUMP_SUIT_GUI			("trumpSuitGUI",			new BidSuitGUI())
-	, NEXT_HAND_GUI			("nextHandGUI",			new NextHandGUI())
-	, SCAN_DUMMY_GUI			("scanDummyGUI",			new ScanDummyGUI())
-	, GAME_STATUS_GUI		("gameStatusGUI",		new GameStatusGUI())
-	, HELP_GUI				("help",					new HelpGUI())
-	, SWITCH_TO_SCAN_DUMMY	("switchToScanHand")
-	, SWITCH_TO_NEXT_HAND	("switchToNextHand")
-	, NONE					("none")
+	INITIALIZING_GUI   		("initializingGUI",		0000, new InitializationGUI())
+	, SCANNING_BLIND_GUI		("scanningGUI",			0000, new ScanningBlindGUI())
+	, BID_POSITION_GUI		("bidPosGUI",			0000, new BidPositionGUI())
+	, BID_NUMBER_GUI			("bidNumGUI",			0000, new BidNumberGUI())
+	, TRUMP_SUIT_GUI			("trumpSuitGUI",			0000, new BidSuitGUI())
+	, NEXT_HAND_GUI			("nextHandGUI",			0000, new NextHandGUI())
+	, SCAN_DUMMY_GUI			("scanDummyGUI",			1000, new ScanDummyGUI())
+	, GAME_STATUS_GUI		("gameStatusGUI",		3000, new GameStatusGUI())
+	, HELP_GUI				("help",					0000, new HelpGUI())
 	;
 
 	/**
@@ -46,6 +43,9 @@ public enum GameGUIs
 
 	/** Name of the GUI panel */
 	String			m_name;
+	
+	/** Minimum amount of time to display this GUI, before switching to a different GUI */
+	int				m_minDisplayTimeMillis;
 
 	/** The GUI panel */
 	BridgeJPanel		m_panel;
@@ -58,15 +58,16 @@ public enum GameGUIs
 	// CONSTRUCTORS
 	//--------------------------------------------------
 	
-	private GameGUIs ( String p_name )
+	/***********************************************************************
+	 * Associates various information with each enumerated GUI.
+	 * @param p_name						GUI's name
+	 * @param p_minDisplayTimeMillis		Min time to display before switching to a different GUI
+	 * @param p_panel					The JPanel implementing the GUI
+	 ***********************************************************************/
+	private GameGUIs ( String p_name, int p_minDisplayTimeMillis, BridgeJPanel p_panel )
 	{
 		m_name = p_name;
-		m_panel = null;
-	}
-
-	private GameGUIs ( String p_name, BridgeJPanel p_panel )
-	{
-		m_name = p_name;
+		m_minDisplayTimeMillis = p_minDisplayTimeMillis;
 		m_panel = p_panel;
 	}
 
@@ -143,6 +144,16 @@ public enum GameGUIs
 	public JPanel getPanel ()
 	{
 		return m_panel;
+	}
+
+	/***********************************************************************
+	 * Minimum amount of time to display this GUI, before switching to a different GUI.
+	 * ChangeFrame(GUI) enforces these minimum display times.
+	 * @return time in milliseconds
+	 ***********************************************************************/
+	public int getMinDisplayTimeMillis ()
+	{
+		return m_minDisplayTimeMillis;
 	}
 	
 }

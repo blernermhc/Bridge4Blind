@@ -34,6 +34,9 @@ public class TricksWonPanel extends BridgeJPanel implements GameListener_sparse
 	/** the Game object associated with this GUI */
 	private Game					m_game;
 
+	/** the GUI manager object */
+	private GameGUI				m_gameGUI;
+	
 	//--------------------------------------------------
 	// CONSTRUCTORS
 	//--------------------------------------------------
@@ -65,7 +68,7 @@ public class TricksWonPanel extends BridgeJPanel implements GameListener_sparse
 	public void initialize ( GameGUI p_gameGUI, Game p_game )
 	{
 		m_game = p_game;
-		// m_gameGUI = p_gameGUI;
+		m_gameGUI = p_gameGUI;
 	}
 
 	private void updateDisplay ()
@@ -73,6 +76,7 @@ public class TricksWonPanel extends BridgeJPanel implements GameListener_sparse
 		// just get the numbers from the BridgeHand state
 		m_northSouthTrickLabel.setText("" + m_game.getBridgeHand().getTricksTaken().getNumTricksWon(Direction.NORTH));
 		m_eastWestTrickLabel.setText("" + m_game.getBridgeHand().getTricksTaken().getNumTricksWon(Direction.EAST));
+		m_gameGUI.resetTimeOfLastDisplayChange();
 	}
 	//--------------------------------------------------
 	// Game Event Signal Handlers

@@ -644,6 +644,7 @@ public class BridgeHand
 		
 		if (m_cardsPlayed.contains(p_card))
 		{
+			if (s_cat.isDebugEnabled()) s_cat.debug("playCard: card already played");
 			for (GameListener listener : m_game.getGameListeners())
 			{
 				listener.sig_error(ErrorCode.CANNOT_PLAY_ALREADY_PLAYED, p_direction, p_card, null, 0);
@@ -660,6 +661,7 @@ public class BridgeHand
 			if (! hand.testPlay(p_card, m_currentTrick.getCurrentSuit()))
 			{
 				// announce illegal play
+				if (s_cat.isDebugEnabled()) s_cat.debug("playCard: cannot play, illegal suit");
 				for (GameListener listener : m_game.getGameListeners())
 				{
 					listener.sig_error(ErrorCode.CANNOT_PLAY_WRONG_SUIT, p_direction, p_card, m_currentTrick.getCurrentSuit(), 0);
@@ -671,6 +673,7 @@ public class BridgeHand
 			if (! hand.useCard(p_card))
 			{
 				// announce illegal play
+				if (s_cat.isDebugEnabled()) s_cat.debug("playCard: cannot play, not in hand");
 				for (GameListener listener : m_game.getGameListeners())
 				{
 					listener.sig_error(ErrorCode.CANNOT_PLAY_NOT_IN_HAND, p_direction, p_card, null, 0);
@@ -739,13 +742,11 @@ public class BridgeHand
 				if (p_redoFlag)
 				{
 					playerHand.removeCard(card);
-					m_cardsPlayed.add(card);
 					if (s_cat.isDebugEnabled()) s_cat.debug("evt_playCard_undo: after redo, playerHand: " + playerHand); 
 				}
 				else
 				{
 					playerHand.addCard(card);
-					m_cardsPlayed.remove(card);
 					if (s_cat.isDebugEnabled()) s_cat.debug("evt_playCard_undo: after undo, playerHand: " + playerHand); 
 				}
 			}
@@ -754,6 +755,7 @@ public class BridgeHand
 			if (p_redoFlag)
 			{
 				m_currentTrick.playCard(direction, card);
+				m_cardsPlayed.add(card);
 				if (s_cat.isDebugEnabled()) s_cat.debug("evt_playCard_undo: after redo, trick: " + m_currentTrick); 
 			}
 			else
@@ -769,6 +771,7 @@ public class BridgeHand
 					m_currentTrick.unplayCard(direction, card);
 					if (s_cat.isDebugEnabled()) s_cat.debug("evt_playCard_undo: trick was not empty, now: " + m_currentTrick);
 				}
+				m_cardsPlayed.remove(card);
 			}
 		}
 		

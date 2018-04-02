@@ -27,8 +27,10 @@ import lerner.blindBridge.model.Suit;
 public class BidSuitGUI extends BridgeJPanel
 {
 
+	/** the Game object associated with this GUI */
 	private Game		m_game;
 
+	/** the GUI manager object */
 	private GameGUI	m_gameGUI;
 
 	// for test mode only. For now, hand number can be 1 or 2.
@@ -107,7 +109,6 @@ public class BidSuitGUI extends BridgeJPanel
 				{
 					m_game.getBridgeHand().evt_setContractSuit(Suit.SPADES);
 				}
-				m_gameGUI.changeFrame();
 			}
 
 		});
@@ -126,7 +127,6 @@ public class BidSuitGUI extends BridgeJPanel
 				{
 					m_game.getBridgeHand().evt_setContractSuit(Suit.HEARTS);
 				}
-				m_gameGUI.changeFrame();
 			}
 
 		});
@@ -145,7 +145,6 @@ public class BidSuitGUI extends BridgeJPanel
 				{
 					m_game.getBridgeHand().evt_setContractSuit(Suit.DIAMONDS);
 				}
-				m_gameGUI.changeFrame();
 			}
 
 		});
@@ -164,7 +163,6 @@ public class BidSuitGUI extends BridgeJPanel
 				{
 					m_game.getBridgeHand().evt_setContractSuit(Suit.CLUBS);
 				}
-				m_gameGUI.changeFrame();
 			}
 
 		});
@@ -183,7 +181,6 @@ public class BidSuitGUI extends BridgeJPanel
 				{
 					m_game.getBridgeHand().evt_setContractSuit(Suit.NOTRUMP);
 				}
-				m_gameGUI.changeFrame();
 			}
 
 		});

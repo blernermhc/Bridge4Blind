@@ -26,8 +26,7 @@ import lerner.blindBridge.model.Direction;
 public class NextHandGUI extends BridgeJPanel
 {
 
-	private GameGUI	m_gameGUI;
-
+	/** the Game object associated with this GUI */
 	private Game		m_game;
 
 	private JLabel	m_winnerLabel;
@@ -77,7 +76,7 @@ public class NextHandGUI extends BridgeJPanel
 	public void initialize ( GameGUI p_gameGUI, Game p_game )
 	{
 		m_game = p_game;
-		m_gameGUI = p_gameGUI;
+		// m_gameGUI = p_gameGUI;
 	}
 	
 	/**
@@ -139,14 +138,10 @@ public class NextHandGUI extends BridgeJPanel
 			@Override
 			public void actionPerformed ( ActionEvent e )
 			{
-
-				m_gameGUI.changeFrame();
-
 				m_game.evt_startNewHand();
-
 				System.out.println("resetting game in Next Hand GUI");
-
 			}
+
 		});
 
 		nextHandButton.setAlignmentX(Component.CENTER_ALIGNMENT);

@@ -19,7 +19,7 @@ public class State_EnterContract extends ControllerState
 	/**
 	 * Used to collect logging output for this class
 	 */
-	// private static Category s_cat = Category.getInstance(State_Scan_Blind_Hands.class.getName());
+	// private static Category s_cat = Category.getInstance(State_EnterContract.class.getName());
 
 	//--------------------------------------------------
 	// CONSTANTS

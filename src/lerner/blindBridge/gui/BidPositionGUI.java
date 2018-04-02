@@ -17,8 +17,10 @@ import lerner.blindBridge.model.Direction;
 public class BidPositionGUI extends DirectionGUI
 {
 
+	/** the Game object associated with this GUI */
 	private Game		m_game;
 
+	/** the GUI manager object */
 	private GameGUI	m_gameGUI;
 
 	// for test mode only. For now, hand number can be 1 or 2.

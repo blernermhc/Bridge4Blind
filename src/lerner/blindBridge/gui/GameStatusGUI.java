@@ -30,7 +30,7 @@ public class GameStatusGUI extends BridgeJPanel implements GameListener_sparse
 	/**
 	 * Used to collect logging output for this class
 	 */
-	private static Category s_cat = Category.getInstance(GameGUI.class.getName());
+	private static Category s_cat = Category.getInstance(GameStatusGUI.class.getName());
 
 	//--------------------------------------------------
 	// CONSTANTS
@@ -65,7 +65,8 @@ public class GameStatusGUI extends BridgeJPanel implements GameListener_sparse
 	/** the Game object associated with this GUI */
 	private Game					m_game;
 
-	//private GameGUI				m_gameGUI;
+	/** the GUI manager object */
+	private GameGUI				m_gameGUI;
 
 	// private boolean				m_trickOverHandled	= true;
 
@@ -154,7 +155,7 @@ public class GameStatusGUI extends BridgeJPanel implements GameListener_sparse
 	public void initialize ( GameGUI p_gameGUI, Game p_game )
 	{
 		m_game = p_game;
-		// m_gameGUI = p_gameGUI;
+		m_gameGUI = p_gameGUI;
 
 		m_tricksWonPanel.initialize (p_gameGUI, p_game);
 		
@@ -197,6 +198,8 @@ public class GameStatusGUI extends BridgeJPanel implements GameListener_sparse
 		//------------------------------
 		
 		m_bidGUI.setBid(curContract);
+		
+		m_gameGUI.resetTimeOfLastDisplayChange();
 	}
 	
 	/***********************************************************************
@@ -233,7 +236,7 @@ public class GameStatusGUI extends BridgeJPanel implements GameListener_sparse
 	@Override
 	public void sig_setNextPlayer ( Direction p_direction )
 	{
-		if (s_cat.isDebugEnabled()) s_cat.debug("sig_setNextPlayer: entered");
+		if (s_cat.isDebugEnabled()) s_cat.debug("sig_setNextPlayer: entered. direction: " + p_direction);
 
 		updateDisplay();
 	}
@@ -244,7 +247,7 @@ public class GameStatusGUI extends BridgeJPanel implements GameListener_sparse
 	@Override
 	public void sig_cardPlayed ( Direction turn, Card card )
 	{
-		if (s_cat.isDebugEnabled()) s_cat.debug("sig_setNextPlayer: entered");
+		if (s_cat.isDebugEnabled()) s_cat.debug("sig_cardPlayed: entered");
 
 		updateDisplay();
 	}
