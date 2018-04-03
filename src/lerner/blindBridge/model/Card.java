@@ -259,7 +259,7 @@ public class Card implements Comparable<Card>
 		}
 		else
 		{
-			num -= 10;
+			num -= 11;
 			char cards[] = { 'J', 'Q', 'K', 'A' };
 			return "" + cards[num] + suit;
 		}
