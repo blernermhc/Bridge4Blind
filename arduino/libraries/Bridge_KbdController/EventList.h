@@ -29,6 +29,7 @@ class EventList
 	void addEvent(uint8_t p_input0, uint8_t p_input1, uint8_t p_repeat);
 	void resetEventList(uint8_t p_repeat);
 	uint8_t previousEvent();
+	void resetRepeatCursor();
 };
 
 #endif //EventList_h

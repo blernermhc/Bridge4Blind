@@ -3,9 +3,14 @@
 /** configure a new instance of Eventlist. */
 EventList::EventList(void)
 {
-  m_eventListNextIdx = 0;
-  m_eventListCurrentIdx = 0;
-  m_wrap = 0;
+	// index at which to insert next event
+	m_eventListNextIdx = 0;
+
+	// repeat cursor
+	m_eventListCurrentIdx = 0;
+
+	// set to true when the insert point has wrapped around
+	m_wrap = 0;
 }
 
 void EventList::addEvent(uint8_t p_input, uint8_t p_repeat)
@@ -51,4 +56,9 @@ uint8_t EventList::previousEvent()
     }
   }
   return m_eventList[m_eventListCurrentIdx];
+}
+
+void EventList::resetRepeatCursor()
+{
+	m_eventListCurrentIdx = m_eventListNextIdx;
 }

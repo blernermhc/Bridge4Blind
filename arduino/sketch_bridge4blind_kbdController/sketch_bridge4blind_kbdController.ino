@@ -497,6 +497,9 @@ void processInputButton (uint8_t p_input0, uint8_t p_repeat)
   putstring_nl("");
 #endif
 
+  // any button except the Repeat Button resets the Repeat cursor
+  if (Button != 13) eventList.resetRepeatCursor();
+  
   switch (buttonId)
   {
     case 0:	btn_play(); break;
@@ -1388,6 +1391,9 @@ void checkButton()
     uint8_t dummyOnTop = true;
     if ((s_options & TOP_BUTTONS_ME) != 0) dummyOnTop = false;
 
+    // any button except the Repeat Button resets the Repeat cursor
+    if (Button != 62) eventList.resetRepeatCursor();
+    
     switch (Button)
     {
       case 2:	btn_play(); break;	// Play button spans three buttons

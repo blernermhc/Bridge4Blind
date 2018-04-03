@@ -174,7 +174,7 @@ public class CommandController implements Runnable
 				}
 
 				// special case for scan with no spaces
-				if (line.matches("^s[nNeEsSwW]([1-9JQKA]|10)[cCdDhHsS]"))
+				if (line.matches("^s[nNeEsSwW]([1-9jJqQkKaA]|10)[cCdDhHsS]"))
 				{
 					line = "s " + line.substring(1,2) + " " + line.substring(2);
 				}
