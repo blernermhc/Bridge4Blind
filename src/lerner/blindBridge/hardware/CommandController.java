@@ -37,24 +37,26 @@ public class CommandController implements Runnable
 	 ***********************************************************************/
 	public enum BridgeCommand {
 		  HELP("Lists valid commands")
-		, NEWHAND("Starts a new hand")
-		, CONTRACT("Set contract: position numTricks suit")
-		, PLAY("Play card (simulates RFID scan from sighted player next to play): position cardAbbrev (e.g., QH)")
-		, DEAL("Deals a random or predefined hand and simulates scanning: [predefined hand #]")
+		, ANTPOS("Move an antenna to a new position: idx (from SHOWANTS) newPosition)")
 		, B("Simulates pressing a keyboard controller button for testing: kbdPosition buttonName")
+		, CANCELRESET("Send reset finished to ensure that audio is enabled: kbdPosition")
+		, CONTRACT("Set contract: position numTricks suit")
+		, DEAL("Deals a random or predefined hand and simulates scanning: [predefined hand #]")
+		, MODE("Sets the keyboard controller mode: kbdPosition modeNumber")
+		, NEWHAND("Starts a new hand")
+		, OPTIONS("Sets the options of a keyboard controller: kbdPosition max 8-bit option bit map (e.g., 110)")
+		, PLAY("Play card (simulates RFID scan from sighted player next to play): position cardAbbrev (e.g., QH)")
+		, PRINTHAND("For testing prints a hand: player")
+		, PRINTSTATE("Prints the Game Controller state")
+		, REDO("Redo last undone event: [confirmed | c]")
+		, REINITPOS("Reinitialize keyboard and antenna positions")
 		, REOPEN("Reopens connection to keyboard controller: kbdPosition")
 		, REOPENANT("Reopens connection to antenna controller: kbdPosition")
 		, RESET("Sends request to reset keyboard controller: kbdPosition")
-		, PRINTHAND("For testing prints a hand: player")
-		, PRINTSTATE("Prints the Game Controller state")
-		, CANCELRESET("Send reset finished to ensure that audio is enabled: kbdPosition")
-		, SHOWKBDS("Print a list of the known keyboards with an index for use in changing the keyboard's position")
-		, REINITPOS("Reinitialize keyboard and antenna positions")
-		, SHOWANTS("Print a list of the known antennas with an index for use in changing the antenna's position")
-		, ANTPOS("Move an antenna to a new position: idx (from SHOWANTS) newPosition)")
 		, S("Simulates RFID scan of a card: position cardAbbrev (e.g., QH)")
+		, SHOWANTS("Print a list of the known antennas with an index for use in changing the antenna's position")
+		, SHOWKBDS("Print a list of the known keyboards with an index for use in changing the keyboard's position")
 		, UNDO("Undo last event: [confirmed | c]")
-		, REDO("Redo last undone event: [confirmed | c]")
 		, QUIT("Exit program")
 		;
 		
@@ -401,6 +403,30 @@ public class CommandController implements Runnable
 					}
 					break;
 
+					case OPTIONS:
+					{
+						if (args.length != 3)
+							throw new IllegalArgumentException("Wrong number of arguments");
+						int idx = 0;
+						Direction direction = Direction.fromString(args[++idx]);
+						KeyboardController kbdController = m_game.getKeyboardControllers().get(direction);
+						int options = Integer.parseInt(args[++idx], 2);
+						if (kbdController != null) kbdController.send_options(0, options);
+					}
+					break;
+						
+					case MODE:
+					{
+						if (args.length != 3)
+							throw new IllegalArgumentException("Wrong number of arguments");
+						int idx = 0;
+						Direction direction = Direction.fromString(args[++idx]);
+						KeyboardController kbdController = m_game.getKeyboardControllers().get(direction);
+						int mode = Integer.parseInt(args[++idx]);
+						if (kbdController != null) kbdController.send_options(1, mode);
+					}
+					break;
+						
 					case UNDO:
 					{
 						if ((args.length != 1) && (args.length != 2))

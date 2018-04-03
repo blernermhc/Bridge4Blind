@@ -31,8 +31,9 @@ EventList eventList;
 /** Tells Game Controller to resend state */
 #define INITIATE_RESET_MSG 0b11000010
 
-// options
+// options (bit mask - powers of two)
 #define SUIT_HIGH_LOW 1
+#define TOP_BUTTONS_ME 2
 
 // global state data
 uint8_t s_options = 0;
@@ -123,6 +124,30 @@ void sdErrorCheck(void)
 // Address we will use to store the position
 #define NON_VOLATILE_POSITION_ADDR 0
 #define NON_VOLATILE_VOLUME_ADDR 1
+#define NON_VOLATILE_OPTIONS_ADDR 2
+
+//-------------------------------------------------------------
+// Copies the options bitmap from non-volatile storage into variable storage.
+//-------------------------------------------------------------
+uint8_t loadNonVolatileOptions ()
+{
+	s_options = EEPROM.read(NON_VOLATILE_OPTIONS_ADDR);
+	printOptions(true);
+	return s_options;
+}
+
+//-------------------------------------------------------------
+// Copies the current options into non-volatile storage, if different.
+// Assumes the current value is "valid".
+//-------------------------------------------------------------
+void saveNonVolatileOptions ()
+{
+	uint8_t val = EEPROM.read(NON_VOLATILE_OPTIONS_ADDR);
+	if (val != s_options)
+	{
+	  EEPROM.write(NON_VOLATILE_OPTIONS_ADDR, s_options);
+	}
+}
 
 //-------------------------------------------------------------
 // Copies the position from non-volatile storage into variable storage.
@@ -271,6 +296,7 @@ void setup()
   
   // restore volume
   loadNonVolatileVolume();
+  loadNonVolatileOptions();
 
   // Whew! We got past the tough parts.
   printSerialMessagePrefix();
@@ -547,11 +573,76 @@ void processInput()
   }
 }
 
+//----------------------------------------------------------------------
+// Sets the options bitmap to the value in p_input1 (from the Game Controller).
+//----------------------------------------------------------------------
 void setOptions (uint8_t p_input0, uint8_t p_input1, uint8_t p_repeat)
 {
 	if (p_repeat) return;
 
-	s_options = p_input1;
+	uint8_t cmdId = (p_input0 & 0b1111);
+	
+	switch (cmdId)
+	{
+		case 0:
+		{
+			s_options = p_input1;
+			printOptions(false);
+			saveNonVolatileOptions();
+		}
+		break;
+		
+		case 1:
+		{
+			s_mode = p_input1;
+			s_submode = 0;
+			announce_mode();
+		}
+		break;
+		
+		default:
+		{
+			Serial.write(START_SEND_MSG);
+			putstring("Unknown setOptions cmdId: ");
+			Serial.println(cmdId,DEC);
+
+		}
+	}
+}
+
+//----------------------------------------------------------------------
+// Prints the current options on the Game Controller
+// If p_inSetup is true, this is within the setup routine.
+// If false, send START_SEND_MSG, so the game controller knows to print the line
+//----------------------------------------------------------------------
+void printOptions (uint8_t p_inSetup)
+{
+	if (p_inSetup) printSerialMessagePrefix(); else Serial.write(START_SEND_MSG);
+	putstring("Options: ");
+	Serial.print(s_options, BIN);
+	putstring_nl("");
+	
+	if (s_options & SUIT_HIGH_LOW)
+	{
+		if (p_inSetup) printSerialMessagePrefix(); else Serial.write(START_SEND_MSG);
+		putstring_nl("  Suits High to Low, Left to Right");
+	}
+	else
+	{
+		if (p_inSetup) printSerialMessagePrefix(); else Serial.write(START_SEND_MSG);
+		putstring_nl("  Suits Low to High, Left to Right");
+	}
+	
+	if (s_options & TOP_BUTTONS_ME)
+	{
+		if (p_inSetup) printSerialMessagePrefix(); else Serial.write(START_SEND_MSG);
+		putstring_nl("  Hand buttons ABOVE Dummy buttons");
+	}
+	else
+	{
+		if (p_inSetup) printSerialMessagePrefix(); else Serial.write(START_SEND_MSG);
+		putstring_nl("  Hand buttons BELOW Dummy buttons");
+	}
 }
 
 //----------------------------------------------------------------------
@@ -761,6 +852,22 @@ void btn_down()
 }  
 
 //----------------------------------------------------------------------
+// Ensures we are in play mode, but otherwise does nothing (to disable no longer used buttons)
+//----------------------------------------------------------------------
+void btn_noop()
+{
+    if (s_mode == MODE_HELP)
+    {	// TODO: add SND_UNUSED_BUTTON phrase to announce here instead of MODE, PLAY HAND
+    		phrases.playMode(MODE_PLAY_HAND, NEW_AUDIO);
+  	    return;
+    }
+
+	s_mode = MODE_PLAY_HAND;
+	s_submode = 0;
+	announce_mode();
+}  
+
+//----------------------------------------------------------------------
 // Repeats last audio from Game Controller event (resets mode to play, if not already in that mode)
 //----------------------------------------------------------------------
 void btn_repeat()
@@ -960,9 +1067,9 @@ void btn_play()
 	return;
   }
 
-  if (s_selectedCardId == CARDID_NOT_SET || s_selectedSuitId == SUITID_NOT_SET)
+  if (s_selectedCardId == CARDID_NOT_SET || s_selectedCardId == CARDID_VOID || s_selectedSuitId == SUITID_NOT_SET)
   {
-	  if (s_playedCardId == CARDID_NOT_SET || s_playedSuitId == SUITID_NOT_SET)
+	  if (s_playedCardId == CARDID_NOT_SET || s_playedCardId == CARDID_VOID || s_playedSuitId == SUITID_NOT_SET)
 	  {
 		  phrases.playMessage(SND_SELECT_CARD, NEW_AUDIO);
 		  return;
@@ -1274,34 +1381,39 @@ void checkButton()
     Serial.print(Button, DEC);
     putstring_nl(" - Pressed");
 
-    Serial.write(START_SEND_MSG);
-	putstring("Free RAM: ");       // This can help with debugging, running out of RAM is bad
-	Serial.println(freeRam());      // if this is under 150 bytes it may spell trouble!
+    //Serial.write(START_SEND_MSG);
+	//putstring("Free RAM: ");       // This can help with debugging, running out of RAM is bad
+	//Serial.println(freeRam());      // if this is under 150 bytes it may spell trouble!
 
+    uint8_t dummyOnTop = true;
+    if ((s_options & TOP_BUTTONS_ME) != 0) dummyOnTop = false;
 
     switch (Button)
     {
       case 2:	btn_play(); break;	// Play button spans three buttons
       case 3:	btn_play(); break;
       case 4:	btn_play(); break;
-      case 55:	btn_H1(); break;
-      case 63:	btn_H2(); break;
-      case 26:	btn_H3(); break;
-      case 18:	btn_H4(); break;
+      case 55:	if (dummyOnTop) btn_H1(); else btn_D1(); break;
+      case 63:	if (dummyOnTop) btn_H2(); else btn_D2(); break;
+      case 26:	if (dummyOnTop) btn_H3(); else btn_D3(); break;
+      case 18:	if (dummyOnTop) btn_H4(); else btn_D4(); break;
       //case 54:	btn_HC(); break;
       case 54:	btn_state(Button == m_previousButtonId); break;
-      case 56:	btn_D1(); break;
-      case 64:	btn_D2(); break;
-      case 25:	btn_D3(); break;
-      case 17:	btn_D4(); break;
+      case 56:	if (dummyOnTop) btn_D1(); else btn_H1(); break;
+      case 64:	if (dummyOnTop) btn_D2(); else btn_H2(); break;
+      case 25:	if (dummyOnTop) btn_D3(); else btn_H3(); break;
+      case 17:	if (dummyOnTop) btn_D4(); else btn_H4(); break;
       // case 62:	btn_DC(); break;
-      case 62:	btn_state(Button == m_previousButtonId); break;
+      case 62:	btn_repeat(); break;
       case 40:	btn_up(); break;
       case 39:	btn_down(); break;
-      case 37:	btn_repeat(); break;
-      case 45:	btn_state(Button == m_previousButtonId); break;
+      //case 37:	btn_repeat(); break;
+      case 37:	btn_function(); break;
+      //case 45:	btn_state(Button == m_previousButtonId); break;
+      case 45:	btn_noop(); break;
       //case 28:	btn_undo(); break;
-      case 53:	btn_function(); break;
+      //case 53:	btn_function(); break;
+      case 53:	btn_noop(); break;
       //case 61:  keyboardRestartInitiate(); break;
       default:	phrases.playNumber(SND_UNEXPECTED_BUTTON, Button, NEW_AUDIO);
     }    

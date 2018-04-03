@@ -12,6 +12,7 @@
 #define PLAYERID_NOT_SET 16
 #define SUITID_NOT_SET 16
 #define CARDID_NOT_SET 16
+#define CARDID_VOID 13
 #define NO_CARD_PLAYED 0b11111111
 
 //------------------------------------------------------------------------------

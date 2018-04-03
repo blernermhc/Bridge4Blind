@@ -103,6 +103,7 @@ public class KeyboardController extends SerialController implements Runnable
 		, UNPLAY_CARD		(7, 3000)
 		, TRICK_TAKEN		(8, 3500)
 		, CANNOT_PLAY_WRONG_SUIT		(9, 4000)
+		, SET_OPTIONS		(10, 0)
 		, TRICKS_TAKEN		(11, 0)
 		, UNDO				(15, 4000)
 		;
@@ -747,6 +748,29 @@ public class KeyboardController extends SerialController implements Runnable
 		return status;
 	}
 	
+	/***********************************************************************
+	 * Sends a message to the Keyboard Controller to set the options or mode.
+	 * Logs an error if the message fails.
+	 * @param p_byte1	the value to put in the low order bits of the first byte.
+	 *  If 0, setting options. If 1, setting mode.
+	 * @param p_options	the options or mode value
+	 * @return true if sent, false if failed
+	 ***********************************************************************/
+	public boolean send_options (int p_byte1, int p_options)
+	{
+		if (s_cat.isDebugEnabled()) s_cat.debug("send_opitons: entered" + " byte1: " + p_byte1 + " options: " + p_options);
+
+		// 2nd byte is the options value send high and low order nibbles
+		boolean status = send_multiByteMessage( MULTIBYTE_MESSAGE.SET_OPTIONS
+		                                        , (p_byte1 & 0b1111)
+		                                        , (p_options & 0b11110000)
+		                                        , (p_options & 0b00001111)
+                								  );
+
+		if (s_cat.isDebugEnabled()) s_cat.debug("send_opitons: finished");
+		return status;
+	}
+			
 	/***********************************************************************
 	 * Sends a generic two-byte message to the Keyboard Controller.
 	 * Logs an error if the message fails.
