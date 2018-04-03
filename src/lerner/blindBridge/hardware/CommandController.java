@@ -165,16 +165,28 @@ public class CommandController implements Runnable
 					line = "b " + line.substring(1);
 				}
 
-				// special case for s (add space after s, if missing)
+				// special case for scan (add space after s, if missing)
 				if (line.matches("^s[nNeEsSwW] .*"))
 				{
 					line = "s " + line.substring(1);
 				}
 
-				// special case for p (add space after s, if missing)
+				// special case for scan with no spaces
+				if (line.matches("^s[nNeEsSwW]([1-9JQKA]|10)[cCdDhHsS]"))
+				{
+					line = "s " + line.substring(1,2) + " " + line.substring(2);
+				}
+
+				// special case for printhand
 				if (line.matches("^ph [nNeEsSwW]"))
 				{
 					line = "printhand " + line.substring(3);
+				}
+
+				// special case for printhand with missing space
+				if (line.matches("^ph[nNeEsSwW]"))
+				{
+					line = "printhand " + line.substring(2);
 				}
 
 				// special case for p (add space after s, if missing)
