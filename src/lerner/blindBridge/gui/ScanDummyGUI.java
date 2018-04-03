@@ -140,7 +140,7 @@ public class ScanDummyGUI extends BridgeJPanel implements GameListener_sparse
 	 ***********************************************************************/
 	public void displayHand ()
 	{
-		PlayerHand hand = m_game.getBridgeHand().getHands().get(m_game.getBridgeHand().getDummyPosition());
+		PlayerHand hand = m_game.getBridgeHand().getDummyHand();
 		
 		for (Suit suit : Suit.values())
 		{

@@ -29,9 +29,9 @@ public class PlayerStatusGUI extends JComponent
 
 	private static final double	SCALE				= .7;
 
-	private static final int	CARD_WIDTH			= (int) (225 * SCALE);
+	public static final int	CARD_WIDTH			= (int) (225 * SCALE);
 
-	private static final int	CARD_HEIGHT			= (int) (350 * SCALE);
+	public static final int	CARD_HEIGHT			= (int) (350 * SCALE);
 
 	private static final int	SPACING				= 20;
 
@@ -63,7 +63,7 @@ public class PlayerStatusGUI extends JComponent
 	{
 		setBorder(PLAYER_BORDER);
 
-		m_rotation = (p_dir.ordinal() + 2) * .5 * Math.PI;
+		m_rotation = p_dir.getRotation();
 		// cardPlayed = dir.name();
 		this.m_dir = p_dir;
 		setPreferredSize();

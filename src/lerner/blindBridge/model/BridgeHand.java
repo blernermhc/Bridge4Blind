@@ -1321,6 +1321,15 @@ public class BridgeHand
 	}
 
 	/***********************************************************************
+	 * Dummy's hand
+	 * May be null
+	 * @return dummy's hand
+	 ***********************************************************************/
+	public PlayerHand getDummyHand() {
+		return getHands().get(m_game.getBridgeHand().getDummyPosition());
+	}
+
+	/***********************************************************************
 	 * The current score of the bridge game
 	 * @return score
 	 ***********************************************************************/
@@ -1356,5 +1365,6 @@ public class BridgeHand
 	{
 		return m_tricksTaken;
 	}
+
 
 }
