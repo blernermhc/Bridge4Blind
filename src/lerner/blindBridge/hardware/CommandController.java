@@ -46,7 +46,7 @@ public class CommandController implements Runnable
 		, NEWHAND("Starts a new hand")
 		, OPTIONS("Sets the options of a keyboard controller: kbdPosition max 8-bit option bit map (e.g., 110)")
 		, PLAY("Play card (simulates RFID scan from sighted player next to play): position cardAbbrev (e.g., QH)")
-		, PRINTHAND("For testing prints a hand: player")
+		, PRINTHAND("For testing prints a hand: player (or A for all players)")
 		, PRINTSTATE("Prints the Game Controller state")
 		, REDO("Redo last undone event: [confirmed | c]")
 		, REINITPOS("Reinitialize keyboard and antenna positions")
@@ -180,13 +180,13 @@ public class CommandController implements Runnable
 				}
 
 				// special case for printhand
-				if (line.matches("^ph [nNeEsSwW]"))
+				if (line.matches("^ph [nNeEsSwWaA]"))
 				{
 					line = "printhand " + line.substring(3);
 				}
 
 				// special case for printhand with missing space
-				if (line.matches("^ph[nNeEsSwW]"))
+				if (line.matches("^ph[nNeEsSwWaA]"))
 				{
 					line = "printhand " + line.substring(2);
 				}
@@ -390,8 +390,19 @@ public class CommandController implements Runnable
 						if (args.length != 2)
 							throw new IllegalArgumentException("Wrong number of arguments");
 						int idx = 0;
-						Direction direction = Direction.fromString(args[++idx]);
-						printHand(p_out, direction);
+						String dirString = args[++idx];
+						if (dirString.toUpperCase().equals("A"))
+						{
+							for (Direction direction : Direction.values())
+							{
+								printHand(p_out, direction);
+							}
+						}
+						else
+						{
+							Direction direction = Direction.fromString(dirString);
+							printHand(p_out, direction);
+						}
 					}
 					break;
 					

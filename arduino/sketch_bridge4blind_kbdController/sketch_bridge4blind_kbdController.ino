@@ -6,6 +6,7 @@
 #include <WaveUtil.h>
 #include <WaveHCL.h>
 #include <BridgeHand.h>
+#include <BridgeUtils.h>
 #include <Phrases.h>
 #include <Eventlist.h>
 #include <FatStructs.h>
@@ -652,64 +653,6 @@ void printOptions (uint8_t p_inSetup)
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
 
-//----------------------------------------------------------------------
-// 0: two; 1: three; ... 12: ace; 13: void
-//----------------------------------------------------------------------
-uint8_t lowCard (uint16_t p_bitmap)
-{
-  if (p_bitmap == 0) return 13;
-  
-  uint8_t r = 0;
-  uint16_t t = 1;
-  while ((p_bitmap & t) == 0) { t <<= 1; ++r;}
-  return r;
-}
-
-//----------------------------------------------------------------------
-// 0: two; 1: three; ... 12: ace; 13: void
-//----------------------------------------------------------------------
-uint8_t highCard (uint16_t p_bitmap)
-{
-  if (p_bitmap == 0) return 13;
-  
-  uint8_t r = 0;
-  while (p_bitmap >>= 1) { ++r; }
-  return r;
-}
-
-//----------------------------------------------------------------------
-// 0: two; 1: three; ... 12: ace; 13: void
-// if none higher, returns p_curCard
-//----------------------------------------------------------------------
-uint8_t nextCardUp (uint16_t p_bitmap, uint16_t p_curCard)
-{
-  if (p_bitmap == 0) return 13;
-  if (p_curCard == 13) return 13;
-  if (p_curCard == 12) return 12;
-  
-  p_bitmap >>= (p_curCard + 1);
-  uint8_t next = lowCard(p_bitmap);
-  if (next == 13) return p_curCard;
-  return p_curCard + 1 + next;
-}
-
-//----------------------------------------------------------------------
-// 0: two; 1: three; ... 12: ace; 13: void
-// if none lower, returns p_curCard
-//----------------------------------------------------------------------
-uint8_t nextCardDown (uint16_t p_bitmap, uint16_t p_curCard)
-{
-  if (p_bitmap == 0) return 13;
-  if (p_curCard == 13) return 13;
-  if (p_curCard == 0) return 0;
-  
-  p_bitmap = p_bitmap & ((1 << p_curCard) - 1);
-
-  uint8_t next = highCard(p_bitmap);
-  if (next == 13) return p_curCard;
-  return next;
-}
-
 
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
@@ -1196,11 +1139,21 @@ void btn_announceHand (uint8_t p_playerId, uint8_t p_buttonId)
   s_selectedSuitId = suitId;
   s_selectedCardId = CARDID_NOT_SET;
   
-  uint8_t lowCardId  = lowCard(bridgeHand.getHand(bridgeHand.getCurrentHandId(), s_selectedSuitId));
-  uint8_t highCardId = highCard(bridgeHand.getHand(bridgeHand.getCurrentHandId(), s_selectedSuitId));
-
-  // if only one card, select it
-  if (lowCardId == highCardId) s_selectedCardId = lowCardId;
+  if (p_playerId == PLAYER_DUMMY && bridgeHand.m_myPlayerId == bridgeHand.m_dummyPlayerId)
+  {
+	  // if you are dummy, disable the dummy suit keys (use hand keys to see what you have)
+	  phrases.playMessage(SND_YOU_ARE_DUMMY, NEW_AUDIO);
+	  return;
+  }
+  
+  // if selecting a suit for the next hand to play, and the suit has only one card, select it
+  if (bridgeHand.getCurrentHandId() == p_playerId)
+  {
+	  uint8_t lowCardId  = lowCard(bridgeHand.getHand(p_playerId, s_selectedSuitId));
+	  uint8_t highCardId = highCard(bridgeHand.getHand(p_playerId, s_selectedSuitId));
+	
+	  if (lowCardId == highCardId) s_selectedCardId = lowCardId;
+  }
 
   uint16_t hand = bridgeHand.getHand(p_playerId, suitId);
   phrases.playHandSuit(p_playerId, suitId, hand, NEW_AUDIO);
@@ -1252,8 +1205,8 @@ void resetKeyboard(uint8_t p_playerId)
 
   if (reset)
   {
-    s_selectedSuitId = SUITID_NOT_SET;
-    s_selectedCardId = CARDID_NOT_SET;
+	  s_selectedSuitId = SUITID_NOT_SET;
+	  s_selectedCardId = CARDID_NOT_SET;
   }
   
   // if card played by other team, clear my last played card

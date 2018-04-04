@@ -238,6 +238,8 @@ void BridgeHand::playState()
 {
   m_phrases->playNewAudio();
 
+  uint8_t cardsPlayed = 0;
+
   if (m_firstPlayerId != PLAYERID_NOT_SET)
   {
     uint8_t idx = m_firstPlayerId;
@@ -246,9 +248,17 @@ void BridgeHand::playState()
       m_phrases->playCardPlayed(adjustPlayerId(idx), SND_PLAYED, cardNumber(m_played[idx]), cardSuit(m_played[idx]), APPEND_AUDIO);
       m_phrases->playPause();
       ++idx;
+      ++cardsPlayed;
       if (idx > 3) idx = 0;
     }
   }
+
+  if (cardsPlayed == 0)
+  {
+		m_phrases->playMessage(SND_NO_CARDS_PLAYED, APPEND_AUDIO);
+		m_phrases->playPause();
+  }
+
   if (m_nextPlayerId != PLAYERID_NOT_SET)
   {
 	  m_phrases->playWaitPlayer(adjustPlayerId(m_nextPlayerId), APPEND_AUDIO);
@@ -280,7 +290,9 @@ void BridgeHand::playState()
 
 uint16_t BridgeHand::getHand(uint8_t p_playerId, uint8_t p_suitId)
 {
-  return m_hands[p_playerId][p_suitId];
+	// If asking for dummy hand and I am dummy, return my hand (dummy hand will be null)
+	if (m_myPlayerId == m_dummyPlayerId) p_playerId = PLAYER_ME;
+	return m_hands[p_playerId][p_suitId];
 }
 
 uint8_t BridgeHand::getCurrentSuitId()

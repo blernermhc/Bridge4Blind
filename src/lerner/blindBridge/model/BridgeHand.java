@@ -1074,6 +1074,7 @@ public class BridgeHand
 		
 		if (currentState == BridgeHandState.SCAN_DUMMY)
 		{
+			m_hands.put(m_dummyPosition, null);
 			scanHand(m_dummyPosition);
 		}
 	}

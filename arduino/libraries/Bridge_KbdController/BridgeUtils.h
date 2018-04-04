@@ -19,4 +19,9 @@ extern HardwareSerial Serial;
 
 void sendSerialString ();
 
+uint8_t lowCard (uint16_t p_bitmap);
+uint8_t highCard (uint16_t p_bitmap);
+uint8_t nextCardUp (uint16_t p_bitmap, uint16_t p_curCard);
+uint8_t nextCardDown (uint16_t p_bitmap, uint16_t p_curCard);
+
 #endif //BridgeUtils_h
