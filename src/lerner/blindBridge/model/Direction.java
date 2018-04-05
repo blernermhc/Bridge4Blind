@@ -79,6 +79,10 @@ public enum Direction
 		return values()[nextPosition];
 	}
 	
+	public double getRotation() {
+		return (ordinal() + 2) * .5 * Math.PI;
+	}
+
 	/***********************************************************************
 	 * Converts from a string to a player position, allows full names or one-letter abbreviations.
 	 * @param p_directionShortHand	name to lookup (a letter like N, S)

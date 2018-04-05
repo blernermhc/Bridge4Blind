@@ -12,6 +12,7 @@ import javax.swing.border.Border;
 
 import lerner.blindBridge.model.Card;
 import lerner.blindBridge.model.Direction;
+import lerner.blindBridge.model.Suit;
 
 /**
  * This class displays the rank and suit of the current card of the players in each cardianl
@@ -29,23 +30,17 @@ public class PlayerStatusGUI extends JComponent
 
 	private static final double	SCALE				= .7;
 
-	private static final int	CARD_WIDTH			= (int) (225 * SCALE);
+	public static final int	CARD_WIDTH			= (int) (225 * SCALE);
 
-	private static final int	CARD_HEIGHT			= (int) (350 * SCALE);
+	public static final int	CARD_HEIGHT			= (int) (350 * SCALE);
 
 	private static final int	SPACING				= 20;
 
-	private static final String	SPADES				= "\u2660";
 
-	private static final String	CLUBS				= "\u2663";
-
-	private static final String	HEARTS				= "\u2665";
-
-	private static final String	DIAMONDS			= "\u2666";
 
 	private String				m_rankPlayed			= "";
 
-	private String				m_suitPlayed			= "";
+	private Suit				m_suitPlayed			= null ;
 
 	// private boolean				m_turn				= false; // did not appear to be used
 
@@ -63,7 +58,7 @@ public class PlayerStatusGUI extends JComponent
 	{
 		setBorder(PLAYER_BORDER);
 
-		m_rotation = (p_dir.ordinal() + 2) * .5 * Math.PI;
+		m_rotation = p_dir.getRotation();
 		// cardPlayed = dir.name();
 		this.m_dir = p_dir;
 		setPreferredSize();
@@ -83,32 +78,13 @@ public class PlayerStatusGUI extends JComponent
 		
 		if (p_card == null)
 		{
-			m_suitPlayed = "";
+			m_suitPlayed = null;
 			m_rankPlayed = "";
 		}
 		else
 		{
 			m_rankPlayed = p_card.getRank().toString();
-	
-			switch (p_card.getSuit())
-			{
-				case DIAMONDS:
-					m_suitPlayed = DIAMONDS;
-					break;
-				case HEARTS:
-					m_suitPlayed = HEARTS;
-					break;
-				case CLUBS:
-					m_suitPlayed = CLUBS;
-					break;
-				case SPADES:
-					m_suitPlayed = SPADES;
-					break;
-				default:
-					throw new AssertionError(
-							"Should not have come here since only 4 suits are available");
-	
-			}
+			m_suitPlayed = p_card.getSuit();
 		}
 		repaint();
 	}
@@ -129,15 +105,18 @@ public class PlayerStatusGUI extends JComponent
 		g2d.setColor(Color.WHITE);
 		g2d.fillRect(0, 0, CARD_WIDTH, CARD_HEIGHT);
 
-		setColor(g2d);
-		g2d.drawString(m_rankPlayed, getLeft(m_rankPlayed, cardMetrics), getRankBottom());
-		g2d.drawString(m_suitPlayed, getLeft(m_suitPlayed, cardMetrics), getSuitBottom(cardMetrics));
+		if (m_suitPlayed != null) {
+			setColor(g2d);
+			g2d.drawString(m_rankPlayed, getLeft(m_rankPlayed, cardMetrics), getRankBottom());
+			String suitSymbol = m_suitPlayed.getSymbol();
+			g2d.drawString(suitSymbol, getLeft(suitSymbol, cardMetrics), getSuitBottom(cardMetrics));
+		}
 		g2d.rotate(-m_rotation);
 	}
 
 	private void setColor ( Graphics g )
 	{
-		if (m_suitPlayed.equals(DIAMONDS) || m_suitPlayed.equals(HEARTS))
+		if (m_suitPlayed.equals(Suit.DIAMONDS) || m_suitPlayed.equals(Suit.HEARTS))
 		{
 			g.setColor(Color.RED);
 		}
@@ -248,26 +227,8 @@ public class PlayerStatusGUI extends JComponent
 
 		setBorder(PLAYER_BORDER);
 		m_rankPlayed = card.getRank().toString();
+		m_suitPlayed = card.getSuit();
 
-		switch (card.getSuit())
-		{
-			case DIAMONDS:
-				m_suitPlayed = DIAMONDS;
-				break;
-			case HEARTS:
-				m_suitPlayed = HEARTS;
-				break;
-			case CLUBS:
-				m_suitPlayed = CLUBS;
-				break;
-			case SPADES:
-				m_suitPlayed = SPADES;
-				break;
-			default:
-				throw new AssertionError(
-						"Should not have come here since only 4 suits are available");
-
-		}
 
 		// so that this thread is called first before the audio starts playing
 		// and the painting of the last card is not delayed
@@ -305,7 +266,7 @@ public class PlayerStatusGUI extends JComponent
 		System.out.println("player status gui trick over " + m_dir);
 
 		m_rankPlayed = "";
-		m_suitPlayed = "";
+		m_suitPlayed = null;
 		setBorder(PLAYER_BORDER);
 
 		synchronized (this)
@@ -337,7 +298,7 @@ public class PlayerStatusGUI extends JComponent
 	public void clear ()
 	{
 
-		m_suitPlayed = "";
+		m_suitPlayed = null;
 		m_rankPlayed = "";
 		setBorder(PLAYER_BORDER);
 		repaint();
@@ -349,7 +310,7 @@ public class PlayerStatusGUI extends JComponent
 
 		System.out.println("player status gui undo");
 
-		m_suitPlayed = "";
+		m_suitPlayed = null;
 		m_rankPlayed = "";
 		setBorder(NEXT_PLAYER_BORDER);
 		// repaint();

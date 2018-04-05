@@ -6,6 +6,7 @@ import java.awt.GridBagLayout;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 
 import org.apache.log4j.Category;
@@ -16,6 +17,8 @@ import lerner.blindBridge.model.CardPlay;
 import lerner.blindBridge.model.Contract;
 import lerner.blindBridge.model.Direction;
 import lerner.blindBridge.model.GameListener_sparse;
+import lerner.blindBridge.model.Rank;
+import lerner.blindBridge.model.Suit;
 import lerner.blindBridge.model.Trick;
 
 /**
@@ -51,6 +54,9 @@ public class GameStatusGUI extends BridgeJPanel implements GameListener_sparse
 	/** the screen component showing the tricks taken by each team */
 	private TricksWonPanel 					m_tricksWonPanel;
 	
+	/** the screen component showing the contents of the dummy's hand */
+	private DummyHandPanel					m_dummyHandPanel;
+	
 	// private int count = 0 ;
 
 	// keeps track of the current player
@@ -67,6 +73,7 @@ public class GameStatusGUI extends BridgeJPanel implements GameListener_sparse
 
 	/** the GUI manager object */
 	private GameGUI				m_gameGUI;
+
 
 	// private boolean				m_trickOverHandled	= true;
 
@@ -147,6 +154,9 @@ public class GameStatusGUI extends BridgeJPanel implements GameListener_sparse
 		trickConstraints.gridy = 1;
 		m_tricksWonPanel = new TricksWonPanel();
 		add(m_tricksWonPanel, trickConstraints);
+
+		m_dummyHandPanel = new DummyHandPanel(this);
+	
 	}
 
 	/* (non-Javadoc)
@@ -158,9 +168,11 @@ public class GameStatusGUI extends BridgeJPanel implements GameListener_sparse
 		m_gameGUI = p_gameGUI;
 
 		m_tricksWonPanel.initialize (p_gameGUI, p_game);
+		m_dummyHandPanel.initialize(p_gameGUI, p_game);
 		
 		m_game.addGameListener(this);
 		m_game.addGameListener(m_tricksWonPanel);
+		m_game.addGameListener(m_dummyHandPanel);
 	}
 
 	//--------------------------------------------------
@@ -250,6 +262,47 @@ public class GameStatusGUI extends BridgeJPanel implements GameListener_sparse
 		if (s_cat.isDebugEnabled()) s_cat.debug("sig_cardPlayed: entered");
 
 		updateDisplay();
+	}
+	public void addDummyPanel(Direction p_direction) {
+		GridBagConstraints dummyConstraints = new GridBagConstraints();
+		
+		switch (p_direction) {
+		case NORTH:
+			dummyConstraints.gridx = 0;
+			dummyConstraints.gridy = 1;
+			break;
+			
+		case EAST:
+			dummyConstraints.gridx = 2;
+			dummyConstraints.gridy = 3;
+			break;
+			
+		case SOUTH:
+			dummyConstraints.gridx = 2;
+			dummyConstraints.gridy = 3;
+			break;
+			
+		case WEST:
+			dummyConstraints.gridx = 0;
+			dummyConstraints.gridy = 1;
+			break;
+		}
+		
+		add(m_dummyHandPanel, dummyConstraints);
+	}
+
+	public static void main (String[] args) {
+		JFrame f = new JFrame("Game Status Test");
+		GameStatusGUI gamePanel = new GameStatusGUI();
+		Direction dir = Direction.SOUTH;
+		gamePanel.m_dummyHandPanel.sig_setDummyPosition(dir);
+		gamePanel.addDummyPanel (dir);
+		gamePanel.m_dummyHandPanel.sig_cardScanned(dir, new Card(Rank.KING, Suit.CLUBS), false);
+		gamePanel.m_dummyHandPanel.sig_cardScanned(dir, new Card(Rank.QUEEN, Suit.CLUBS), false);
+		gamePanel.m_dummyHandPanel.sig_cardPlayed(dir, new Card(Rank.KING, Suit.CLUBS));
+		f.add(gamePanel);
+		f.pack();
+		f.setVisible(true);
 	}
 
 }

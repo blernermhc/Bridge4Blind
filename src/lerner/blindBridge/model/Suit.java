@@ -5,13 +5,14 @@ package lerner.blindBridge.model;
  ***********************************************************************/
 public enum Suit
 {
-	CLUBS		("C") 
-	, DIAMONDS	("D")  
-	, HEARTS		("H")
-	, SPADES		("S") 
-	, NOTRUMP	("N")
+	CLUBS		("C", "\u2663") 
+	, DIAMONDS	("D", "\u2666")  
+	, HEARTS		("H", "\u2665")
+	, SPADES		("S", "\u2660") 
+	, NOTRUMP	("N", "NT")
 	;
 	
+
 	//--------------------------------------------------
 	// CONSTANTS
 	//--------------------------------------------------
@@ -34,15 +35,19 @@ public enum Suit
 
 	/** the name of the file containing the audio announcement of this suit */
 	private String m_sound;
+	
+	
+	private String m_symbol;
 		
 	//--------------------------------------------------
 	// CONSTRUCTORS
 	//--------------------------------------------------
 
-	private Suit(String p_suit)
+	private Suit(String p_suit, String p_symbol)
 	{
 		m_suitString = p_suit;
 		m_sound = SOUND_FOLDER + m_suitString + ".WAV";
+		m_symbol = p_symbol;
 	}
 	
 	//--------------------------------------------------
@@ -81,6 +86,16 @@ public enum Suit
 	{
 		return m_suitString;
 	}
+	
+	/**
+	 * 
+	 * @return the graphical symbol for the suit.
+	 */
+	public String getSymbol()
+	{
+		return m_symbol;
+	}
+
 
 	//--------------------------------------------------
 	// ACCESSORS
