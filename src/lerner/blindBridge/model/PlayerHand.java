@@ -49,6 +49,9 @@ public class PlayerHand
 	public PlayerHand (Direction p_direction)
 	{
 		m_myPlayer = p_direction;
+		for (Suit suit : Suit.values()) {
+			m_suitCards.put(suit, new TreeSet<>());	
+		}
 	}
 
 	//--------------------------------------------------
@@ -64,11 +67,6 @@ public class PlayerHand
 		m_cards.add(p_card);
 		
 		TreeSet<Card> cards = m_suitCards.get(p_card.getSuit());
-		if (cards == null)
-		{
-			cards = new TreeSet<>();
-			m_suitCards.put(p_card.getSuit(), cards);
-		}
 		cards.add(p_card);
 	}
 	
