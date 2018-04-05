@@ -2,6 +2,7 @@ package lerner.blindBridge.gui;
 
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -36,7 +37,7 @@ public class PlayerStatusGUI extends JComponent
 
 	private static final int	SPACING				= 20;
 
-
+	private static final Font DIR_FONT = GameStatusGUI.STATUS_FONT.deriveFont(24f);
 
 	private String				m_rankPlayed			= "";
 
@@ -111,6 +112,11 @@ public class PlayerStatusGUI extends JComponent
 			String suitSymbol = m_suitPlayed.getSymbol();
 			g2d.drawString(suitSymbol, getLeft(suitSymbol, cardMetrics), getSuitBottom(cardMetrics));
 		}
+		
+		g2d.setColor(Color.BLACK);
+		g2d.setFont(DIR_FONT);
+		FontMetrics dirMetrics = g2d.getFontMetrics();
+		g2d.drawString(m_dir.toString(), getLeft (m_dir.toString(), dirMetrics), getDirBottom(cardMetrics, dirMetrics));
 		g2d.rotate(-m_rotation);
 	}
 
@@ -215,6 +221,25 @@ public class PlayerStatusGUI extends JComponent
 				return getWidth() / 3 + rankHeight + SPACING;
 			case SOUTH:
 				return getHeight() / 3 + rankHeight + SPACING;
+		}
+		assert false;
+		return 0;
+	}
+
+	private int getDirBottom ( FontMetrics rankMetrics, FontMetrics dirMetrics )
+	{
+		int rankHeight = rankMetrics.getHeight();
+		int dirHeight = dirMetrics.getHeight();
+		switch (m_dir)
+		{
+			case NORTH:
+				return -2 * getHeight() / 3 + rankHeight + dirHeight + 2 * SPACING;
+			case WEST:
+				return -2 * getWidth() / 3 + rankHeight + dirHeight + 2 * SPACING;
+			case EAST:
+				return getWidth() / 3 + rankHeight + dirHeight + 2 * SPACING;
+			case SOUTH:
+				return getHeight() / 3 + rankHeight + dirHeight + 2 * SPACING;
 		}
 		assert false;
 		return 0;
