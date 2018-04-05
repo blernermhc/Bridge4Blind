@@ -103,7 +103,6 @@ public class GameStatusGUI extends BridgeJPanel implements GameListener_sparse
 		playerGUI =  new PlayerStatusGUI(direction);
 		m_playerGUIs.put(direction, playerGUI);
 		add(playerGUI, northConstraints);
-		addDirLabels(direction, 1, 0, GridBagConstraints.PAGE_START);
 
 		GridBagConstraints eastConstraints = new GridBagConstraints();
 		eastConstraints.gridx = 2;
@@ -115,7 +114,6 @@ public class GameStatusGUI extends BridgeJPanel implements GameListener_sparse
 		playerGUI =  new PlayerStatusGUI(direction);
 		m_playerGUIs.put(direction, playerGUI);
 		add(playerGUI, eastConstraints);
-		addDirLabels(direction, 2, 2, GridBagConstraints.LINE_END);
 
 		GridBagConstraints southConstraints = new GridBagConstraints();
 		southConstraints.gridx = 1;
@@ -129,7 +127,6 @@ public class GameStatusGUI extends BridgeJPanel implements GameListener_sparse
 		playerGUI =  new PlayerStatusGUI(direction);
 		m_playerGUIs.put(direction, playerGUI);
 		add(playerGUI, southConstraints);
-		addDirLabels(direction, 1, 4, GridBagConstraints.PAGE_END);
 
 		GridBagConstraints westConstraints = new GridBagConstraints();
 		westConstraints.gridx = 0;
@@ -141,7 +138,6 @@ public class GameStatusGUI extends BridgeJPanel implements GameListener_sparse
 		playerGUI =  new PlayerStatusGUI(direction);
 		m_playerGUIs.put(direction, playerGUI);
 		add(playerGUI, westConstraints);
-		addDirLabels(direction, 0, 2, GridBagConstraints.LINE_START);
 
 		GridBagConstraints bidConstraints = new GridBagConstraints();
 		bidConstraints.gridx = 1;
@@ -214,30 +210,6 @@ public class GameStatusGUI extends BridgeJPanel implements GameListener_sparse
 		m_gameGUI.resetTimeOfLastDisplayChange();
 	}
 	
-	/***********************************************************************
-	 * Adds direction labels to the PlayerStatusGUIs
-	 * 
-	 * @param dir
-	 *            The direction of a PlayerStatusGUI
-	 * @param gridX
-	 *            The gridx number for GridBagConstraints
-	 * @param gridY
-	 *            The gridy number for GridBagConstraints
-	 * @param anchor
-	 *            The anchor number for GridBagConstraints
-	 ***********************************************************************/
-	private void addDirLabels ( Direction dir, int gridX, int gridY, int anchor )
-	{
-
-		GridBagConstraints dirLabelConstraint = new GridBagConstraints();
-		dirLabelConstraint.gridx = gridX;
-		dirLabelConstraint.gridy = gridY;
-		dirLabelConstraint.anchor = anchor;
-
-		add(new JLabel(dir.toString()), dirLabelConstraint);
-	}
-
-
 	//--------------------------------------------------
 	// Game Event Signal Handlers
 	//--------------------------------------------------
