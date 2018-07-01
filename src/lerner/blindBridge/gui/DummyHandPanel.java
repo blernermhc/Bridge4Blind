@@ -29,6 +29,8 @@ public class DummyHandPanel extends BridgeJPanel implements GameListener_sparse 
 	// Font used to draw the dummy cards
 	private static final Font	DUMMY_FONT				= GameStatusGUI.STATUS_FONT.deriveFont(30f);
 
+	// Font used to draw the suit symbols
+	private static final Font	DUMMY_SUIT_FONT				= GameStatusGUI.STATUS_FONT.deriveFont(40f);
 	
 	// Contains a subpanel for each suit
 	private DummySuitPanel m_clubPanel = new DummySuitPanel(Suit.CLUBS);
@@ -203,10 +205,11 @@ public class DummyHandPanel extends BridgeJPanel implements GameListener_sparse 
 			}
 			
 			// Draw the suit symbol.
-			g2d.setFont(DUMMY_FONT);
+			g2d.setFont(DUMMY_SUIT_FONT);
 			g2d.drawString(m_suit.getSymbol(), x, y);
 			
 			// Draw the cards in the suit.
+			g2d.setFont(DUMMY_FONT);
 			drawCards(g2d, x, y);
 			g2d.rotate(-m_rotation);
 		}
