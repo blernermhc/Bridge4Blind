@@ -89,7 +89,7 @@ void BridgeHand::setNextPlayer(uint8_t p_playerId, uint8_t p_repeat)
 		}
 	}
 
-	if (p_playerId == m_myPlayerId)
+	if (p_playerId == m_myPlayerId && m_myPlayerId != m_dummyPlayerId)
 	{
 		m_phrases->playMessage(SND_IN_HAND, NEW_AUDIO);
 	}
