@@ -13,6 +13,8 @@ import java.util.TreeSet;
 import javax.swing.BorderFactory;
 import javax.swing.JPanel;
 
+import org.apache.log4j.Category;
+
 import lerner.blindBridge.main.Game;
 import lerner.blindBridge.model.Card;
 import lerner.blindBridge.model.Direction;
@@ -26,9 +28,16 @@ import lerner.blindBridge.model.Suit;
  *
  */
 public class DummyHandPanel extends BridgeJPanel implements GameListener_sparse {
-	// Font used to draw the dummy cards
-	private static final Font	DUMMY_FONT				= GameStatusGUI.STATUS_FONT.deriveFont(30f);
+	/**
+	 * Used to collect logging output for this class
+	 */
+	private static Category s_cat = Category.getInstance(DummyHandPanel.class.getName());
 
+	// Font used to draw the dummy cards
+	private static final Font	DUMMY_FONT				= GameStatusGUI.STATUS_FONT.deriveFont(25f);
+
+	// Font used to draw the suit symbols
+	private static final Font	DUMMY_SUIT_FONT				= GameStatusGUI.STATUS_FONT.deriveFont(40f);
 	
 	// Contains a subpanel for each suit
 	private DummySuitPanel m_clubPanel = new DummySuitPanel(Suit.CLUBS);
@@ -109,25 +118,34 @@ public class DummyHandPanel extends BridgeJPanel implements GameListener_sparse 
 		
 		// Add the suits in the right order so they will be C, D, H, S from
 		// left to right from the users' perspectives.
+		
+		Suit trumpSuit = m_game.getBridgeHand().getContract().getTrump();
+		
 		switch (m_dummyDirection) {
 		case NORTH:
 		case EAST:
-			add (m_clubPanel);
-			add (m_diamondPanel);
-			add (m_heartPanel);
-			add (m_spadePanel);
+			if (trumpSuit != Suit.NOTRUMP)	add (m_dummySuitGUIs.get(trumpSuit));
+			if (trumpSuit != Suit.CLUBS)		add (m_clubPanel);
+			if (trumpSuit != Suit.DIAMONDS)	add (m_diamondPanel);
+			if (trumpSuit != Suit.HEARTS)	add (m_heartPanel);
+			if (trumpSuit != Suit.SPADES)	add (m_spadePanel);
 			break;
 		case SOUTH:
 		case WEST:
-			add (m_spadePanel);
-			add (m_heartPanel);
-			add (m_diamondPanel);
-			add (m_clubPanel);
+			if (trumpSuit != Suit.SPADES)	add (m_spadePanel);
+			if (trumpSuit != Suit.HEARTS)	add (m_heartPanel);
+			if (trumpSuit != Suit.DIAMONDS)	add (m_diamondPanel);
+			if (trumpSuit != Suit.CLUBS)		add (m_clubPanel);
+			if (trumpSuit != Suit.NOTRUMP)	add (m_dummySuitGUIs.get(trumpSuit));
 			break;
 		}
 		
 		// Add the dummy panel in the right location.
 		m_gameStatusGUI.addDummyPanel (p_direction);
+		
+		this.revalidate();
+		this.repaint();
+		if (s_cat.isDebugEnabled()) s_cat.debug("sig_setDummyPosition: repainted");
 	}
 
 	/**
@@ -177,19 +195,19 @@ public class DummyHandPanel extends BridgeJPanel implements GameListener_sparse 
 			switch (m_dummyDirection) {
 			case NORTH:
 				x = 10;
-				y = 30;
+				y = 40;
 				break;
 			case SOUTH:
 				x = -getWidth() + 10; 
-				y = -getHeight() + 30;
+				y = -getHeight() + 40;
 				break;
 			case WEST:
 				x = -getHeight() + 10;
-				y = 30;
+				y = 40;
 				break;
 			case EAST:
 				x = 10;
-				y = -getWidth() + 30;
+				y = -getWidth() + 40;
 			}
 
 			// Select the color based on the suit.
@@ -203,10 +221,11 @@ public class DummyHandPanel extends BridgeJPanel implements GameListener_sparse 
 			}
 			
 			// Draw the suit symbol.
-			g2d.setFont(DUMMY_FONT);
+			g2d.setFont(DUMMY_SUIT_FONT);
 			g2d.drawString(m_suit.getSymbol(), x, y);
 			
 			// Draw the cards in the suit.
+			g2d.setFont(DUMMY_FONT);
 			drawCards(g2d, x, y);
 			g2d.rotate(-m_rotation);
 		}
@@ -223,7 +242,7 @@ public class DummyHandPanel extends BridgeJPanel implements GameListener_sparse 
 				TreeSet<Card> cards = hand.getSuitCards().get(m_suit);
 				int numDrawn = 0;
 				for (Card c : cards.descendingSet()) {
-					y = y + 35;
+					y = y + 30;
 					g2d.drawString(c.getRank().toString(), x, y);
 					numDrawn++;
 					
