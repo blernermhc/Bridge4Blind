@@ -454,6 +454,7 @@ public class Game
 				if (nextHand == null)
 				{
 					s_cat.error("evt_startNewHand_undo: no next hand, ignoring redo");
+					return;
 				}
 				
 				m_playedHands.push(m_bridgeHand);
