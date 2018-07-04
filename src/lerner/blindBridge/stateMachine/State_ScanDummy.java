@@ -46,15 +46,19 @@ public class State_ScanDummy extends ControllerState
 	{
 		m_game = p_game;
 		
-		// notify all listeners we have entered this state
-		for (GameListener gameListener : m_game.getGameListeners())
+		// if dummy is blind, hand is already known
+		if (! m_game.getBridgeHand().testDummyComplete())
 		{
-			gameListener.sig_scanDummyHand();
-		}
-		
-		if (m_game.getBridgeHand().isAutoScan())
-		{
-			m_game.getBridgeHand().sc_scanHands();
+			// notify all listeners we have entered this state
+			for (GameListener gameListener : m_game.getGameListeners())
+			{
+				gameListener.sig_scanDummyHand();
+			}
+			
+			if (m_game.getBridgeHand().isAutoScan())
+			{
+				m_game.getBridgeHand().sc_scanHands();
+			}
 		}
 	}
 

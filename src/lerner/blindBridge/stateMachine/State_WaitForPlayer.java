@@ -158,6 +158,15 @@ public class State_WaitForPlayer extends ControllerState
 
 			if (m_waitForFirstPlayer)
 			{
+				Direction dummyPosition = m_game.getBridgeHand().getContract().getBidWinner().getPartner();
+
+				m_game.getBridgeHand().setDummyPosition(dummyPosition);
+				
+				for (GameListener gameListener : m_game.getGameListeners())
+				{
+					gameListener.sig_setDummyPosition(dummyPosition);
+				}
+				
 				return BridgeHandState.SCAN_DUMMY;
 			}
 			else

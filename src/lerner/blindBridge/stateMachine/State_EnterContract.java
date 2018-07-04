@@ -6,7 +6,6 @@ package lerner.blindBridge.stateMachine;
 
 import lerner.blindBridge.main.Game;
 import lerner.blindBridge.model.Contract;
-import lerner.blindBridge.model.Direction;
 import lerner.blindBridge.model.GameListener;
 
 /***********************************************************************
@@ -70,15 +69,8 @@ public class State_EnterContract extends ControllerState
 			gameListener.sig_contractSet(contract);
 		}
 
-		Direction dummyPosition = contract.getBidWinner().getPartner();
+		// Wait to set dummy position until first player plays a card so display does not appear early
 
-		m_game.getBridgeHand().setDummyPosition(dummyPosition);
-		
-		for (GameListener gameListener : m_game.getGameListeners())
-		{
-			gameListener.sig_setDummyPosition(dummyPosition);
-		}
-		
 		return BridgeHandState.WAIT_FOR_FIRST_PLAYER;
 	}
 
