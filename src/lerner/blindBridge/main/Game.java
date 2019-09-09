@@ -247,6 +247,14 @@ public class Game
 			//------------------------------
 			Logger.resetConfiguration();
 			Logger.initialize(logLevel);
+			if (s_cat.isDebugEnabled())
+			{
+				s_cat.debug("args: ");
+				for (String arg : p_args)
+				{
+					s_cat.debug("    " + arg);
+				}
+			}
 
 			//------------------------------
 			// Create the command line input controller and start it
@@ -679,8 +687,12 @@ public class Game
             Matcher matcher = devicePattern.matcher(portName);
             if (matcher.matches())
             {
-            		if (s_cat.isDebugEnabled()) s_cat.debug("findUSBCommunicationPorts: matched port: " + portName + " of type: " + portTypeToString(portIdentifier.getPortType()));
+        			if (s_cat.isDebugEnabled()) s_cat.debug("findUSBCommunicationPorts: matched port: " + portName + " of type: " + portTypeToString(portIdentifier.getPortType()));
             		m_candidatePorts.add(new CandidatePort(portIdentifier));
+            }
+            else
+            {
+            		if (s_cat.isDebugEnabled()) s_cat.debug("findUSBCommunicationPorts: skipping port: " + portName + " of type: " + portTypeToString(portIdentifier.getPortType()));
             }
         }
     }

@@ -76,13 +76,13 @@ public abstract class SerialController implements SerialPortEventListener, GameL
 	//--------------------------------------------------
 
 	/***********************************************************************
-	 * Configures and initializes a Keyboard Controller
+	 * Configures and initializes a Serial Controller
 	 * @param p_game				The game object managing the hands
 	 * @param p_direction		If non-null, the player position this controller is at.
 	 * 							If null, attempts to set position based on hardware settings.
 	 * @param p_deviceName		If non-empty, open the device with this name for this controller
 	 * 							If null or empty, try each device in turn until you find an appropriate one
-	 * @param p_hasHardware		If false, there is no hardware and the "antenna"
+	 * @param p_hasHardware		If false, there is no hardware and the "antenna" or "keyboard"
 	 * 	will be controlled from the command interpreter (for testing)
 	 * @throws IOException if it cannot open a port for this controller.
 	 ***********************************************************************/
