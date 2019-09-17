@@ -5,6 +5,7 @@
 package lerner.blindBridge.stateMachine;
 
 import lerner.blindBridge.main.Game;
+import lerner.blindBridge.model.GameListener;
 
 /***********************************************************************
  * Initial state on startup.  Waits for devices to initialize.
@@ -44,6 +45,12 @@ public class State_Initializing extends ControllerState
 	public void onEntry ( Game p_game )
 	{
 		m_game = p_game;
+		
+		// notify all listeners we have entered this state
+		for (GameListener gameListener : m_game.getGameListeners())
+		{
+			gameListener.sig_initializing();
+		}
 	}
 
 	/* (non-Javadoc)

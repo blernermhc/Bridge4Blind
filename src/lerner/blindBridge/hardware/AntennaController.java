@@ -1,10 +1,9 @@
 package lerner.blindBridge.hardware;
-import java.io.BufferedInputStream;
 import java.io.IOException;
 
 import org.apache.log4j.Category;
 
-import gnu.io.SerialPortEvent;
+import jssc.SerialPortEvent;
 import lerner.blindBridge.main.Game;
 import lerner.blindBridge.model.BridgeScore;
 import lerner.blindBridge.model.Card;
@@ -19,7 +18,7 @@ import lerner.blindBridge.model.Trick;
  * Communicates with an RFID Antenna Controller 
  *********************************************************************/
 
-public class AntennaController extends SerialController
+public class AntennaController extends JSSCSerialController
 {
 	/**
 	 * Used to collect logging output for this class
@@ -77,6 +76,9 @@ public class AntennaController extends SerialController
 	/** Last seen card */
 	private Card m_currentCard = null;
 
+	/** Buffer used to hold bytes read from serial port until a newline is read. */
+	StringBuilder m_message = new StringBuilder();
+
 	//--------------------------------------------------
 	// CONSTRUCTORS
 	//--------------------------------------------------
@@ -96,14 +98,15 @@ public class AntennaController extends SerialController
 		throws IOException
 	{
 		super(p_game, p_direction, p_deviceName, p_hasHardware);
-		if (p_direction != null)
+		if (getMyPosition() != null)
 		{
+			send_setPosition(getMyPosition());
 			m_controllerState = AntennaControllerState.CAPTURE_CARD;
 		}
 	}
 
 	//--------------------------------------------------
-	// CONFIGURATION METHODS (used by findPortToOpen)
+	// CONFIGURATION METHODS (used by openDevice)
 	//--------------------------------------------------
 
 	/* (non-Javadoc)
@@ -143,6 +146,7 @@ public class AntennaController extends SerialController
 	public void requestPosition()
 	{
 		m_myPosition = null;
+		m_deviceReady = false;
 		m_controllerState = AntennaControllerState.DETERMINE_POSITION;
 	}
 	
@@ -152,6 +156,14 @@ public class AntennaController extends SerialController
 	
 	public void send_setPosition ( Direction p_direction )
 	{
+		if (isVirtualController()) return;
+
+		if (m_output == null)
+		{
+			if (s_cat.isDebugEnabled()) s_cat.debug("send_setPosition(" + getFullName() + "): skipping non-open device. direction: " + p_direction);
+			return;
+		}
+		
 		int msg = (0b01000000 | p_direction.ordinal());
 		try
 		{
@@ -187,25 +199,6 @@ public class AntennaController extends SerialController
 		}
 		
 		return m_myPosition;
-	}
-
-	/***********************************************************************
-	 * Reads a newline-terminated string of characters from the input stream.
-	 * @param p_input	the input stream
-	 * @return	the string.  May be empty, but never null.
-	 * @throws IOException if there was a problem reading from the stream
-	 ***********************************************************************/
-	private String readLine (BufferedInputStream p_input)
-		throws IOException
-	{
-		StringBuilder line = new StringBuilder();
-		int ch;
-		while ((ch = p_input.read()) != '\n')
-		{
-			// do not include carriage return or newline
-			if (ch != 13) line.append((char)ch);
-		}
-		return line.toString();
 	}
 
 	/***********************************************************************
@@ -270,7 +263,7 @@ public class AntennaController extends SerialController
 	 * Actions to take when a card has been removed from the antenna
 	 * @return a description of the actions taken
 	 ***********************************************************************/
-	private String processCardRemovedEvent()
+	public String processCardRemovedEvent()
 	{
 		if (m_currentCard != null)
 		{
@@ -344,24 +337,37 @@ public class AntennaController extends SerialController
 	 * @see gnu.io.SerialPortEventListener#serialEvent(gnu.io.SerialPortEvent)
 	 * Handle an event on the serial port. Read the data and print it.
 	 * *******************************************************************/
-	public synchronized void serialEvent(SerialPortEvent oEvent)
+	public synchronized void serialEvent(SerialPortEvent p_event)
 	{
-		if (oEvent.getEventType() == SerialPortEvent.DATA_AVAILABLE)
+	    if(p_event.isRXCHAR() && p_event.getEventValue() > 0)
 		{
-			try
+	        try
 			{
-				while (m_input.available() > 0)
+	            byte buffer[] = m_serialPort.readBytes();
+	            for (byte b: buffer)
 				{
-					String line = readLine(m_input);
-					String description = processLine(line);
-					System.out.println("From " + m_myPosition + " Antenna: " + description);
-				}
-			}
-			catch (Exception e)
+					if ( b == '\n')
+					{
+						if (m_message.length() > 0)
+						{
+							String toProcess = m_message.toString();
+							String description = processLine(toProcess);
+							System.out.println("From " + getFullName() + ": " + description);
+							m_message.setLength(0);
+						}
+					}
+					else
+					{
+						// do not include carriage return
+						if (b != 13) m_message.append((char)b);
+					}
+	            }                
+	        }
+	        catch (Exception e)
 			{
 				System.err.println(e.toString());
-			}
-		}
+	        }
+	    }
 		// Ignore all the other eventTypes, but you should consider the other ones.
 	}
 
@@ -610,7 +616,7 @@ public class AntennaController extends SerialController
 		out.append("Antenna[" + m_myPosition + "]");
 		out.append(" state: " + m_controllerState);
 		out.append(" curCard: " + m_currentCard);
-		out.append(" device: " + (m_virtualController ? "virtual" : m_communicationPort.getName()));
+		out.append(" device: " + (m_virtualController ? "virtual" : m_serialPort.getPortName()));
 		
 		return out.toString();
 	}
@@ -618,15 +624,6 @@ public class AntennaController extends SerialController
 	//--------------------------------------------------
 	// ACCESSORS
 	//--------------------------------------------------
-
-	/***********************************************************************
-	 * The position of this Keyboard Controller
-	 * @return player
-	 ***********************************************************************/
-	public Direction getMyPosition ()
-	{
-		return m_myPosition;
-	}
 
 	/***********************************************************************
 	 * The most recently seen (and not removed) card.

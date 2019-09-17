@@ -11,6 +11,11 @@ import lerner.blindBridge.model.GameListener_sparse;
 
 public class InitializationGUI extends BridgeJPanel implements GameListener_sparse
 {
+	/**
+	 * Used to collect logging output for this class
+	 */
+	//private static Category s_cat = Logger.getLogger(InitializationGUI.class);
+
 	public InitializationGUI ( )
 	{
 		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
@@ -27,7 +32,7 @@ public class InitializationGUI extends BridgeJPanel implements GameListener_spar
 		p_game.addGameListener(this);
 
 	}
-	
+
 	private void addInstructions ( String text )
 	{
 		JLabel instructions = new JLabel(text);

@@ -47,27 +47,27 @@ public class CommandController implements Runnable
 		, OPTIONS("Sets the options of a keyboard controller: kbdPosition max 8-bit option bit map (e.g., 110)")
 		, PLAY("Play card (simulates RFID scan from sighted player next to play): position cardAbbrev (e.g., QH)")
 		, PRINTHAND("For testing prints a hand: player (or A for all players)")
-		, PRINTSTATE("Prints the Game Controller state")
+		, PRINTSTATE("(PS) Prints the Game Controller state")
 		, REDO("Redo last undone event: [confirmed | c]")
 		, REINITPOS("Reinitialize keyboard and antenna positions")
-		, REOPEN("Reopens connection to keyboard controller: kbdPosition")
+		, REOPEN("Reopens connection to keyboard controller: kbdPosition (with no arg, reopen all antenna and keyboard ports)")
 		, REOPENANT("Reopens connection to antenna controller: kbdPosition")
 		, RESET("Sends request to reset keyboard controller: kbdPosition")
-		, S("Simulates RFID scan of a card: position cardAbbrev (e.g., QH)")
+		, S("Simulates RFID scan and removal of a card: position cardAbbrev (e.g., swqh scans Queen of Hearts from West)")
 		, SHOWANTS("Print a list of the known antennas with an index for use in changing the antenna's position")
 		, SHOWKBDS("Print a list of the known keyboards with an index for use in changing the keyboard's position")
 		, UNDO("Undo last event: [confirmed | c]")
 		, QUIT("Exit program")
 		;
 		
-		private String m_description;
+		private final String f_description;
 		
 		BridgeCommand (String p_description)
 		{
-			m_description = p_description;
+			f_description = p_description;
 		}
 		
-		public String getDescription() { return m_description; } 
+		public String getDescription() { return f_description; } 
 	}
 
 	//--------------------------------------------------
@@ -162,37 +162,37 @@ public class CommandController implements Runnable
 			try
 			{
 				// special case for b (add space after b, if missing)
-				if (line.matches("^b[nNeEsSwW] .*"))
+				if (line.matches("^[bB][nNeEsSwW] .*"))
 				{
 					line = "b " + line.substring(1);
 				}
 
 				// special case for scan (add space after s, if missing)
-				if (line.matches("^s[nNeEsSwW] .*"))
+				if (line.matches("^[sS][nNeEsSwW] .*"))
 				{
 					line = "s " + line.substring(1);
 				}
 
 				// special case for scan with no spaces
-				if (line.matches("^s[nNeEsSwW]([1-9jJqQkKaA]|10)[cCdDhHsS]"))
+				if (line.matches("^[sS][nNeEsSwW]([1-9jJqQkKaA]|10)[cCdDhHsS]"))
 				{
 					line = "s " + line.substring(1,2) + " " + line.substring(2);
 				}
 
 				// special case for printhand
-				if (line.matches("^ph [nNeEsSwWaA]"))
+				if (line.matches("^[pP][hH] [nNeEsSwWaA]"))
 				{
 					line = "printhand " + line.substring(3);
 				}
 
 				// special case for printhand with missing space
-				if (line.matches("^ph[nNeEsSwWaA]"))
+				if (line.matches("^[pP][hH][nNeEsSwWaA]"))
 				{
 					line = "printhand " + line.substring(2);
 				}
 
 				// special case for p (add space after s, if missing)
-				if (line.equals("ps"))
+				if (line.matches("^[pP][sS]$"))
 				{
 					line = "printstate";
 				}
@@ -200,7 +200,15 @@ public class CommandController implements Runnable
 				String[] args = line.split(" ");
 				if (args.length <= 0) continue;
 				
-				cmd = CommandController.BridgeCommand.valueOf(args[0].toUpperCase());
+				try
+				{
+					cmd = CommandController.BridgeCommand.valueOf(args[0].toUpperCase());
+				}
+				catch (Exception e)
+				{
+					p_out.println("Unknown command: " + cmd + " Enter help to list commands");
+					continue;
+				}
 				
 				switch (cmd)
 				{
@@ -210,7 +218,9 @@ public class CommandController implements Runnable
 						p_out.println("Keyboards:");
 						for (KeyboardController kbdController : m_game.getKeyboardControllers().values())
 						{
-							p_out.println("  " + idx + ": " + kbdController.getMyPosition() + " (" + kbdController.m_communicationPort.getName() + ")");
+							String dir = "" + kbdController.getMyPosition();
+							String portName = (kbdController.m_serialPort == null ? "null" : kbdController.m_serialPort.getPortName());
+							p_out.println("  " + idx + ": " + dir + " (" + portName + ")");
 							++idx;
 						}
 					}
@@ -238,7 +248,9 @@ public class CommandController implements Runnable
 						p_out.println("Antennas:");
 						for (AntennaController antennaController : m_game.getAntennaControllers().values())
 						{
-							p_out.println("  " + idx + ": " + antennaController.getMyPosition() + " (" + antennaController.m_serialPort.getName() + ")");
+							String dir = "" + antennaController.getMyPosition();
+							String portName = (antennaController.m_serialPort == null ? "null" : antennaController.m_serialPort.getPortName());
+							p_out.println("  " + idx + ": " + dir + " (" + portName + ")");
 							++idx;
 						}
 					}
@@ -296,6 +308,11 @@ public class CommandController implements Runnable
 						
 					case REOPEN:
 					{
+						if (args.length == 1)
+						{
+							m_game.reopenAllPorts();
+							break;
+						}
 						if (args.length != 2)
 							throw new IllegalArgumentException("Wrong number of arguments");
 						int idx = 0;
@@ -303,8 +320,7 @@ public class CommandController implements Runnable
 						KeyboardController kbdController = m_game.getKeyboardControllers().get(direction); 
 						if (kbdController != null)
 						{
-							kbdController.close();
-							kbdController.tryOpen(kbdController.m_communicationPort);
+							kbdController.reopen();
 						}
 					}
 					break;
@@ -318,8 +334,7 @@ public class CommandController implements Runnable
 						AntennaController antController = m_game.getAntennaControllers().get(direction); 
 						if (antController != null)
 						{
-							antController.close();
-							antController.tryOpen(antController.m_communicationPort);
+							antController.reopen();
 						}
 					}
 					break;
@@ -381,7 +396,12 @@ public class CommandController implements Runnable
 						Direction direction = Direction.fromString(args[++idx]);
 						Card card = new Card(args[++idx]);
 						AntennaController antController = m_game.getAntennaControllers().get(direction); 
-						if (antController != null) p_out.println("Ant[" + direction + "] " + antController.processCardPresentEvent(card));
+						if (antController != null)
+						{
+							p_out.println("Ant[" + direction + "] " + antController.processCardPresentEvent(card));
+							p_out.println("Ant[" + direction + "] " + antController.processCardRemovedEvent());
+						}
+							
 					}
 					break;
 						

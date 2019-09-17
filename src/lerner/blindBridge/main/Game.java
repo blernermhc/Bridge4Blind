@@ -3,15 +3,11 @@ import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
-import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Set;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.cli.CommandLine;
@@ -24,7 +20,6 @@ import org.apache.commons.cli.ParseException;
 import org.apache.log4j.Category;
 import org.apache.logging.log4j.Level;
 
-import gnu.io.CommPortIdentifier;
 import lerner.blindBridge.audio.AudibleGameListener;
 import lerner.blindBridge.gui.GameGUI;
 import lerner.blindBridge.hardware.AntennaController;
@@ -58,28 +53,9 @@ public class Game
 	// CONFIGURATION MEMBER DATA
 	//--------------------------------------------------
 	
-	public class CandidatePort
-	{
-		/** the candidate port to try to open */
-		public CommPortIdentifier	m_portIdentifier;
-		
-		/**
-		 * Set of device types this port is known NOT to be.
-		 * For example, if this was rejected while opening one Antenna,
-		 * do not try this for subsequent Antennas.
-		 */
-		public Set<String>			m_skipTypes			= new HashSet<>();
-		
-		public CandidatePort (CommPortIdentifier p_portIdentifier)
-		{
-			m_portIdentifier = p_portIdentifier;
-		}
-	}
-	
 	int m_numAntennas					= 0;
 	int m_numKeyboards					= 0;
-	String m_devicePattern;
-	Set<CandidatePort>	m_candidatePorts		= new HashSet<>();
+	Pattern m_devicePattern;
 	
 	//--------------------------------------------------
 	// INTERNAL MEMBER DATA
@@ -157,6 +133,7 @@ public class Game
 		option = new Option( "h", "help", false, "print this message" );	options.addOption(option);
 		option = new Option( "d", "debug", false, "debug mode" );		options.addOption(option);
 		option = new Option( "q", "quiet", false, "quiet mode" );		options.addOption(option);
+		option = new Option( "p", "listPortNames", false, "lists available port names" );		options.addOption(option);
 		
 		// Define two argument options (e.g., --logLevel debug)
 		option = Option.builder("l")
@@ -233,8 +210,15 @@ public class Game
 				// automatically generate the help statement
 				HelpFormatter formatter = new HelpFormatter();
 		    		formatter.printHelp( "BlindBridgeMain", options );
+		    		return;
 		    }
-		    
+
+			if ( line.hasOption( "listPortNames" ) )
+			{
+				AntennaController.listPortNames();
+				return;
+			}
+
 			if ( line.hasOption( "quiet" ) ) logLevel = Level.ERROR;
 			if ( line.hasOption( "debug" ) ) logLevel = Level.DEBUG;
 			if ( line.hasOption( "logLevel" ) )
@@ -273,14 +257,17 @@ public class Game
 			//------------------------------
 			m_gameGUI = new GameGUI(this);
 			addGameListener(m_gameGUI);
-			// do we need something to run it?  maybe m_gameGUI.validate();?  Start a new thread?
 		
 			//------------------------------
 			// Read card libraries
 			//------------------------------
-			for (String cardFile : line.getOptionValues("cardFile"))
+			String[] cardFiles = line.getOptionValues("cardFile");
+			if (cardFiles != null)
 			{
-				CardLibrary.readCardFile(cardFile);
+				for (String cardFile : cardFiles)
+				{
+					CardLibrary.readCardFile(cardFile);
+				}
 			}
 
 			//------------------------------
@@ -289,7 +276,7 @@ public class Game
 			
 			if ( line.hasOption( "devicePattern" ) )
 			{
-				m_devicePattern = line.getOptionValue("devicePattern");
+				m_devicePattern = Pattern.compile(line.getOptionValue("devicePattern"));
 			}
 			
 			if ( line.hasOption( "antennas" ) )
@@ -302,14 +289,15 @@ public class Game
 				m_numKeyboards = Integer.parseInt(line.getOptionValue("keyboards"));
 			}
 			
-			if (m_devicePattern != null && !m_devicePattern.isEmpty())
-				findUSBCommunicationPorts(m_devicePattern);
-			
 		    //------------------------------
-			// Add antennas bound to known device names (add simulated antennas later, if real ones not defined)
+			// Add antennas
 			//------------------------------
 			if ( line.hasOption( "antenna" ) )
 			{
+			    //------------------------------
+				// Add antennas bound to known device names
+				// (add simulated antennas later, if real ones not defined)
+				//------------------------------
 				Properties props = line.getOptionProperties( "antenna" );
 				for (Direction position : Direction.values())
 				{
@@ -322,22 +310,27 @@ public class Game
 					}
 				}
 			}
-			
-		    //------------------------------
-			// Add antennas with hardware but unknown device name
-			// (add simulated antennas later, if real ones not defined)
-			//------------------------------
-			for (int i = 0; i < m_numAntennas; ++i)
+			else
 			{
-				addAntennaController(null, null, true);	// if not remembered, use card scan to determine position
+			    //------------------------------
+				// Add antennas with hardware but unknown device name
+				// (add simulated antennas later, if real ones not defined)
+				//------------------------------
+				for (int i = 0; i < m_numAntennas; ++i)
+				{
+					addAntennaController(null, null, true);	// if not remembered, use card scan to determine position
+				}
+				// add dummy antennas in sc_testDevicesReady
 			}
-			// add dummy antennas in sc_testDevicesReady
-
+			
 			//------------------------------
-			// Add Keyboards bound to known device names
+			// Add Keyboards
 			//------------------------------
 			if ( line.hasOption( "keyboard" ) )
 			{
+				//------------------------------
+				// Add Keyboards bound to known device names
+				//------------------------------
 				Properties props = line.getOptionProperties( "keyboard" );
 				String device;
 				for (Direction position : Direction.values())
@@ -352,15 +345,16 @@ public class Game
 					}
 				}
 			}
-			
-			//------------------------------
-			// Add Keyboards with hardware but unknown device name
-			//------------------------------
-			for (int i = 0; i < m_numKeyboards; ++i)
+			else
 			{
-				addKeyboardController(null, null);			// if not remembered, ask to determine position
+				//------------------------------
+				// Add Keyboards with hardware but unknown device name
+				//------------------------------
+				for (int i = 0; i < m_numKeyboards; ++i)
+				{
+					addKeyboardController(null, null);			// if not remembered, ask to determine position
+				}
 			}
-			
 	    }
 	    catch( ParseException exp )
 	    {
@@ -372,6 +366,36 @@ public class Game
 		// Start the game
 		//------------------------------
 		m_bridgeHandStateController.runStateMachine();
+	}
+
+	/***********************************************************************
+	 * Attempt to reopen all ports (e.g., after accidentally unplugging USB cable)
+	 ***********************************************************************/
+	public void reopenAllPorts()
+	{
+		for (AntennaController antController : m_antennaControllerList)
+		{
+			try
+			{
+				antController.reopen();
+			}
+			catch (Exception e)
+			{
+				s_cat.error("reopenAllPorts: exception for controller: " + antController, e);
+			}
+		}
+
+		for (KeyboardController kbdController : m_keyboardControllerList)
+		{
+			try
+			{
+				kbdController.reopen();
+			}
+			catch (Exception e)
+			{
+				s_cat.error("reopenAllPorts: exception for controller: " + kbdController, e);
+			}
+		}
 	}
 
 	/***********************************************************************
@@ -403,6 +427,7 @@ public class Game
 			}
 		}
 	}
+
 	//--------------------------------------------------
 	// METHODS
 	//--------------------------------------------------
@@ -651,7 +676,7 @@ public class Game
 			{
 				AntennaController antController = antennaControllers.next();
 				if (antController.isVirtualController())
-					antennaControllers.remove();
+					antennaControllers.remove();	// sc_testDevicesReady will add necessary virtual antennaControllers
 				else
 					antController.requestPosition();
 			}
@@ -669,58 +694,6 @@ public class Game
 		m_keyboardControllers.clear();
 	}
 	
-    /***********************************************************************
-     * Finds the communication ports with names that match the given pattern
-     * and adds them to the set of candidate ports.
-     * @param p_pattern Regexp pattern (e.g., "/dev/cu.usbmodem.*")
-     ***********************************************************************/
-    void findUSBCommunicationPorts ( String p_pattern )
-    {
-    		Pattern devicePattern = Pattern.compile(p_pattern);
-    		
-        @SuppressWarnings("unchecked")
-		Enumeration<CommPortIdentifier> portEnum = CommPortIdentifier.getPortIdentifiers();
-        while ( portEnum.hasMoreElements() ) 
-        {
-            CommPortIdentifier portIdentifier = portEnum.nextElement();
-            String portName = portIdentifier.getName();
-            Matcher matcher = devicePattern.matcher(portName);
-            if (matcher.matches())
-            {
-        			if (s_cat.isDebugEnabled()) s_cat.debug("findUSBCommunicationPorts: matched port: " + portName + " of type: " + portTypeToString(portIdentifier.getPortType()));
-            		m_candidatePorts.add(new CandidatePort(portIdentifier));
-            }
-            else
-            {
-            		if (s_cat.isDebugEnabled()) s_cat.debug("findUSBCommunicationPorts: skipping port: " + portName + " of type: " + portTypeToString(portIdentifier.getPortType()));
-            }
-        }
-    }
-    
-    /***********************************************************************
-     * Returns the name of a port type
-     * @param p_portType	the portType
-     * @return the name
-     ***********************************************************************/
-    private String portTypeToString ( int p_portType )
-    {
-        switch ( p_portType )
-        {
-            case CommPortIdentifier.PORT_I2C:
-                return "I2C";
-            case CommPortIdentifier.PORT_PARALLEL:
-                return "Parallel";
-            case CommPortIdentifier.PORT_RAW:
-                return "Raw";
-            case CommPortIdentifier.PORT_RS485:
-                return "RS485";
-            case CommPortIdentifier.PORT_SERIAL:
-                return "Serial";
-            default:
-                return "unknown type";
-        }
-    }
-
     //--------------------------------------------------
 	// ACCESSORS
 	//--------------------------------------------------
@@ -815,8 +788,19 @@ public class Game
 		m_gameListeners.add(p_listener);
 	}
 
+	/***********************************************************************
+	 * A regular expression to limit the ports considered for game hardware.
+	 * Default is null (consider all ports).
+	 * @return the regular expression string from the command line
+	 ***********************************************************************/
+	public Pattern getDevicePattern ()
+	{
+		return m_devicePattern;
+	}
+
+	
 	//--------------------------------------------------
-	// MAIN routing
+	// MAIN routine
 	//--------------------------------------------------
 
 	/***********************************************************************
@@ -844,15 +828,6 @@ public class Game
 			if (main != null) main.closeAllPorts();
 			System.exit(status);
 		}
-	}
-
-	/***********************************************************************
-	 * The set of devices that may be connected to antenna or keyboard controllers.
-	 * @return set of device names
-	 ***********************************************************************/
-	public Set<CandidatePort> getCandidatePorts ()
-	{
-		return m_candidatePorts;
 	}
 
  }

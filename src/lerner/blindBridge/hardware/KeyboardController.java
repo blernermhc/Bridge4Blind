@@ -1,12 +1,11 @@
 package lerner.blindBridge.hardware;
-import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.Queue;
 
 import org.apache.log4j.Category;
 
-import gnu.io.SerialPortEvent;
+import jssc.SerialPortEvent;
 import lerner.blindBridge.main.Game;
 import lerner.blindBridge.model.BridgeScore;
 import lerner.blindBridge.model.Card;
@@ -23,7 +22,7 @@ import lerner.blindBridge.model.TrickSet;
  * Communicates with a Blind players' Keyboard Controller 
  *********************************************************************/
 
-public class KeyboardController extends SerialController implements Runnable
+public class KeyboardController extends JSSCSerialController implements Runnable
 {
 	/**
 	 * Used to collect logging output for this class
@@ -174,6 +173,9 @@ public class KeyboardController extends SerialController implements Runnable
 	/** End of final message sent by the Keyboard Hardware during boot-up or firmware reset */
 	private static final String READY_MSG = ": Ready!";
 
+	/** Prefix that indicates line from Keyboard Controller is a command to process */
+	public static final String CMD_PREFIX = "CMD: ";
+	
 	//--------------------------------------------------
 	// CONFIGURATION MEMBER DATA
 	//--------------------------------------------------
@@ -307,6 +309,9 @@ public class KeyboardController extends SerialController implements Runnable
 	/** thread to serialize actual sending of messages to the controller */
 	private Thread 			m_thread;
 
+	/** Buffer used to hold bytes read from serial port until a newline is read. */
+	StringBuilder m_message = new StringBuilder();
+
 	//--------------------------------------------------
 	// CONSTRUCTORS
 	//--------------------------------------------------
@@ -331,10 +336,10 @@ public class KeyboardController extends SerialController implements Runnable
 	    m_thread = new Thread (this);
 	    m_thread.start();
 
-	    if (p_direction != null)
-	    {
-	    		setPlayer(p_direction);
-	    }
+		if (getMyPosition() != null)
+		{
+			setPlayer(getMyPosition());
+		}
 	}
 
 	//--------------------------------------------------
@@ -420,6 +425,7 @@ public class KeyboardController extends SerialController implements Runnable
 	public void requestPosition()
 	{
 		m_myPosition = null;
+		m_deviceReady = false;
 		send_simpleMessage(KBD_MESSAGE.SEND_POSITION);
 	}
 	
@@ -909,66 +915,62 @@ public class KeyboardController extends SerialController implements Runnable
 	}
 	
 
-	private String readLine (BufferedInputStream p_input)
-		throws IOException
-	{
-		StringBuilder line = new StringBuilder();
-		int ch;
-		while ((ch = p_input.read()) != '\n')
-		{
-			// do not include carriage return or newline
-			if (ch != 13) line.append((char)ch);
-		}
-		return line.toString();
-	}
-
-	/** Prefix that indicates line from Keyboard Controller is a command to process */
-	public static final String CMD_PREFIX = "CMD: ";
-	
-	/* *******************************************************************
-	 * (non-Javadoc)
-	 * @see gnu.io.SerialPortEventListener#serialEvent(gnu.io.SerialPortEvent)
+	/********************************************************************
 	 * Handle an event on the serial port. Read the data and print it.
-	 * *******************************************************************/
-	public synchronized void serialEvent(SerialPortEvent oEvent)
+	 * @param p_event	the event
+	 ********************************************************************/
+	public synchronized void serialEvent(SerialPortEvent p_event)
 	{
-		if (oEvent.getEventType() == SerialPortEvent.DATA_AVAILABLE)
+	    if(p_event.isRXCHAR() && p_event.getEventValue() > 0)
 		{
-			try
+	        try
 			{
-				while (m_input.available() > 0)
+	            byte buffer[] = m_serialPort.readBytes();
+	            for (byte b: buffer)
 				{
 					if (m_readLineEventMode || m_readOneLineEventMode)
 					{
-						String line = readLine(m_input);
-						System.out.println("Keyboard(" + m_myPosition + "): " + line);
-						if (line.startsWith(CMD_PREFIX))
+						if ( b == '\n')
 						{
-							processIncomingCommand(line.substring(CMD_PREFIX.length()));
+							if (m_message.length() > 0)
+							{
+								String line = m_message.toString();
+								System.out.println("Keyboard(" + m_myPosition + "): " + line);
+								if (line.startsWith(CMD_PREFIX))
+								{
+									processIncomingCommand(line.substring(CMD_PREFIX.length()));
+								}
+								if (line.endsWith(READY_MSG))
+								{
+									m_readLineEventMode = false;
+									System.out.println("Found " + READY_MSG);
+								}
+								m_readOneLineEventMode = false;
+								m_message.setLength(0);
+							}
 						}
-						if (line.endsWith(READY_MSG))
+						else
 						{
-							m_readLineEventMode = false;
-							System.out.println("Found " + READY_MSG);
+							// do not include carriage return
+							if (b != 13) m_message.append((char)b);
 						}
-						m_readOneLineEventMode = false;
 					}
 					else
 					{
 						// read an 8-bit byte, but operate on it as an int, so it is, in effect, unsigned
-						int msg = m_input.read();
+						int msg = b;
 						if (msg != 192)
 							System.out.println("From Keyboard: " + binaryMsgToString(msg));
 						String messageDescription = processIncomingMessage(msg);
 						if (messageDescription != null)
 							System.out.println("    Operation: " + messageDescription);
 					}
-				}
-			}
-			catch (Exception e)
+	            }                
+	        }
+	        catch (Exception e)
 			{
 				System.err.println(e.toString());
-			}
+	        }
 		}
 		// Ignore all the other eventTypes, but you should consider the other ones.
 	}
@@ -1468,7 +1470,7 @@ public class KeyboardController extends SerialController implements Runnable
 		
 		out.append("Kbd[" + m_myPosition + "]");
 		out.append(" dummy: " + m_dummyPosition);
-		out.append(" device: " + m_communicationPort.getName());
+		out.append(" device: " + m_serialPort.getPortName());
 		
 		return out.toString();
 	}
@@ -1523,15 +1525,6 @@ public class KeyboardController extends SerialController implements Runnable
 	public void setReadOneLineEventMode ( boolean p_readOneLineEventMode )
 	{
 		m_readOneLineEventMode = p_readOneLineEventMode;
-	}
-
-	/***********************************************************************
-	 * The position of this Keyboard Controller
-	 * @return player
-	 ***********************************************************************/
-	public Direction getMyPosition ()
-	{
-		return m_myPosition;
 	}
 
 	/***********************************************************************
