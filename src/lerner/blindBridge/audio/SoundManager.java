@@ -2,7 +2,15 @@ package lerner.blindBridge.audio;
 
 import java.util.ArrayList;
 
+import org.apache.log4j.Category;
+import org.apache.log4j.Logger;
+
 public class SoundManager {
+	/**
+	 * Used to collect logging output for this class
+	 */
+	private static Category s_cat = Logger.getLogger(SoundManager.class);
+
 	// the sounds to play
 	// Need to synchronize methods that use this variable. Sounds
 	// are added to toPlay in one thread and removed in another.
@@ -38,26 +46,15 @@ public class SoundManager {
 	}
 
 	public synchronized void addSound(String filename) {
-		// System.out.println("SoundManager.addSound: Thread " +
-		// Thread.currentThread().getName() + " got lock in playSounds");
 		
 		toPlay.add(filename);
 		
-		// System.out.println("SoundManager.addSound: Thread " +
-		// Thread.currentThread().getName() + " releasing lock");
 	}
 
 	public void playSounds() {
-		// System.out.println("Entering playSounds");
-		// System.out.println("SoundManager.playSounds: Thread " +
-		// Thread.currentThread().getName() +
-		// " trying to get lock in playSounds");
 		
 		synchronized (this) {
 		
-			// System.out.println("SoundManager.playSounds: Thread " +
-			// Thread.currentThread().getName() + " got lock in playSounds");
-			// System.out.println("SoundManager.playSounds got the lock");
 			// Do not start a new thread if there is one already running. The
 			// existing thread will play all the sounds that are queued up.
 			
@@ -66,12 +63,10 @@ public class SoundManager {
 
 				try {
 
-					while (!soundThreadDone) {
-						System.out
-								.println("Sleeping playSounds - thread alive");
-
+					while (!soundThreadDone)
+					{
+						if (s_cat.isDebugEnabled()) s_cat.debug("playSounds: waiting for previous play to finish");
 						this.wait();
-
 					}
 
 				} catch (InterruptedException e) {

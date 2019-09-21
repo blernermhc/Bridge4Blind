@@ -44,20 +44,37 @@ public class HelpGUI extends BridgeJPanel
 	private JPanel createHelpPanel ()
 	{
 
-		JPanel helpPanel = new JPanel(new GridLayout(0, 4));
+		JPanel helpPanel = new JPanel(new GridLayout(0, 1));
 		helpPanel.add(new JLabel(""));
 
 		Font f = new Font("helpFont", Font.PLAIN, 18);
 
-		JLabel helpLabel1 = new JLabel("<html>Backspace: own spades<br>"
-											+ "Asterisk: own hearts<br>Backslash: own diamonds<br>"
-										+ "Tab: own clubs<br><br>Dash: dummy spades<br>Nine: dummy hearts<br>"
-										+ "Eight: dummy diamonds<br>Seven: dummy clubs</html>");
+		JLabel helpLabel1 = new JLabel("<html>\n" + 
+				"  <table>\n" + 
+				"    <tr>\n" + 
+				"      <td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td><td>Up</td><td align='right'><em>dummy:</em></td><td>Clubs</td><td>Diamonds</td><td>Hearts</td><td>Spades</td>\n" + 
+				"    </tr>\n" + 
+				"    <tr>\n" + 
+				"      <td></td><td>Down</td><td align='right'><em>hand:</em></td><td>Clubs</td><td>Diamonds</td><td>Hearts</td><td>Spades</td>\n" + 
+				"    </tr>\n" + 
+				"    <tr>\n" + 
+				"      <td></td><td></td><td></td><td>Say<br/>State</td><td>Repeat<br/>Msg</td><td></td><td></td><td>Play</td>\n" + 
+				"    </tr>\n" + 
+				"    <tr>\n" + 
+				"      <td></td><td>Function</td>\n" + 
+				"    </tr>\n" + 
+				"    <tr>\n" + 
+				"      <td></td><td></td><td>Undo<br/>Redo<br/>Volume<br/>Set&nbsp;Position<br/>Enter&nbsp;Contract<br/>Resync<br/>New&nbsp;Game<br/>Deal<br/>Preferences<br/>Help</td>\n" + 
+				"    </tr>\n" + 
+				"  </table>\n" + 
+				"</html>\n" + 
+				"");
 
 		helpLabel1.setFont(f);
 
 		helpPanel.add(helpLabel1);
 
+		/*
 		JLabel helpLabel2 = new JLabel("<html>Plus: current trick<br>Five: Dummy's full hand<br>"
 											+ "Four: Own full hand<br><br>Three: E/W tricks won<br>"
 										+ "Two: N/S tricks won<br>One: contract<br><br>"
@@ -66,7 +83,8 @@ public class HelpGUI extends BridgeJPanel
 		helpLabel2.setFont(f);
 
 		helpPanel.add(helpLabel2);
-
+		 */
+		
 		helpPanel.add(new JLabel(""));
 
 		return helpPanel;

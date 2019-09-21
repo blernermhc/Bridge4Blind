@@ -1,0 +1,315 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1671\cocoasubrtf600
+{\fonttbl\f0\fswiss\fcharset0 Helvetica-Bold;\f1\fswiss\fcharset0 Helvetica;\f2\fswiss\fcharset0 Helvetica-Oblique;
+\f3\fswiss\fcharset0 Helvetica-BoldOblique;\f4\fnil\fcharset0 Menlo-Regular;}
+{\colortbl;\red255\green255\blue255;\red0\green0\blue0;\red54\green95\blue145;\red79\green129\blue189;
+\red191\green191\blue191;\red0\green0\blue0;\red79\green129\blue189;\red54\green95\blue145;\red103\green103\blue103;
+\red103\green103\blue103;\red255\green255\blue10;}
+{\*\expandedcolortbl;;\cssrgb\c0\c0\c0;\csgenericrgb\c21176\c37255\c56863;\csgenericrgb\c30980\c50588\c74118;
+\csgray\c79525;\csgray\c0;\csgenericrgb\c30980\c50588\c74118;\csgenericrgb\c21176\c37255\c56863;\csgray\c47953;
+\csgray\c47953;\cssrgb\c99942\c98555\c0;}
+\margl1440\margr1440\vieww15220\viewh14060\viewkind1
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\b\fs36 \cf2 Bridge4Blind System Documentation\
+
+\f1\b0\fs24 \cf0 \
+\
+
+\f0\b\fs28 \cf3 Components\
+
+\f1\b0\fs24 \cf0 \
+The system is comprised of a Game controller, a GUI device, some number of card reader antennas and some number of keyboards for blind players.  In its current implementation, the Game controller is a Java program that runs on a Windows or Mac OS X laptop.  The GUI device is the laptop\'92s display (we use a windows laptop that can be folded into a tablet form factor for actual game use.  Any laptop is suitable for development and testing).  The card reader antennas are implemented as Arduino processors with an RFID card reader attachment.  The keyboard is a special purpose keyboard built using an Arduino with a sound generator and button multiplexer.  The antennas and keyboard(s) are connected to the game controller via USB.\
+\
+
+\f0\b\fs26 \cf4 Antenna Hardware\
+
+\f1\b0\fs24 \cf0 \
+When the Game Controller opens a port, the Arduino runs its setup() method.  The setup() method sends a number of lines over the USB port, each with the prefix \'93Antenna(
+\f2\i pos
+\f1\i0 ): \'94, where 
+\f2\i pos
+\f1\i0  is a number from 0 to 16, indicating the remembered position.\
+\
+
+\itap1\trowd \taflags1 \trgaph108\trleft-108 \trbrdrt\brdrnil \trbrdrl\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clshdrawnil \clwWidth1180\clftsWidth3 \clbrdrt\brdrs\brdrw20\brdrcf5 \clbrdrl\brdrs\brdrw20\brdrcf5 \clbrdrb\brdrs\brdrw20\brdrcf5 \clbrdrr\brdrs\brdrw20\brdrcf5 \clpadl100 \clpadr100 \gaph\cellx4320
+\clvertalc \clshdrawnil \clwWidth1440\clftsWidth3 \clbrdrt\brdrs\brdrw20\brdrcf5 \clbrdrl\brdrs\brdrw20\brdrcf5 \clbrdrb\brdrs\brdrw20\brdrcf5 \clbrdrr\brdrs\brdrw20\brdrcf5 \clpadl100 \clpadr100 \gaph\cellx8640
+\pard\intbl\itap1\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\b \cf0 Position
+\f1\b0 \cell 
+\pard\intbl\itap1\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f3\i\b \cf0 pos
+\f0\i0  number
+\f1\b0 \cell \row
+
+\itap1\trowd \taflags1 \trgaph108\trleft-108 \trbrdrl\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clshdrawnil \clwWidth1180\clftsWidth3 \clbrdrt\brdrs\brdrw20\brdrcf5 \clbrdrl\brdrs\brdrw20\brdrcf5 \clbrdrb\brdrs\brdrw20\brdrcf5 \clbrdrr\brdrs\brdrw20\brdrcf5 \clpadl100 \clpadr100 \gaph\cellx4320
+\clvertalc \clshdrawnil \clwWidth1440\clftsWidth3 \clbrdrt\brdrs\brdrw20\brdrcf5 \clbrdrl\brdrs\brdrw20\brdrcf5 \clbrdrb\brdrs\brdrw20\brdrcf5 \clbrdrr\brdrs\brdrw20\brdrcf5 \clpadl100 \clpadr100 \gaph\cellx8640
+\pard\intbl\itap1\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+\cf0 North\cell 
+\pard\intbl\itap1\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+\cf0 0\cell \row
+
+\itap1\trowd \taflags1 \trgaph108\trleft-108 \trbrdrl\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clshdrawnil \clwWidth1180\clftsWidth3 \clbrdrt\brdrs\brdrw20\brdrcf5 \clbrdrl\brdrs\brdrw20\brdrcf5 \clbrdrb\brdrs\brdrw20\brdrcf5 \clbrdrr\brdrs\brdrw20\brdrcf5 \clpadl100 \clpadr100 \gaph\cellx4320
+\clvertalc \clshdrawnil \clwWidth1440\clftsWidth3 \clbrdrt\brdrs\brdrw20\brdrcf5 \clbrdrl\brdrs\brdrw20\brdrcf5 \clbrdrb\brdrs\brdrw20\brdrcf5 \clbrdrr\brdrs\brdrw20\brdrcf5 \clpadl100 \clpadr100 \gaph\cellx8640
+\pard\intbl\itap1\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+\cf0 East\cell 
+\pard\intbl\itap1\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+\cf0 1\cell \row
+
+\itap1\trowd \taflags1 \trgaph108\trleft-108 \trbrdrl\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clshdrawnil \clwWidth1180\clftsWidth3 \clbrdrt\brdrs\brdrw20\brdrcf5 \clbrdrl\brdrs\brdrw20\brdrcf5 \clbrdrb\brdrs\brdrw20\brdrcf5 \clbrdrr\brdrs\brdrw20\brdrcf5 \clpadl100 \clpadr100 \gaph\cellx4320
+\clvertalc \clshdrawnil \clwWidth1440\clftsWidth3 \clbrdrt\brdrs\brdrw20\brdrcf5 \clbrdrl\brdrs\brdrw20\brdrcf5 \clbrdrb\brdrs\brdrw20\brdrcf5 \clbrdrr\brdrs\brdrw20\brdrcf5 \clpadl100 \clpadr100 \gaph\cellx8640
+\pard\intbl\itap1\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+\cf0 South\cell 
+\pard\intbl\itap1\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+\cf0 2\cell \row
+
+\itap1\trowd \taflags1 \trgaph108\trleft-108 \trbrdrl\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clshdrawnil \clwWidth1180\clftsWidth3 \clbrdrt\brdrs\brdrw20\brdrcf5 \clbrdrl\brdrs\brdrw20\brdrcf5 \clbrdrb\brdrs\brdrw20\brdrcf5 \clbrdrr\brdrs\brdrw20\brdrcf5 \clpadl100 \clpadr100 \gaph\cellx4320
+\clvertalc \clshdrawnil \clwWidth1440\clftsWidth3 \clbrdrt\brdrs\brdrw20\brdrcf5 \clbrdrl\brdrs\brdrw20\brdrcf5 \clbrdrb\brdrs\brdrw20\brdrcf5 \clbrdrr\brdrs\brdrw20\brdrcf5 \clpadl100 \clpadr100 \gaph\cellx8640
+\pard\intbl\itap1\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+\cf0 West\cell 
+\pard\intbl\itap1\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+\cf0 3\cell \row
+
+\itap1\trowd \taflags1 \trgaph108\trleft-108 \trbrdrl\brdrnil \trbrdrt\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clshdrawnil \clwWidth1180\clftsWidth3 \clbrdrt\brdrs\brdrw20\brdrcf5 \clbrdrl\brdrs\brdrw20\brdrcf5 \clbrdrb\brdrs\brdrw20\brdrcf5 \clbrdrr\brdrs\brdrw20\brdrcf5 \clpadl100 \clpadr100 \gaph\cellx4320
+\clvertalc \clshdrawnil \clwWidth1440\clftsWidth3 \clbrdrt\brdrs\brdrw20\brdrcf5 \clbrdrl\brdrs\brdrw20\brdrcf5 \clbrdrb\brdrs\brdrw20\brdrcf5 \clbrdrr\brdrs\brdrw20\brdrcf5 \clpadl100 \clpadr100 \gaph\cellx8640
+\pard\intbl\itap1\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+\cf0 Undefined\cell 
+\pard\intbl\itap1\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+\cf0 16\cell \lastrow\row
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+\cf0 \
+When the Arduino configuration is complete and it is ready to accept and send commands, it sends the line: \'93Antenna(
+\f2\i pos
+\f1\i0 ): Reset Complete\'94.\
+\
+
+\f0\b\fs26 \cf4 Keyboard Hardware\
+
+\f1\b0\fs24 \cf0 \
+When the Game Controller opens a port, the Arduino runs its setup() method.  The setup() method sends a number of lines over the USB port, each with the prefix \'93Keyboard(
+\f2\i pos
+\f1\i0 ): \'94, where 
+\f2\i pos
+\f1\i0  is a number from 0 to 16, indicating the remembered position, as with the Antenna hardware.\
+\
+When the Arduino configuration is complete and it is ready to accept and send commands, it sends the line: \'93Keyboard(
+\f2\i pos
+\f1\i0 ): Ready!\'94.\
+\
+\
+\
+
+\f0\b\fs28 \cf3 Initialization\
+
+\f1\b0\fs24 \cf0 \
+When starting the Game Controller Java program, the command line describes the hardware the program should expect to use.  When playing bridge, the Game Controller expects there to be four antennas, corresponding to the four player positions, North, East, South and West, and zero to four keyboards for blind players, each associated with one of these four positions.  The command line can either simply identify the number of hardware antennas and keyboards to expect, or it can specify the mapping from USB port names to specific hardware.  In either case, the command line must also specify the file listing the RFID numbers of the cards to be used.\
+\
+
+\f0\b\fs26 \cf4 Generic Configuration\
+
+\f1\b0\fs24 \cf0 \
+Bridge4blind \\\
+  --cardFile /Users/rick/Documents/workspace/Bridge4Blind/conf/cardID.txt \\\
+  --antennas 4 \\\
+  --keyboards 1 \\\
+\
+With this configuration, the Game Controller gets a list of the available device names and opens each in turn, reads a few lines to see if the lines have the expected prefix, and if so, reads lines until it receives the line indicating that the device is ready.  If the lines from a device indicate a valid position, the Game Controller assigns the device to that position.  When all of the devices have been opened, the Game Controller checks that the all of the positions have been found (i.e., that there are no duplicates or undefined positions).  If the same position has been assigned to two or more antennas, or two or more keyboards, or if any antenna or keyboard has not been assigned a position, the Game Controller switches to the Initialization state where it waits for a player to place a card on each antenna to indicate its position by suit and to push a suit key on each keyboard to indicate the keyboard\'92s position.\
+\
+
+\itap1\trowd \taflags1 \trgaph108\trleft-108 \trbrdrt\brdrnil \trbrdrl\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clshdrawnil \clwWidth1120\clftsWidth3 \clbrdrt\brdrs\brdrw20\brdrcf5 \clbrdrl\brdrs\brdrw20\brdrcf5 \clbrdrb\brdrs\brdrw20\brdrcf5 \clbrdrr\brdrs\brdrw20\brdrcf5 \clpadl100 \clpadr100 \gaph\cellx4320
+\clvertalc \clshdrawnil \clwWidth1040\clftsWidth3 \clbrdrt\brdrs\brdrw20\brdrcf5 \clbrdrl\brdrs\brdrw20\brdrcf5 \clbrdrb\brdrs\brdrw20\brdrcf5 \clbrdrr\brdrs\brdrw20\brdrcf5 \clpadl100 \clpadr100 \gaph\cellx8640
+\pard\intbl\itap1\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\b \cf0 Suit
+\f1\b0 \cell 
+\pard\intbl\itap1\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\b \cf0 Postion
+\f1\b0 \cell \row
+
+\itap1\trowd \taflags1 \trgaph108\trleft-108 \trbrdrl\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clshdrawnil \clwWidth1120\clftsWidth3 \clbrdrt\brdrs\brdrw20\brdrcf5 \clbrdrl\brdrs\brdrw20\brdrcf5 \clbrdrb\brdrs\brdrw20\brdrcf5 \clbrdrr\brdrs\brdrw20\brdrcf5 \clpadl100 \clpadr100 \gaph\cellx4320
+\clvertalc \clshdrawnil \clwWidth1040\clftsWidth3 \clbrdrt\brdrs\brdrw20\brdrcf5 \clbrdrl\brdrs\brdrw20\brdrcf5 \clbrdrb\brdrs\brdrw20\brdrcf5 \clbrdrr\brdrs\brdrw20\brdrcf5 \clpadl100 \clpadr100 \gaph\cellx8640
+\pard\intbl\itap1\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+\cf0 Clubs\cell 
+\pard\intbl\itap1\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+\cf0 North\cell \row
+
+\itap1\trowd \taflags1 \trgaph108\trleft-108 \trbrdrl\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clshdrawnil \clwWidth1120\clftsWidth3 \clbrdrt\brdrs\brdrw20\brdrcf5 \clbrdrl\brdrs\brdrw20\brdrcf5 \clbrdrb\brdrs\brdrw20\brdrcf5 \clbrdrr\brdrs\brdrw20\brdrcf5 \clpadl100 \clpadr100 \gaph\cellx4320
+\clvertalc \clshdrawnil \clwWidth1040\clftsWidth3 \clbrdrt\brdrs\brdrw20\brdrcf5 \clbrdrl\brdrs\brdrw20\brdrcf5 \clbrdrb\brdrs\brdrw20\brdrcf5 \clbrdrr\brdrs\brdrw20\brdrcf5 \clpadl100 \clpadr100 \gaph\cellx8640
+\pard\intbl\itap1\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+\cf0 Diamonds\cell 
+\pard\intbl\itap1\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+\cf0 East\cell \row
+
+\itap1\trowd \taflags1 \trgaph108\trleft-108 \trbrdrl\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clshdrawnil \clwWidth1120\clftsWidth3 \clbrdrt\brdrs\brdrw20\brdrcf5 \clbrdrl\brdrs\brdrw20\brdrcf5 \clbrdrb\brdrs\brdrw20\brdrcf5 \clbrdrr\brdrs\brdrw20\brdrcf5 \clpadl100 \clpadr100 \gaph\cellx4320
+\clvertalc \clshdrawnil \clwWidth1040\clftsWidth3 \clbrdrt\brdrs\brdrw20\brdrcf5 \clbrdrl\brdrs\brdrw20\brdrcf5 \clbrdrb\brdrs\brdrw20\brdrcf5 \clbrdrr\brdrs\brdrw20\brdrcf5 \clpadl100 \clpadr100 \gaph\cellx8640
+\pard\intbl\itap1\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+\cf0 Hearts\cell 
+\pard\intbl\itap1\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+\cf0 South\cell \row
+
+\itap1\trowd \taflags1 \trgaph108\trleft-108 \trbrdrl\brdrnil \trbrdrt\brdrnil \trbrdrr\brdrnil 
+\clvertalc \clshdrawnil \clwWidth1120\clftsWidth3 \clbrdrt\brdrs\brdrw20\brdrcf5 \clbrdrl\brdrs\brdrw20\brdrcf5 \clbrdrb\brdrs\brdrw20\brdrcf5 \clbrdrr\brdrs\brdrw20\brdrcf5 \clpadl100 \clpadr100 \gaph\cellx4320
+\clvertalc \clshdrawnil \clwWidth1040\clftsWidth3 \clbrdrt\brdrs\brdrw20\brdrcf5 \clbrdrl\brdrs\brdrw20\brdrcf5 \clbrdrb\brdrs\brdrw20\brdrcf5 \clbrdrr\brdrs\brdrw20\brdrcf5 \clpadl100 \clpadr100 \gaph\cellx8640
+\pard\intbl\itap1\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+\cf0 Spades\cell 
+\pard\intbl\itap1\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+\cf0 West\cell \lastrow\row
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+\cf0 \
+A user can manually initiate positional configuration by entering the REINITPOS command in the runtime console.\
+\
+
+\f0\b\fs26 \cf4 Specific Configuration\
+
+\f1\b0\fs24 \cf0 \
+Bridge4blind \\\
+  --cardFile /Users/rick/Documents/workspace/Bridge4Blind/conf/cardID.txt \\\
+  -aNORTH=
+\f4 \cf6 \CocoaLigature0 /dev/tty.usbmodem14633201 \\
+\f1 \cf0 \CocoaLigature1 \
+  -aEAST=
+\f4 \cf6 \CocoaLigature0 /dev/tty.usbmodem14633301 \\
+\f1 \cf0 \CocoaLigature1 \
+  -aSOUTH=
+\f4 \cf6 \CocoaLigature0 /dev/tty.usbmodem14633401 \\
+\f1 \cf0 \CocoaLigature1 \
+  -aWEST=
+\f4 \cf6 \CocoaLigature0 /dev/tty.usbmodem146331301 \\
+\f1 \cf0 \CocoaLigature1 \
+  -kWEST=
+\f4 \cf6 \CocoaLigature0 /dev/tty.usbmodem146331401 \\
+\f1 \cf0 \CocoaLigature1 \
+\
+\
+With this configuration, the Game Controller opens each named device, checks that the output appears to be the correct type of hardware (antenna or keyboard), and reads lines until it receives the line indicating that the device is ready.  Once it receives the ready message, the Game Controller sends a command to the device to set its position as indicated on the command line.\
+\
+
+\f0\b\fs26 \cf4 Virtual Antennas
+\f1\b0\fs24 \cf0 \
+\
+If the command line does not indicate that there are four antenna devices, the Game Controller will create virtual antennas for the missing devices.  This allows testing without the full compliment of hardware.  Commands issued via the runtime console generate the signals that the hardware antennas would normally generate (e.g., scanning a card).\
+\
+\
+
+\f0\b\fs26 \cf7 Serial deviceReady flag\
+
+\f1\b0\fs24 \cf0 \
+The deviceReady flag for serial device controllers (i.e, AntennaController and KeyboardController) indicate if the system believes that the device is ready to receive commands.  This flag is initially false.  When the controller constructor opens a device for the controller, it waits for the ready message to arrive and then sets deviceReady to true.  Virtual devices set deviceReady to true in the constructor.  If a device needs to be reopened, the reopen method sets the value to false and the openDevice method sets it to true, when successful.  The deviceReady flag is also set to false when a keyboard requests to have its state reloaded by the Game, and set to true when that is complete.\
+\
+if the event processor detects that the device is resetting itself, it will set the deviceReady flag to false until it receives the ready message from the device.  \
+\
+The send_ methods should either queue messages while the device is not ready, or ignore them.\
+\
+The state machine\'92s Initialization state invokes the sc_testDevicesReady Game method to check if all of the devices are ready.\
+\
+\
+
+\f0\b\fs28 \cf8 Threads\
+
+\f1\b0\fs24 \cf0 \
+The system uses multiple threads in order to handle asynchronous messages from all of the devices.  Most runtime console messages include the thread name.\
+\
+\
+
+\f0\b\fs26 \cf7 Main\
+
+\f1\b0\fs24 \cf0 \
+This is the initial thread started when the Java program begins execution.  This thread processes the command line and opens communication to all of the devices connected to the game computer.  As each device is initialized, a new thread is created to wait for and process messages from the device.  The USB devices have names like \'93Ant Receiver 
+\f2\i pos
+\f1\i0 \'94 and \'93Kbd Receiver 
+\f2\i pos
+\f1\i0 \'94.  The following sections describe the various threads and their names.  Once initialization is complete and all of the threads are started the game runs the state machine in the main thread.  When the state machine exits, the program exits.\
+\
+
+\f0\b\fs26 \cf7 Ant Receiver pos\
+
+\f1\b0\fs24 \cf0 \
+Each of these threads waits for events to be received on the USB serial port associated with one of the Antenna devices. \
+\
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+\cf9 TBD\cf0 \
+\
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\b\fs26 \cf7 Kbd Receiver pos\
+
+\f1\b0\fs24 \cf0 \
+Each of these threads waits for events to be received on the USB serial port associated with one of the Keyboard devices. \
+\
+\cf10 TBD\cf0 \
+\
+\
+
+\f0\b\fs26 \cf7 Kbd Sender 
+\f3\i pos
+\f0\i0 \
+
+\f1\b0\fs24 \cf0 \
+The keyboard device expects a single stream of commands from the Game Controller, so when the game configures a Keyboard controller, it starts a thread that is solely responsible for sending commands to the keyboard device.  The KeyboardController methods that send commands to the Keyboard (the methods with the prefix \'93send_\'94) device actually queue the commands in a message queue and the sender thread processes them in order.  Since the name of the thread includes the position, the thread name is updated anytime the position is changed.  If the keyboard has no position, such as when the system is waiting for a button press to identify its position, the thread name contains its numeric ID in place of the position.\
+\
+Antenna Controllers do not have a separate thread for sending messages to the antennas since the game controller sends only one command to antenna devices (setPosition).\
+\
+
+\f0\b\fs26 \cf7 Cmd Receiver\
+
+\f1\b0\fs24 \cf0 \
+This thread waits for commands on STDIN and invokes appropriate events (evt_ methods).  The commands can control the game (e.g., newhand and quit), can generate debugging output (e.g., printstate) and can simulate messages from devices (e.g., scan).  The main Game initialization method creates this thread.\
+\
+
+\f0\b\fs26 \cf7 Sound Player\
+
+\f1\b0\fs24 \cf0 \
+This thread processes a queue of commands to play various sounds (generally voice prompts).  The AudibleGameListener responds to signals (sig_ methods) and queues the appropriate sounds to play.  When the thread is done playing the sounds, the run method exits and the thread is finished.  The SoundManager instance creates a new thread for each sequence of sounds to play (within the playSounds() method).\
+\
+
+\f0\b\fs26 \cf7  GUI threads ?\
+
+\f1\b0\fs24 \cf0 \
+\cb11 [Does the GUI run in the main thread?  There is a sleep in GameGUI.ensureMinimumDisplayTime.  I am not sure what thread is sleeping.]\cb1 \
+\
+\
+
+\f0\b\fs28 \cf8 Method Naming Conventions\
+
+\f1\b0\fs24 \cf0 \
+Since the game is multi-threaded, the classes have methods whose naming conventions indicate what parts of the system call them.\
+\
+
+\f0\b\fs26 \cf7 evt_ - asynchronous signal handlers for messages received from various devices\
+
+\f1\b0\fs24 \cf0 \
+These methods are typically called by the threads that process messages arriving from connected devices.  These methods make changes to the game that are checked by the state controller when checking to see if the state should change.  For example, when an Antenna Controller receives a card present event and the Antenna is in the \'93scan cards\'94 state (such as when scanning the dummy\'92s hand), it invokes evt_addScannedCard.  When the state controller sees that 13 cards have been scanned, it moves to the next state.  The evt_ methods also broadcast events to other parts of the system by invoking signal methods (sig_ prefix) on all registered listener objects.\
+\
+
+\f0\b\fs26 \cf4 sig_ - state machine event handlers\
+
+\f1\b0\fs24 \cf0 \
+These methods allow multiple listeners to react to changes to the system of interest to them.  For example, when a card is scanned triggering a call to evt_addScannedCard, if that method determines that the scanned card should be accepted, it signals this by invoking the sig_cardScanned method on all registered listeners.  The GUI listener may implement the sig_cardScanned method to alter the display to show the scanned card (for example, when scanning the dummy\'92s hand).\
+\
+
+\f0\b\fs26 \cf7 sc_ - state controller test methods\
+
+\f1\b0\fs24 \cf0 \
+
+\f0\b\fs26 \cf7 send_ - methods that send commands to their associated device (e.g., Blind Keyboard). \
+
+\f1\b0\fs24 \cf0 \
+These methods send specific commands to a connected device, such as the Blind player\'92s Keyboard.  These are typically invoked from event handlers and other game play functions.  They may send the command immediately (antennas), or queue it for delivery by another thread (keyboards).\
+\
+
+\f0\b\fs26 \cf7 processXX - handle raw data from a device\
+
+\f1\b0\fs24 \cf0 \
+}

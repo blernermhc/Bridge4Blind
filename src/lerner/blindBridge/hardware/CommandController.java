@@ -107,6 +107,7 @@ public class CommandController implements Runnable
     public void start ()
     {
 	    m_thread = new Thread (this);
+	    m_thread.setName("Cmd Receiver");
 	    m_thread.start ();
     }
 
@@ -116,7 +117,7 @@ public class CommandController implements Runnable
 		{
 			BufferedReader in = new BufferedReader(new InputStreamReader(m_input));
 
-			commandLine(in, m_output);
+			processInput(in, m_output);
 		}
 		catch (Exception e)
 		{
@@ -139,7 +140,7 @@ public class CommandController implements Runnable
 	 * Main loop for commands from the game controller.
 	 * Input from Keyboard Controllers are handled via interrupt handlers.
 	 ***********************************************************************/
-	public void commandLine ( BufferedReader p_in, PrintStream p_out )
+	public void processInput ( BufferedReader p_in, PrintStream p_out )
 	{
 		while (true)
 		{

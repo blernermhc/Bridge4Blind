@@ -19,9 +19,9 @@ import lerner.blindBridge.model.Trick;
 import lerner.blindBridge.model.TrickSet;
 
 /**********************************************************************
- * Communicates with a Blind players' Keyboard Controller 
+ * Handles communication with a Blind players' Keyboard device
+ * connected using a USB Serial port. 
  *********************************************************************/
-
 public class KeyboardController extends JSSCSerialController implements Runnable
 {
 	/**
@@ -167,9 +167,6 @@ public class KeyboardController extends JSSCSerialController implements Runnable
 	/** Start of messages sent by the Keyboard Hardware during boot-up or firmware reset */
 	private static final String IDENT_MSG = "Keyboard(";
 
-	/** End of message sent by the Keyboard Hardware at start of boot-up or firmware reset */
-	private static final String RESET_MSG = ": Resetting";
-
 	/** End of final message sent by the Keyboard Hardware during boot-up or firmware reset */
 	private static final String READY_MSG = ": Ready!";
 
@@ -185,10 +182,9 @@ public class KeyboardController extends JSSCSerialController implements Runnable
 	 * the Keyboard Controller until the final setup message is received.
 	 * Then switch back to byte-message mode.
 	 * <p>
-	 * Start with true, since connecting to the USB port triggers
-	 * an Arduino reset.
+	 * Start with false, since openDevice waits until reset is complete
 	 */
-	boolean m_readLineEventMode = true;
+	boolean m_readLineEventMode = false;
 	
 	/**
 	 * If true, read one ASCII newline-terminated message from
@@ -213,6 +209,12 @@ public class KeyboardController extends JSSCSerialController implements Runnable
 	// INTERNAL MEMBER DATA
 	//--------------------------------------------------
 
+	/** register our identity message */
+	static
+	{
+		addIdentMsg(IDENT_MSG);
+	}
+	
 	/***********************************************************************
 	 * Represents a message to be sent to the hardware.  Used to queue messages
 	 * so a single thread serializes the message.
@@ -306,8 +308,8 @@ public class KeyboardController extends JSSCSerialController implements Runnable
 	 */
 	private long m_messageReserveMillis = 0;
 	
-	/** thread to serialize actual sending of messages to the controller */
-	private Thread 			m_thread;
+	/** Thread to serialize actual sending of messages to the controller */
+	private Thread 			m_senderThread;
 
 	/** Buffer used to hold bytes read from serial port until a newline is read. */
 	StringBuilder m_message = new StringBuilder();
@@ -333,10 +335,12 @@ public class KeyboardController extends JSSCSerialController implements Runnable
 		//--------------------------------------------------
 		// Start thread to send queued messages to keyboard controller hardware
 		//--------------------------------------------------
-	    m_thread = new Thread (this);
-	    m_thread.start();
+	    m_senderThread = new Thread (this);
+	    m_senderThread.start();
+	    updateSenderThreadName();	// after start so it has an id, in case postion is null
 
-		if (getMyPosition() != null)
+	    // send direction to hardware, if necessary
+		if (p_direction != null)
 		{
 			setPlayer(getMyPosition());
 		}
@@ -367,11 +371,6 @@ public class KeyboardController extends JSSCSerialController implements Runnable
 	public String getIdentMsg() { return IDENT_MSG; }
 	
 	/* (non-Javadoc)
-	 * @see lerner.blindBridge.hardware.SerialController#getResetMsg()
-	 */
-	public String getResetMsg() { return RESET_MSG; }
-	
-	/* (non-Javadoc)
 	 * @see lerner.blindBridge.hardware.SerialController#getReadyMsg()
 	 */
 	public String getReadyMsg() { return READY_MSG; }
@@ -389,6 +388,7 @@ public class KeyboardController extends JSSCSerialController implements Runnable
 
 		m_myPosition = p_direction;
 		m_myPartnersPosition = p_direction.getPartner();
+		updateSenderThreadName();
 		
 		boolean status = send_multiByteMessage( MULTIBYTE_MESSAGE.SET_PLAYER
 		                                        , 0
@@ -425,7 +425,7 @@ public class KeyboardController extends JSSCSerialController implements Runnable
 	public void requestPosition()
 	{
 		m_myPosition = null;
-		m_deviceReady = false;
+		updateSenderThreadName();
 		send_simpleMessage(KBD_MESSAGE.SEND_POSITION);
 	}
 	
@@ -464,6 +464,21 @@ public class KeyboardController extends JSSCSerialController implements Runnable
 
 			if (msg != null)
 			{
+				// Wait for device to be ready before sending messages.
+				// Do not "wait" on the queue since we may not get another notification for a while.
+				while (! isDeviceReady())
+				{
+					if (s_cat.isDebugEnabled()) s_cat.debug("sendQueuedMessages: waiting for deviceReady");
+					try
+					{
+						Thread.sleep(1000);
+					}
+					catch (Exception e)
+					{
+						// do nothing
+					}
+				}
+				
 				if (s_cat.isDebugEnabled()) s_cat.debug("sendQueuedMessages: (" + m_messageReserveMillis + ") dequeued message: " + msg);
 				
 				if (msg instanceof KbdMsg_control)
@@ -521,6 +536,19 @@ public class KeyboardController extends JSSCSerialController implements Runnable
 		sendQueuedMessages();
 	}
 	
+	/***********************************************************************
+	 * Updates the name of the single thread used to send events to the
+	 * keyboard device.  Invoked when the thread is started and whenever
+	 * m_myPosition changes.  Also, signals that the receiver thread should
+	 * also be updated.
+	 ***********************************************************************/
+	private void updateSenderThreadName ()
+	{
+	    setReceiverThreadName(null);
+		if (m_senderThread == null) return;
+	    m_senderThread.setName("Kbd Sender " + (m_myPosition == null ? m_senderThread.getId() : m_myPosition));
+	}
+	
 	//--------------------------------------------------
 	// PUBLIC METHODS TO SEND EVENTS TO Keyboard Controller
 	//--------------------------------------------------
@@ -541,7 +569,8 @@ public class KeyboardController extends JSSCSerialController implements Runnable
 	 ***********************************************************************/
 	public void send_reloadFinished ()
 	{
-		if (m_myPosition != null) m_deviceReady = true;	// wait until position is known
+		// this is the last message sent to the keyboard during a reset, so mark it ready.
+		m_deviceReady = true;
 		send_simpleMessage(KBD_MESSAGE.FINISH_RELOAD);
 	}
 	
@@ -914,18 +943,19 @@ public class KeyboardController extends JSSCSerialController implements Runnable
 		return String.format("%s: %3d%4s", b, p_num, a);
 	}
 	
-
 	/********************************************************************
 	 * Handle an event on the serial port. Read the data and print it.
 	 * @param p_event	the event
 	 ********************************************************************/
 	public synchronized void serialEvent(SerialPortEvent p_event)
 	{
+		if (getReceiverThreadName() == null) updateReceiverThreadName("Kbd");
+		
 	    if(p_event.isRXCHAR() && p_event.getEventValue() > 0)
 		{
 	        try
 			{
-	            byte buffer[] = m_serialPort.readBytes();
+	            byte buffer[] = readBytesFromPort();
 	            for (byte b: buffer)
 				{
 					if (m_readLineEventMode || m_readOneLineEventMode)
@@ -935,7 +965,7 @@ public class KeyboardController extends JSSCSerialController implements Runnable
 							if (m_message.length() > 0)
 							{
 								String line = m_message.toString();
-								System.out.println("Keyboard(" + m_myPosition + "): " + line);
+								if (s_cat.isInfoEnabled()) s_cat.info("Keyboard(" + m_myPosition + "): " + line);
 								if (line.startsWith(CMD_PREFIX))
 								{
 									processIncomingCommand(line.substring(CMD_PREFIX.length()));
@@ -943,7 +973,7 @@ public class KeyboardController extends JSSCSerialController implements Runnable
 								if (line.endsWith(READY_MSG))
 								{
 									m_readLineEventMode = false;
-									System.out.println("Found " + READY_MSG);
+									if (s_cat.isInfoEnabled()) s_cat.info("Found " + READY_MSG);
 								}
 								m_readOneLineEventMode = false;
 								m_message.setLength(0);
@@ -959,17 +989,20 @@ public class KeyboardController extends JSSCSerialController implements Runnable
 					{
 						// read an 8-bit byte, but operate on it as an int, so it is, in effect, unsigned
 						int msg = b;
+						msg = (msg & 0xff);
 						if (msg != 192)
-							System.out.println("From Keyboard: " + binaryMsgToString(msg));
+							if (s_cat.isDebugEnabled()) s_cat.debug("From Keyboard: " + binaryMsgToString(msg));
 						String messageDescription = processIncomingMessage(msg);
 						if (messageDescription != null)
-							System.out.println("    Operation: " + messageDescription);
+							s_cat.info("    Operation: " + messageDescription);
 					}
 	            }                
 	        }
 	        catch (Exception e)
 			{
-				System.err.println(e.toString());
+	        		//TODO: NOTE: if this is triggered, bytes read from the device may be lost.
+	        		// However, neither process method should throw an exception, so this should not happen
+				s_cat.error("serialEvent: FAILURE: e.toString()",e);
 	        }
 		}
 		// Ignore all the other eventTypes, but you should consider the other ones.
@@ -980,10 +1013,8 @@ public class KeyboardController extends JSSCSerialController implements Runnable
 	 * @param p_msg			the message (only the low 8 bits are considered)
 	 * 						using an int rather than byte to avoid sign issues
 	 * @return a description of the message
-	 * @throws IOException if there are communication problems
 	 ***********************************************************************/
 	public String processIncomingMessage (int p_msg)
-		throws IOException
 	{
 		int opId = (p_msg >> 6);
 		int cardId = (p_msg & 0b00111111);
@@ -1041,7 +1072,7 @@ public class KeyboardController extends JSSCSerialController implements Runnable
 				}
 				else if (cardId == 2)
 				{
-					System.out.println("    about to initiate reset");
+					s_cat.info("    about to initiate reset");
 					m_deviceReady = false;
 					m_timeOfLastMessage = System.currentTimeMillis();	// Hardware announces reset start
 					m_messageReserveMillis = 1500;
@@ -1103,7 +1134,7 @@ public class KeyboardController extends JSSCSerialController implements Runnable
 				{
 					if (args.length != 1)
 						throw new IllegalArgumentException("Wrong number of arguments");
-					System.out.println("    about to initiate reset");
+					s_cat.info("    about to initiate reset");
 					m_deviceReady = false;
 					m_timeOfLastMessage = System.currentTimeMillis();	// Hardware announces reset start
 					m_messageReserveMillis = 1500;
@@ -1113,7 +1144,7 @@ public class KeyboardController extends JSSCSerialController implements Runnable
 
 				case DEBUG:
 				{
-					System.out.println(p_line);
+					s_cat.info(p_line);
 				}
 				break;
 				
@@ -1145,7 +1176,7 @@ public class KeyboardController extends JSSCSerialController implements Runnable
 					id = Integer.parseInt(args[++idx]);
 					Direction direction = Direction.values()[id];
 					m_myPosition = direction;
-					m_deviceReady = true;
+					updateSenderThreadName();
 					send_multiByteMessage(MULTIBYTE_MESSAGE.SET_PLAYER, m_myPosition);
 				}
 				break;
@@ -1208,10 +1239,9 @@ public class KeyboardController extends JSSCSerialController implements Runnable
 		}
 		catch (Exception e)
 		{
-			System.out.print("Error: ");
-			System.out.println(e.getMessage());
-			e.printStackTrace(System.out);
-			if (cmd != null) System.out.println(cmd.getDescription());
+			s_cat.error(e.getMessage(), e);
+			// e.printStackTrace(System.out);
+			if (cmd != null) s_cat.error(cmd.getDescription());
 		}
 	}
 
@@ -1534,15 +1564,6 @@ public class KeyboardController extends JSSCSerialController implements Runnable
 	public Direction getMyPartnersPosition ()
 	{
 		return m_myPartnersPosition;
-	}
-
-	/***********************************************************************
-	 * Indicates if the device has completed initialization or reset
-	 * @return true if ready, false otherwise
-	 ***********************************************************************/
-	public boolean isDeviceReady ()
-	{
-		return m_deviceReady;
 	}
 
 }

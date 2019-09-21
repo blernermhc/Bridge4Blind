@@ -15,9 +15,11 @@ import lerner.blindBridge.model.Suit;
 import lerner.blindBridge.model.Trick;
 
 /**********************************************************************
- * Communicates with an RFID Antenna Controller 
+ * Handles communication with an RFID card reader device connected
+ * using a USB Serial port. Note that the Blind player's keyboard device
+ * also includes an RFID card reader.  This class handles the embedded
+ * card reader. An instance of KeyboardController handles the keyboard itself.
  *********************************************************************/
-
 public class AntennaController extends JSSCSerialController
 {
 	/**
@@ -62,6 +64,13 @@ public class AntennaController extends JSSCSerialController
 	//--------------------------------------------------
 	// INTERNAL MEMBER DATA
 	//--------------------------------------------------
+	
+	/** register our identity message */
+	static
+	{
+		addIdentMsg(IDENT_MSG);
+	}
+	
 
 	enum AntennaControllerState {
 		  DETERMINE_POSITION
@@ -98,6 +107,7 @@ public class AntennaController extends JSSCSerialController
 		throws IOException
 	{
 		super(p_game, p_direction, p_deviceName, p_hasHardware);
+		
 		if (getMyPosition() != null)
 		{
 			send_setPosition(getMyPosition());
@@ -130,11 +140,6 @@ public class AntennaController extends JSSCSerialController
 	public String getIdentMsg() { return IDENT_MSG; }
 	
 	/* (non-Javadoc)
-	 * @see lerner.blindBridge.hardware.SerialController#getResetMsg()
-	 */
-	public String getResetMsg() { return RESET_MSG; }
-	
-	/* (non-Javadoc)
 	 * @see lerner.blindBridge.hardware.SerialController#getReadyMsg()
 	 */
 	public String getReadyMsg() { return READY_MSG; }
@@ -146,7 +151,7 @@ public class AntennaController extends JSSCSerialController
 	public void requestPosition()
 	{
 		m_myPosition = null;
-		m_deviceReady = false;
+		setReceiverThreadName(null);
 		m_controllerState = AntennaControllerState.DETERMINE_POSITION;
 	}
 	
@@ -157,6 +162,12 @@ public class AntennaController extends JSSCSerialController
 	public void send_setPosition ( Direction p_direction )
 	{
 		if (isVirtualController()) return;
+		
+		if (! isDeviceReady())
+		{
+			if (s_cat.isDebugEnabled()) s_cat.debug("send_setPosition(" + getFullName() + "): device is not ready yet.  Try again later");
+			return;
+		}
 
 		if (m_output == null)
 		{
@@ -198,6 +209,7 @@ public class AntennaController extends JSSCSerialController
 			default:			return null;
 		}
 		
+		setReceiverThreadName(null);
 		return m_myPosition;
 	}
 
@@ -225,8 +237,7 @@ public class AntennaController extends JSSCSerialController
 		
 		if (p_line.endsWith(READY_MSG))
 		{
-			// do not signal ready if position is still unknown
-			if (m_controllerState != AntennaControllerState.DETERMINE_POSITION) m_deviceReady = true;
+			m_deviceReady = true;
 			return p_line;
 		}
 		
@@ -290,7 +301,6 @@ public class AntennaController extends JSSCSerialController
 					description = "Card scan set my postion to: " + m_myPosition;
 					m_controllerState = AntennaControllerState.CAPTURE_CARD;
 					send_setPosition(m_myPosition);
-					m_deviceReady = true;
 				}
 				else
 				{
@@ -339,11 +349,13 @@ public class AntennaController extends JSSCSerialController
 	 * *******************************************************************/
 	public synchronized void serialEvent(SerialPortEvent p_event)
 	{
-	    if(p_event.isRXCHAR() && p_event.getEventValue() > 0)
+		if (getReceiverThreadName() == null) updateReceiverThreadName("Ant");
+
+		if(p_event.isRXCHAR() && p_event.getEventValue() > 0)
 		{
 	        try
 			{
-	            byte buffer[] = m_serialPort.readBytes();
+	            byte buffer[] = readBytesFromPort();
 	            for (byte b: buffer)
 				{
 					if ( b == '\n')
@@ -365,7 +377,9 @@ public class AntennaController extends JSSCSerialController
 	        }
 	        catch (Exception e)
 			{
-				System.err.println(e.toString());
+	        		//TODO: NOTE: if this is triggered, bytes read from the device may be lost.
+	        		// However, process method should never throw an exception, so this should not happen
+				s_cat.error("serialEvent: FAILURE: e.toString()",e);
 	        }
 	    }
 		// Ignore all the other eventTypes, but you should consider the other ones.
@@ -632,15 +646,6 @@ public class AntennaController extends JSSCSerialController
 	public synchronized Card getCurrentCard ()
 	{
 		return m_currentCard;
-	}
-
-	/***********************************************************************
-	 * Indicates if the device has completed initialization or reset
-	 * @return true if ready, false otherwise
-	 ***********************************************************************/
-	public boolean isDeviceReady ()
-	{
-		return m_deviceReady;
 	}
 
 }

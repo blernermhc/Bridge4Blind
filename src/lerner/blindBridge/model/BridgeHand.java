@@ -42,7 +42,7 @@ import lerner.blindBridge.stateMachine.BridgeHandState;
  *  <br>evt_playCard - plays a card
  *  
  *  <br>evt_resetKeyboard - resends the current state to a Keyboard Controller
- *  in response to a request from the Keybaord Controller to be reset.
+ *  in response to a request from the Keyboard Controller to be reset.
  *  We need to wait for the request, so we know it is listening.  This
  *  can be run in any hand state and does not change the hand state.
  *  
