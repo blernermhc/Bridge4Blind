@@ -1,9 +1,9 @@
 package lerner.blindBridge.gui;
 
 import java.awt.BorderLayout;
+import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.Graphics;
-import java.awt.GridLayout;
 
 import javax.swing.BoxLayout;
 import javax.swing.JLabel;
@@ -44,8 +44,8 @@ public class HelpGUI extends BridgeJPanel
 	private JPanel createHelpPanel ()
 	{
 
-		JPanel helpPanel = new JPanel(new GridLayout(0, 1));
-		helpPanel.add(new JLabel(""));
+		JPanel helpPanel = new JPanel(new FlowLayout());
+//		helpPanel.add(new JLabel(""));
 
 		Font f = new Font("helpFont", Font.PLAIN, 18);
 
@@ -85,7 +85,7 @@ public class HelpGUI extends BridgeJPanel
 		helpPanel.add(helpLabel2);
 		 */
 		
-		helpPanel.add(new JLabel(""));
+		//helpPanel.add(new JLabel(""));
 
 		return helpPanel;
 	}
