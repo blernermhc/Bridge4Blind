@@ -49,6 +49,9 @@ public class GameGUI extends JFrame implements GameListener_sparse
 	/** the currently visible GUI */
 	private static GameGUIs		m_currentScreen;
 
+	/** the visible GUI before switching to a temporary screen, such as HELP */
+	private static GameGUIs		m_previousScreen = null;
+
 	/** Maximum delay to insert to ensure requested minimum GUI display time (in milliseconds) */
 	private static final long MAX_DISPLAY_DELAY_MILLIS = 5000;  
 
@@ -321,7 +324,16 @@ public class GameGUI extends JFrame implements GameListener_sparse
 	@SuppressWarnings("boxing")
 	public void showHelp ()
 	{
-		changeFrame(GameGUIs.HELP_GUI);
+		if (m_currentScreen == GameGUIs.HELP_GUI && m_previousScreen != null)
+		{
+			changeFrame(m_previousScreen);
+			m_previousScreen = null;
+		}
+		else
+		{
+			m_previousScreen = m_currentScreen;
+			changeFrame(GameGUIs.HELP_GUI);
+		}
 	}
 
 	public void undoButtonSetEnabled ( boolean enabled )
