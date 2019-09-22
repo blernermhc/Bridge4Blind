@@ -97,7 +97,7 @@ public class GameGUI_builder
 	private JPanel createButtonPanel ()
 	{
 		JPanel southPanel = new JPanel(new GridLayout(1, 0));
-		southPanel.add(createResumeButtonPanel());
+		// southPanel.add(createResumeButtonPanel());
 		southPanel.add(createUndoButtonPanel());
 		southPanel.add(createRedoButtonPanel());
 		southPanel.add(createHelpButtonPanel());
@@ -320,24 +320,19 @@ public class GameGUI_builder
 	 */
 	protected JPanel createHelpButtonPanel ()
 	{
-
-		JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 5));
 		m_helpButton = GUIUtilities.createButton("Help");
-
 		m_helpButton.addActionListener(new ActionListener()
 		{
 
 			@Override
-			public void actionPerformed ( ActionEvent arg0 )
+			public void actionPerformed ( ActionEvent evt )
 			{
 				m_gameGUI.showHelp();
 			}
 
 		});
 
-		panel.add(GUIUtilities.packageButton(m_helpButton, FlowLayout.CENTER));
-		return panel;
-
+		return GUIUtilities.packageButton(m_helpButton, FlowLayout.CENTER);
 	}
 
 	/**
