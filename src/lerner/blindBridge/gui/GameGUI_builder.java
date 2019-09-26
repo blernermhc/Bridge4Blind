@@ -106,6 +106,7 @@ public class GameGUI_builder
 		m_splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT,
 		                                      gamePanel, m_consolePanel);
 		m_splitPane.setOneTouchExpandable(true);
+		m_splitPane.setDividerSize((int) (m_splitPane.getDividerSize() * 2.0));
 		// Invoke restoreDefaults() to hide bottom initially 
 		
 		m_mainPanel = new JPanel(new BorderLayout());
