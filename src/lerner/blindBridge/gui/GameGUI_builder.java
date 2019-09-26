@@ -6,19 +6,28 @@ package lerner.blindBridge.gui;
 
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
+import java.awt.Color;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
 import javax.swing.JTextArea;
+import javax.swing.JTextField;
+import javax.swing.ScrollPaneConstants;
+import javax.swing.SwingUtilities;
 
-import org.apache.log4j.Category;
-
+import lerner.blindBridge.hardware.CommandController;
 import lerner.blindBridge.main.Game;
+import lerner.blindBridge.main.JTextAreaAppender;
 
 /***********************************************************************
  * Methods for constructing the GUI frames
@@ -29,7 +38,7 @@ public class GameGUI_builder
 	/**
 	 * Used to collect logging output for this class
 	 */
-	private static Category s_cat = Category.getInstance(GameGUI_builder.class.getName());
+	// private static Category s_cat = Category.getInstance(GameGUI_builder.class.getName());
 
 	//--------------------------------------------------
 	// CONSTANTS
@@ -56,7 +65,7 @@ public class GameGUI_builder
 	private CardLayout			m_layout;
 
 	// buttons
-	private JButton				m_resumeButton;
+	private JButton				m_consoleButton;
 
 	private JButton				m_undoButton;
 
@@ -65,6 +74,10 @@ public class GameGUI_builder
 	private JButton				m_helpButton;
 
 	private JButton				m_quitButton;
+	
+	private JPanel				m_consolePanel;
+	
+	private JSplitPane			m_splitPane;
 
 	private GameGUI				m_gameGUI;
 	
@@ -82,13 +95,38 @@ public class GameGUI_builder
 		createCards();
 
 		// create the main panel
-		m_mainPanel = new JPanel();
-		m_mainPanel.setLayout(new BorderLayout());
-		// mainPanel.add(createInfoPanel(), BorderLayout.NORTH);
-		m_mainPanel.add(m_cardPanel, BorderLayout.CENTER);
-		m_mainPanel.add(createButtonPanel(), BorderLayout.SOUTH);
+		JPanel gamePanel = new JPanel();
+		gamePanel.setLayout(new BorderLayout());
+		// gamePanel.add(createInfoPanel(), BorderLayout.NORTH);
+		gamePanel.add(m_cardPanel, BorderLayout.CENTER);
+		gamePanel.add(createButtonPanel(), BorderLayout.SOUTH);
 		
+		m_consolePanel = createConsolePanel();
+		
+		m_splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT,
+		                                      gamePanel, m_consolePanel);
+		m_splitPane.setOneTouchExpandable(true);
+		// Invoke restoreDefaults() to hide bottom initially 
+		
+		m_mainPanel = new JPanel(new BorderLayout());
+		m_mainPanel.add(m_splitPane, BorderLayout.CENTER);
+
 	}
+	
+    /***********************************************************************
+     * Invoke after display is visible so we can set divider to initially hide console.
+     ***********************************************************************/
+    public void restoreDefaults()
+    {
+        SwingUtilities.invokeLater(new Runnable() {
+
+            @Override
+            public void run()
+            {
+            		m_splitPane.setDividerLocation(1.0d);
+            }
+        });
+    }
 
 	//--------------------------------------------------
 	// METHODS
@@ -96,16 +134,81 @@ public class GameGUI_builder
 
 	private JPanel createButtonPanel ()
 	{
-		JPanel southPanel = new JPanel(new GridLayout(1, 0));
-		// southPanel.add(createResumeButtonPanel());
+		//JPanel southPanel = new JPanel(new GridLayout(1, 0));
+		JPanel southPanel = new JPanel(new FlowLayout());
+		//southPanel.add(createConsoleButtonPanel());
 		southPanel.add(createUndoButtonPanel());
 		southPanel.add(createRedoButtonPanel());
 		southPanel.add(createHelpButtonPanel());
 		southPanel.add(createQuitPanel());
+		
+		//JPanel bottomPanel = new JPanel(new GridLayout(0,1));
+		//bottomPanel.add(southPanel);
+		//bottomPanel.add(createConsolePanel());
+		
 		return southPanel;
 	}
 
-	@SuppressWarnings("boxing")
+	private JPanel createConsolePanel()
+	{
+		m_consolePanel = new JPanel(new BorderLayout());
+
+		JPanel outPanel = new JPanel();
+		outPanel.setLayout(new BoxLayout(outPanel, BoxLayout.Y_AXIS));
+
+		//----------------------------------------
+		// Create debug output panel
+		//----------------------------------------
+		JTextArea debugOutputArea = new JTextArea(5,0); // 5 lines high here
+		debugOutputArea.setLineWrap(true);
+		debugOutputArea.setWrapStyleWord(true);
+		debugOutputArea.setEditable (false);
+		//jLoggingConsole.setFont(new Font("Courier", Font.PLAIN, 12));
+
+		// Make scrollable console pane
+		JScrollPane jConsoleScroll = new JScrollPane(debugOutputArea);
+		jConsoleScroll.setVerticalScrollBarPolicy ( ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS );
+
+		// Subscribe the text area to JTextAreaAppender
+		JTextAreaAppender.addLog4j2TextAreaAppender(debugOutputArea);
+
+		outPanel.add(jConsoleScroll);
+
+		//----------------------------------------
+		// Create standard output panel
+		//----------------------------------------
+		JTextArea stdOutArea = new JTextArea(5,80);
+		outPanel.add( new JScrollPane( stdOutArea ) );
+		MessageConsole mc = new MessageConsole(stdOutArea);
+		mc.redirectOut(null, System.out);
+		mc.redirectErr(Color.RED, System.err);
+		// mc.setMessageLines(100);
+
+		m_consolePanel.add(outPanel,BorderLayout.CENTER);
+		
+		//----------------------------------------
+		// Create standard input panel
+		//----------------------------------------
+		JTextField field = new JTextField();
+		field.setUI(new HintTextFieldUI("Command", true));
+		Action action = new AbstractAction()
+		{
+			@Override
+			public void actionPerformed(ActionEvent e)
+			{
+				String line = field.getText();
+				System.out.println(CommandController.COMMAND_PROMPT + line);
+				m_game.getCommandController().processCommand(line);
+				field.setText("");
+			}
+		};
+		field.addActionListener( action );
+		m_consolePanel.add(field,BorderLayout.SOUTH);
+
+		//m_consolePanel.setVisible(false);	// console button toggles visibility
+		return m_consolePanel;
+	}
+
 	private void createCards ()
 	{
 		m_cardPanel = new JPanel();
@@ -336,77 +439,28 @@ public class GameGUI_builder
 	}
 
 	/**
-	 * Creates the "resume" button panel at the bottom of the screen.
+	 * Creates the "console" button panel at the bottom of the screen.
 	 * 
-	 * @return A JPanel containing a single, left-oriented "Resume" button.
+	 * @return A JPanel containing a single, left-oriented "Console" button.
 	 */
-	protected JPanel createResumeButtonPanel ()
+	protected JPanel createConsoleButtonPanel ()
 	{
-
-		// create a new JPanel with a FlowLayout
-		JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 5));
-		m_resumeButton = GUIUtilities.createButton("Resume");
-		m_resumeButton.addActionListener(new ActionListener()
+		m_consoleButton = GUIUtilities.createButton("Console");
+		m_consoleButton.addActionListener(new ActionListener()
 		{
 
 			@Override
-			public void actionPerformed ( ActionEvent arg0 )
+			public void actionPerformed ( ActionEvent evt )
 			{
-				// reverse();
-				/*
-				 * rick if (game != null) { System.out.println("Stopping server"); try {
-				 * game.closeHandler(); //BridgeActualGame.closeServerWindow();
-				 * 
-				 * } catch (IOException e) { // TODO Auto-generated catch block
-				 * System.out.println("Unable to close connection"); e.printStackTrace(); } }
-				 */
-
-				// game.resumeGame();
-				/* rick: start GUI from game
-				sig_debugMsg("Starting server");
-				BridgeActualGame.startServer();
-				*/
-
-				// start the game 15 seconds after starting the C# Server
-				/*
-				 * rick TimerTask timerTask = new TimerTask() {
-				 * 
-				 * @Override public void run() {
-				 * 
-				 * try { sig_debugMsg("Activating antennas"); game.activateAntennas(); Handler
-				 * handler = game.getHandler(); if (handler != null) { new Thread(handler,
-				 * "Antenna handler").start() ; }
-				 * 
-				 * 
-				 * } catch (UnknownHostException e) {
-				 * 
-				 * // TODO Auto-generated catch block sig_debugMsg(e.getMessage());
-				 * e.printStackTrace();
-				 * 
-				 * } catch (IOException e) {
-				 * 
-				 * // TODO Auto-generated catch block sig_debugMsg(e.getMessage());
-				 * e.printStackTrace(); } sig_debugMsg("Resuming game"); game.resumeGame();
-				 * sig_debugMsg("Game resumed"); }
-				 * 
-				 * };
-				 * 
-				 * // wait 4 seconds after starting the server to start the game Timer timer = new
-				 * Timer(true); timer.schedule(timerTask, 4000);
-				 */
-
+				if (m_consolePanel == null) return;
+				m_consolePanel.setVisible(! m_consolePanel.isVisible());
+				
+				System.out.println("createConsoleButton: set visible to " + m_consolePanel.isVisible());
 			}
 
 		});
 
-		if (Game.isTestMode())
-		{
-
-			m_resumeButton.setEnabled(false);
-		}
-
-		panel.add(GUIUtilities.packageButton(m_resumeButton, FlowLayout.LEFT));
-		return panel;
+		return GUIUtilities.packageButton(m_consoleButton, FlowLayout.CENTER);
 	}
 
 	/***********************************************************************
@@ -416,7 +470,8 @@ public class GameGUI_builder
 	 ***********************************************************************/
 	public void show ( GameGUIs p_gui )
 	{
-		if (s_cat.isDebugEnabled()) s_cat.debug("show: changing to GUI: " + p_gui);
+		// IMPORTANT: do not generate log4j messages here.
+		// This will cause some sort of loop in JTextAreaAppender
 		m_layout.show(m_cardPanel, p_gui.getName());
 	}
 	

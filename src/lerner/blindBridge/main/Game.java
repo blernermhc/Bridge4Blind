@@ -18,7 +18,11 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.log4j.Category;
+import org.apache.log4j.Logger;
 import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.core.config.LoggerConfig;
 
 import lerner.blindBridge.audio.AudibleGameListener;
 import lerner.blindBridge.gui.GameGUI;
@@ -43,7 +47,7 @@ public class Game
 	/**
 	 * Used to collect logging output for this class
 	 */
-	static Category s_cat = Category.getInstance(Game.class.getName());
+	static Category s_cat = Logger.getLogger(Game.class);
 
 	//--------------------------------------------------
 	// CONSTANTS
@@ -113,7 +117,7 @@ public class Game
 		throws Exception
 	{
 		Level logLevel = Level.WARN;		// use warn until we determine what command line indicates
-		Logger.initialize(logLevel);
+		resetLogLevel(logLevel);
 
 		//------------------------------
 		// Create the game data object and state machine
@@ -229,8 +233,8 @@ public class Game
 			//------------------------------
 			// Update logging level
 			//------------------------------
-			Logger.resetConfiguration();
-			Logger.initialize(logLevel);
+			resetLogLevel(logLevel);
+
 			if (s_cat.isDebugEnabled())
 			{
 				s_cat.debug("args: ");
@@ -240,12 +244,6 @@ public class Game
 				}
 			}
 
-			//------------------------------
-			// Create the command line input controller and start it
-			//------------------------------
-			m_commandController = new CommandController(this, System.in, System.out);
-			m_commandController.start();
-			
 			//------------------------------
 			// Create the Audio generator and add it as an event listener
 			//------------------------------
@@ -258,6 +256,13 @@ public class Game
 			m_gameGUI = new GameGUI(this);
 			addGameListener(m_gameGUI);
 		
+			//------------------------------
+			// Create the command line input controller and start it
+			// NOTE: init CommandController after GameGUI because GameGUI redirects stdout
+			//------------------------------
+			m_commandController = new CommandController(this, System.in, System.out);
+			m_commandController.start();
+			
 			//------------------------------
 			// Read card libraries
 			//------------------------------
@@ -366,6 +371,17 @@ public class Game
 		// Start the game
 		//------------------------------
 		m_bridgeHandStateController.runStateMachine();
+	}
+
+	/***********************************************************************
+	 * Resets logLevel
+	 ***********************************************************************/
+	public static void resetLogLevel (Level p_logLevel)
+	{
+		LoggerContext ctx = (LoggerContext) LogManager.getContext(false);
+		LoggerConfig log = ctx.getConfiguration().getRootLogger();
+		log.setLevel(p_logLevel);
+		ctx.updateLoggers();
 	}
 
 	/***********************************************************************
@@ -768,6 +784,15 @@ public class Game
 	public Map<Direction, AntennaController> getAntennaControllers ()
 	{
 		return m_antennaControllers;
+	}
+
+	/***********************************************************************
+	 * The object used to process command line input.
+	 * @return command controller
+	 ***********************************************************************/
+	public CommandController getCommandController ()
+	{
+		return m_commandController;
 	}
 
 	/***********************************************************************

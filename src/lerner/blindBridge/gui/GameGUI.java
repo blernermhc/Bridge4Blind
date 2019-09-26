@@ -16,7 +16,7 @@ import lerner.blindBridge.model.GameListener_sparse;
 import lerner.blindBridge.model.Trick;
 
 /**
- * The Game class controls the UI for a game of bridge
+ * The GameGUI class controls the UI for a game of bridge
  * 
  * @author Allison DeJordy
  * @version March 12, 2015
@@ -109,6 +109,8 @@ public class GameGUI extends JFrame implements GameListener_sparse
 		this.setVisible(true);
 		this.requestFocusInWindow();
 
+		m_gameGUI_builder.restoreDefaults();
+		
 		// System.out.println("current screen initially " + currentScreen);
 
 		// needed to detect when the this gui is closed

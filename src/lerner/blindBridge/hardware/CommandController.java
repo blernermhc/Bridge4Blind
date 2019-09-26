@@ -70,6 +70,9 @@ public class CommandController implements Runnable
 		public String getDescription() { return f_description; } 
 	}
 
+	/** prompt to display when asking for a command */
+	public static final String COMMAND_PROMPT = "Enter Command: ";
+	
 	//--------------------------------------------------
 	// CONFIGURATION MEMBER DATA
 	//--------------------------------------------------
@@ -117,7 +120,7 @@ public class CommandController implements Runnable
 		{
 			BufferedReader in = new BufferedReader(new InputStreamReader(m_input));
 
-			processInput(in, m_output);
+			processInput(in);
 		}
 		catch (Exception e)
 		{
@@ -140,11 +143,11 @@ public class CommandController implements Runnable
 	 * Main loop for commands from the game controller.
 	 * Input from Keyboard Controllers are handled via interrupt handlers.
 	 ***********************************************************************/
-	public void processInput ( BufferedReader p_in, PrintStream p_out )
+	public void processInput ( BufferedReader p_in )
 	{
 		while (true)
 		{
-			p_out.println("Enter command: ");
+			m_output.println(COMMAND_PROMPT);
 			String line = "";
 			try
 			{
@@ -155,346 +158,356 @@ public class CommandController implements Runnable
 				s_cat.error("commandLine: read failed", e);
 			}
 			
-			if (line.trim().equals("")) continue;	// skip empty input
-			
-			if (line.trim().equals("?")) line = "help";
+			processCommand(line);
+		}
+	}
 
-			CommandController.BridgeCommand cmd = null;
+	/***********************************************************************
+	 * Processes a line of input entered from the command line.
+	 * @param p_line		the line to process
+	 ***********************************************************************/
+	public void processCommand ( String p_line )
+	{
+		if (p_line.trim().equals(""))
+		 return;
+		
+		if (p_line.trim().equals("?")) p_line = "help";
+
+		CommandController.BridgeCommand cmd = null;
+		try
+		{
+			// special case for b (add space after b, if missing)
+			if (p_line.matches("^[bB][nNeEsSwW] .*"))
+			{
+				p_line = "b " + p_line.substring(1);
+			}
+
+			// special case for scan (add space after s, if missing)
+			if (p_line.matches("^[sS][nNeEsSwW] .*"))
+			{
+				p_line = "s " + p_line.substring(1);
+			}
+
+			// special case for scan with no spaces
+			if (p_line.matches("^[sS][nNeEsSwW]([1-9jJqQkKaA]|10)[cCdDhHsS]"))
+			{
+				p_line = "s " + p_line.substring(1,2) + " " + p_line.substring(2);
+			}
+
+			// special case for printhand
+			if (p_line.matches("^[pP][hH] [nNeEsSwWaA]"))
+			{
+				p_line = "printhand " + p_line.substring(3);
+			}
+
+			// special case for printhand with missing space
+			if (p_line.matches("^[pP][hH][nNeEsSwWaA]"))
+			{
+				p_line = "printhand " + p_line.substring(2);
+			}
+
+			// special case for p (add space after s, if missing)
+			if (p_line.matches("^[pP][sS]$"))
+			{
+				p_line = "printstate";
+			}
+
+			String[] args = p_line.split(" ");
+			if (args.length <= 0) return;
+			
 			try
 			{
-				// special case for b (add space after b, if missing)
-				if (line.matches("^[bB][nNeEsSwW] .*"))
-				{
-					line = "b " + line.substring(1);
-				}
-
-				// special case for scan (add space after s, if missing)
-				if (line.matches("^[sS][nNeEsSwW] .*"))
-				{
-					line = "s " + line.substring(1);
-				}
-
-				// special case for scan with no spaces
-				if (line.matches("^[sS][nNeEsSwW]([1-9jJqQkKaA]|10)[cCdDhHsS]"))
-				{
-					line = "s " + line.substring(1,2) + " " + line.substring(2);
-				}
-
-				// special case for printhand
-				if (line.matches("^[pP][hH] [nNeEsSwWaA]"))
-				{
-					line = "printhand " + line.substring(3);
-				}
-
-				// special case for printhand with missing space
-				if (line.matches("^[pP][hH][nNeEsSwWaA]"))
-				{
-					line = "printhand " + line.substring(2);
-				}
-
-				// special case for p (add space after s, if missing)
-				if (line.matches("^[pP][sS]$"))
-				{
-					line = "printstate";
-				}
-
-				String[] args = line.split(" ");
-				if (args.length <= 0) continue;
-				
-				try
-				{
-					cmd = CommandController.BridgeCommand.valueOf(args[0].toUpperCase());
-				}
-				catch (Exception e)
-				{
-					p_out.println("Unknown command: " + cmd + " Enter help to list commands");
-					continue;
-				}
-				
-				switch (cmd)
-				{
-					case SHOWKBDS:
-					{
-						int idx = 0;
-						p_out.println("Keyboards:");
-						for (KeyboardController kbdController : m_game.getKeyboardControllers().values())
-						{
-							String dir = "" + kbdController.getMyPosition();
-							String portName = (kbdController.m_serialPort == null ? "null" : kbdController.m_serialPort.getPortName());
-							p_out.println("  " + idx + ": " + dir + " (" + portName + ")");
-							++idx;
-						}
-					}
-					break;
-					
-					case REINITPOS:
-					{ // change the position of a keyboard
-						if (args.length != 1)
-							throw new IllegalArgumentException("Wrong number of arguments");
-						m_game.evt_resetControllerPositions();
-					}
-					break;
-						
-					case QUIT:
-					{ // change the position of a keyboard
-						if (args.length != 1)
-							throw new IllegalArgumentException("Wrong number of arguments");
-						m_game.evt_exit();
-					}
-					break;
-						
-					case SHOWANTS:
-					{
-						int idx = 0;
-						p_out.println("Antennas:");
-						for (AntennaController antennaController : m_game.getAntennaControllers().values())
-						{
-							String dir = "" + antennaController.getMyPosition();
-							String portName = (antennaController.m_serialPort == null ? "null" : antennaController.m_serialPort.getPortName());
-							p_out.println("  " + idx + ": " + dir + " (" + portName + ")");
-							++idx;
-						}
-					}
-					break;
-					
-					/*
-					case ANTPOS:
-					{ // change the position of an antenna
-						if (args.length != 3)
-							throw new IllegalArgumentException("Wrong number of arguments");
-						int idx = 0;
-						int antIndex = Integer.parseInt(args[++idx]);
-						if (antIndex < 0 || antIndex >= m_antennaControllerList.size())
-							throw new IllegalArgumentException("Invalid antIndex: " + antIndex);
-						Direction direction = Direction.fromString(args[++idx]);
-						AntennaController antennaController = m_antennaControllerList.get(antIndex);
-						m_antennaControllers.remove(antennaController.getMyPosition());
-						antennaController.setPlayer(direction);
-						m_antennaControllers.put(direction, antennaController);
-					}
-					break;
-					*/
-						
-					case NEWHAND:
-					{
-						m_game.evt_startNewHand();
-					}
-					break;
-						
-					case CONTRACT:
-					{
-						if (args.length != 4)
-							throw new IllegalArgumentException("Wrong number of arguments");
-						int idx = 0;
-						Direction direction = Direction.fromString(args[++idx]);
-						int numTricks = Integer.parseInt(args[++idx]);
-						if (numTricks < 0 || numTricks > 7)
-							throw new IllegalArgumentException("Invalid numTricks: " + numTricks);
-						Suit suit = Suit.valueOf(args[++idx].toUpperCase());
-						Contract contract = new Contract(direction, suit, numTricks);
-						m_game.getBridgeHand().evt_setContract(contract);
-					}
-					break;
-
-					case PLAY:
-					{
-						if (args.length != 3)
-							throw new IllegalArgumentException("Wrong number of arguments");
-						int idx = 0;
-						Direction direction = Direction.fromString(args[++idx]);
-						Card card = new Card(args[++idx]);
-						m_game.getBridgeHand().evt_playCard(direction, card);
-					}
-					break;
-						
-					case REOPEN:
-					{
-						if (args.length == 1)
-						{
-							m_game.reopenAllPorts();
-							break;
-						}
-						if (args.length != 2)
-							throw new IllegalArgumentException("Wrong number of arguments");
-						int idx = 0;
-						Direction direction = Direction.fromString(args[++idx]);
-						KeyboardController kbdController = m_game.getKeyboardControllers().get(direction); 
-						if (kbdController != null)
-						{
-							kbdController.reopen();
-						}
-					}
-					break;
-						
-					case REOPENANT:
-					{
-						if (args.length != 2)
-							throw new IllegalArgumentException("Wrong number of arguments");
-						int idx = 0;
-						Direction direction = Direction.fromString(args[++idx]);
-						AntennaController antController = m_game.getAntennaControllers().get(direction); 
-						if (antController != null)
-						{
-							antController.reopen();
-						}
-					}
-					break;
-						
-					case RESET:
-					{
-						if (args.length != 2)
-							throw new IllegalArgumentException("Wrong number of arguments");
-						int idx = 0;
-						Direction direction = Direction.fromString(args[++idx]);
-						KeyboardController kbdController = m_game.getKeyboardControllers().get(direction); 
-						if (kbdController != null) kbdController.send_simpleMessage(KBD_MESSAGE.START_RELOAD);
-					}
-					break;
-						
-					case CANCELRESET:
-					{	// should not be necessary; ensures audio is enabled
-						if (args.length != 2)
-							throw new IllegalArgumentException("Wrong number of arguments");
-						int idx = 0;
-						Direction direction = Direction.fromString(args[++idx]);
-						KeyboardController kbdController = m_game.getKeyboardControllers().get(direction); 
-						if (kbdController != null) kbdController.send_reloadFinished();
-					}
-					break;
-						
-					case DEAL:
-					{
-						if (args.length != 1 && args.length != 2)
-							throw new IllegalArgumentException("Wrong number of arguments");
-						int idx = 0;
-						int testHand = -1;
-						if (args.length == 2)
-						{
-							testHand = Integer.parseInt(args[++idx]);
-							if (testHand < 0 || testHand >=  BridgeHand.m_testHand.length)
-							throw new IllegalArgumentException("Invalid testHand: " + testHand);
-						}
-						m_game.getBridgeHand().evt_dealHands(testHand);
-					}
-					break;
-						
-					case B:
-					{
-						if (args.length != 3)
-							throw new IllegalArgumentException("Wrong number of arguments");
-						int idx = 0;
-						Direction direction = Direction.fromString(args[++idx]);
-						KeyboardController kbdController = m_game.getKeyboardControllers().get(direction); 
-						if (kbdController != null) kbdController.send_pressButton(args[++idx]);
-					}
-					break;
-						
-					case S:
-					{
-						if (args.length != 3)
-							throw new IllegalArgumentException("Wrong number of arguments");
-						int idx = 0;
-						Direction direction = Direction.fromString(args[++idx]);
-						Card card = new Card(args[++idx]);
-						AntennaController antController = m_game.getAntennaControllers().get(direction); 
-						if (antController != null)
-						{
-							p_out.println("Ant[" + direction + "] " + antController.processCardPresentEvent(card));
-							p_out.println("Ant[" + direction + "] " + antController.processCardRemovedEvent());
-						}
-							
-					}
-					break;
-						
-					case PRINTHAND:
-					{
-						if (args.length != 2)
-							throw new IllegalArgumentException("Wrong number of arguments");
-						int idx = 0;
-						String dirString = args[++idx];
-						if (dirString.toUpperCase().equals("A"))
-						{
-							for (Direction direction : Direction.values())
-							{
-								printHand(p_out, direction);
-							}
-						}
-						else
-						{
-							Direction direction = Direction.fromString(dirString);
-							printHand(p_out, direction);
-						}
-					}
-					break;
-					
-					case PRINTSTATE:
-					{
-						if (args.length != 1)
-							throw new IllegalArgumentException("Wrong number of arguments");
-						p_out.println(m_game.getBridgeHand().toString());
-					}
-					break;
-
-					case OPTIONS:
-					{
-						if (args.length != 3)
-							throw new IllegalArgumentException("Wrong number of arguments");
-						int idx = 0;
-						Direction direction = Direction.fromString(args[++idx]);
-						KeyboardController kbdController = m_game.getKeyboardControllers().get(direction);
-						int options = Integer.parseInt(args[++idx], 2);
-						if (kbdController != null) kbdController.send_options(0, options);
-					}
-					break;
-						
-					case MODE:
-					{
-						if (args.length != 3)
-							throw new IllegalArgumentException("Wrong number of arguments");
-						int idx = 0;
-						Direction direction = Direction.fromString(args[++idx]);
-						KeyboardController kbdController = m_game.getKeyboardControllers().get(direction);
-						int mode = Integer.parseInt(args[++idx]);
-						if (kbdController != null) kbdController.send_options(1, mode);
-					}
-					break;
-						
-					case UNDO:
-					{
-						if ((args.length != 1) && (args.length != 2))
-							throw new IllegalArgumentException("Wrong number of arguments");
-						boolean confirmed = (args.length == 2);
-						m_game.getBridgeHand().evt_undo(confirmed);
-					}
-					break;
-
-					case REDO:
-					{
-						if ((args.length != 1) && (args.length != 2))
-							throw new IllegalArgumentException("Wrong number of arguments");
-						boolean confirmed = (args.length == 2);
-						m_game.getBridgeHand().evt_redo(confirmed);
-					}
-					break;
-
-					case HELP:
-					{
-						printHelp(p_out);
-					}
-					break;
-					
-					default:
-						break;
-				}
+				cmd = CommandController.BridgeCommand.valueOf(args[0].toUpperCase());
 			}
 			catch (Exception e)
 			{
-				p_out.print("Error: ");
-				p_out.println(e.getMessage());
-				e.printStackTrace(p_out);
-				if (cmd != null) p_out.println(cmd.getDescription());
-				else printHelp(p_out);
+				m_output.println("Unknown command: " + cmd + " Enter help to list commands");
+				return;
 			}
+			
+			switch (cmd)
+			{
+				case SHOWKBDS:
+				{
+					int idx = 0;
+					m_output.println("Keyboards:");
+					for (KeyboardController kbdController : m_game.getKeyboardControllers().values())
+					{
+						String dir = "" + kbdController.getMyPosition();
+						String portName = (kbdController.m_serialPort == null ? "null" : kbdController.m_serialPort.getPortName());
+						m_output.println("  " + idx + ": " + dir + " (" + portName + ")");
+						++idx;
+					}
+				}
+				break;
+				
+				case REINITPOS:
+				{ // change the position of a keyboard
+					if (args.length != 1)
+						throw new IllegalArgumentException("Wrong number of arguments");
+					m_game.evt_resetControllerPositions();
+				}
+				break;
+					
+				case QUIT:
+				{ // change the position of a keyboard
+					if (args.length != 1)
+						throw new IllegalArgumentException("Wrong number of arguments");
+					m_game.evt_exit();
+				}
+				break;
+					
+				case SHOWANTS:
+				{
+					int idx = 0;
+					m_output.println("Antennas:");
+					for (AntennaController antennaController : m_game.getAntennaControllers().values())
+					{
+						String dir = "" + antennaController.getMyPosition();
+						String portName = (antennaController.m_serialPort == null ? "null" : antennaController.m_serialPort.getPortName());
+						m_output.println("  " + idx + ": " + dir + " (" + portName + ")");
+						++idx;
+					}
+				}
+				break;
+				
+				/*
+				case ANTPOS:
+				{ // change the position of an antenna
+					if (args.length != 3)
+						throw new IllegalArgumentException("Wrong number of arguments");
+					int idx = 0;
+					int antIndex = Integer.parseInt(args[++idx]);
+					if (antIndex < 0 || antIndex >= m_antennaControllerList.size())
+						throw new IllegalArgumentException("Invalid antIndex: " + antIndex);
+					Direction direction = Direction.fromString(args[++idx]);
+					AntennaController antennaController = m_antennaControllerList.get(antIndex);
+					m_antennaControllers.remove(antennaController.getMyPosition());
+					antennaController.setPlayer(direction);
+					m_antennaControllers.put(direction, antennaController);
+				}
+				break;
+				*/
+					
+				case NEWHAND:
+				{
+					m_game.evt_startNewHand();
+				}
+				break;
+					
+				case CONTRACT:
+				{
+					if (args.length != 4)
+						throw new IllegalArgumentException("Wrong number of arguments");
+					int idx = 0;
+					Direction direction = Direction.fromString(args[++idx]);
+					int numTricks = Integer.parseInt(args[++idx]);
+					if (numTricks < 0 || numTricks > 7)
+						throw new IllegalArgumentException("Invalid numTricks: " + numTricks);
+					Suit suit = Suit.valueOf(args[++idx].toUpperCase());
+					Contract contract = new Contract(direction, suit, numTricks);
+					m_game.getBridgeHand().evt_setContract(contract);
+				}
+				break;
+
+				case PLAY:
+				{
+					if (args.length != 3)
+						throw new IllegalArgumentException("Wrong number of arguments");
+					int idx = 0;
+					Direction direction = Direction.fromString(args[++idx]);
+					Card card = new Card(args[++idx]);
+					m_game.getBridgeHand().evt_playCard(direction, card);
+				}
+				break;
+					
+				case REOPEN:
+				{
+					if (args.length == 1)
+					{
+						m_game.reopenAllPorts();
+						break;
+					}
+					if (args.length != 2)
+						throw new IllegalArgumentException("Wrong number of arguments");
+					int idx = 0;
+					Direction direction = Direction.fromString(args[++idx]);
+					KeyboardController kbdController = m_game.getKeyboardControllers().get(direction); 
+					if (kbdController != null)
+					{
+						kbdController.reopen();
+					}
+				}
+				break;
+					
+				case REOPENANT:
+				{
+					if (args.length != 2)
+						throw new IllegalArgumentException("Wrong number of arguments");
+					int idx = 0;
+					Direction direction = Direction.fromString(args[++idx]);
+					AntennaController antController = m_game.getAntennaControllers().get(direction); 
+					if (antController != null)
+					{
+						antController.reopen();
+					}
+				}
+				break;
+					
+				case RESET:
+				{
+					if (args.length != 2)
+						throw new IllegalArgumentException("Wrong number of arguments");
+					int idx = 0;
+					Direction direction = Direction.fromString(args[++idx]);
+					KeyboardController kbdController = m_game.getKeyboardControllers().get(direction); 
+					if (kbdController != null) kbdController.send_simpleMessage(KBD_MESSAGE.START_RELOAD);
+				}
+				break;
+					
+				case CANCELRESET:
+				{	// should not be necessary; ensures audio is enabled
+					if (args.length != 2)
+						throw new IllegalArgumentException("Wrong number of arguments");
+					int idx = 0;
+					Direction direction = Direction.fromString(args[++idx]);
+					KeyboardController kbdController = m_game.getKeyboardControllers().get(direction); 
+					if (kbdController != null) kbdController.send_reloadFinished();
+				}
+				break;
+					
+				case DEAL:
+				{
+					if (args.length != 1 && args.length != 2)
+						throw new IllegalArgumentException("Wrong number of arguments");
+					int idx = 0;
+					int testHand = -1;
+					if (args.length == 2)
+					{
+						testHand = Integer.parseInt(args[++idx]);
+						if (testHand < 0 || testHand >=  BridgeHand.m_testHand.length)
+						throw new IllegalArgumentException("Invalid testHand: " + testHand);
+					}
+					m_game.getBridgeHand().evt_dealHands(testHand);
+				}
+				break;
+					
+				case B:
+				{
+					if (args.length != 3)
+						throw new IllegalArgumentException("Wrong number of arguments");
+					int idx = 0;
+					Direction direction = Direction.fromString(args[++idx]);
+					KeyboardController kbdController = m_game.getKeyboardControllers().get(direction); 
+					if (kbdController != null) kbdController.send_pressButton(args[++idx]);
+				}
+				break;
+					
+				case S:
+				{
+					if (args.length != 3)
+						throw new IllegalArgumentException("Wrong number of arguments");
+					int idx = 0;
+					Direction direction = Direction.fromString(args[++idx]);
+					Card card = new Card(args[++idx]);
+					AntennaController antController = m_game.getAntennaControllers().get(direction); 
+					if (antController != null)
+					{
+						m_output.println("Ant[" + direction + "] " + antController.processCardPresentEvent(card));
+						m_output.println("Ant[" + direction + "] " + antController.processCardRemovedEvent());
+					}
+						
+				}
+				break;
+					
+				case PRINTHAND:
+				{
+					if (args.length != 2)
+						throw new IllegalArgumentException("Wrong number of arguments");
+					int idx = 0;
+					String dirString = args[++idx];
+					if (dirString.toUpperCase().equals("A"))
+					{
+						for (Direction direction : Direction.values())
+						{
+							printHand(m_output, direction);
+						}
+					}
+					else
+					{
+						Direction direction = Direction.fromString(dirString);
+						printHand(m_output, direction);
+					}
+				}
+				break;
+				
+				case PRINTSTATE:
+				{
+					if (args.length != 1)
+						throw new IllegalArgumentException("Wrong number of arguments");
+					m_output.println(m_game.getBridgeHand().toString());
+				}
+				break;
+
+				case OPTIONS:
+				{
+					if (args.length != 3)
+						throw new IllegalArgumentException("Wrong number of arguments");
+					int idx = 0;
+					Direction direction = Direction.fromString(args[++idx]);
+					KeyboardController kbdController = m_game.getKeyboardControllers().get(direction);
+					int options = Integer.parseInt(args[++idx], 2);
+					if (kbdController != null) kbdController.send_options(0, options);
+				}
+				break;
+					
+				case MODE:
+				{
+					if (args.length != 3)
+						throw new IllegalArgumentException("Wrong number of arguments");
+					int idx = 0;
+					Direction direction = Direction.fromString(args[++idx]);
+					KeyboardController kbdController = m_game.getKeyboardControllers().get(direction);
+					int mode = Integer.parseInt(args[++idx]);
+					if (kbdController != null) kbdController.send_options(1, mode);
+				}
+				break;
+					
+				case UNDO:
+				{
+					if ((args.length != 1) && (args.length != 2))
+						throw new IllegalArgumentException("Wrong number of arguments");
+					boolean confirmed = (args.length == 2);
+					m_game.getBridgeHand().evt_undo(confirmed);
+				}
+				break;
+
+				case REDO:
+				{
+					if ((args.length != 1) && (args.length != 2))
+						throw new IllegalArgumentException("Wrong number of arguments");
+					boolean confirmed = (args.length == 2);
+					m_game.getBridgeHand().evt_redo(confirmed);
+				}
+				break;
+
+				case HELP:
+				{
+					printHelp(m_output);
+				}
+				break;
+				
+				default:
+					break;
+			}
+		}
+		catch (Exception e)
+		{
+			m_output.print("Error: ");
+			m_output.println(e.getMessage());
+			e.printStackTrace(m_output);
+			if (cmd != null) m_output.println(cmd.getDescription());
+			else printHelp(m_output);
 		}
 	}
 
