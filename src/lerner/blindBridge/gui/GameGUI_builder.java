@@ -123,7 +123,7 @@ public class GameGUI_builder
             @Override
             public void run()
             {
-            		m_splitPane.setDividerLocation(1.0d);
+            		m_splitPane.setDividerLocation(0.97d);
             }
         });
     }
