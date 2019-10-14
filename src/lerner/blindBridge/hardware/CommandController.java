@@ -12,6 +12,7 @@ import lerner.blindBridge.model.BridgeHand;
 import lerner.blindBridge.model.Card;
 import lerner.blindBridge.model.Contract;
 import lerner.blindBridge.model.Direction;
+import lerner.blindBridge.model.GameListener;
 import lerner.blindBridge.model.PlayerHand;
 import lerner.blindBridge.model.Suit;
 
@@ -40,6 +41,7 @@ public class CommandController implements Runnable
 		, ANTPOS("Move an antenna to a new position: idx (from SHOWANTS) newPosition)")
 		, B("Simulates pressing a keyboard controller button for testing: kbdPosition buttonName")
 		, CANCELRESET("Send reset finished to ensure that audio is enabled: kbdPosition")
+		, CLOSE("Close the console display pane")
 		, CONTRACT("Set contract: position numTricks suit")
 		, DEAL("Deals a random or predefined hand and simulates scanning: [predefined hand #]")
 		, MODE("Sets the keyboard controller mode: kbdPosition modeNumber")
@@ -373,6 +375,16 @@ public class CommandController implements Runnable
 					Direction direction = Direction.fromString(args[++idx]);
 					KeyboardController kbdController = m_game.getKeyboardControllers().get(direction); 
 					if (kbdController != null) kbdController.send_reloadFinished();
+				}
+				break;
+					
+				case CLOSE:
+				{	
+					// notify all listeners we have entered this state
+					for (GameListener gameListener : m_game.getGameListeners())
+					{
+						gameListener.sig_closeConsole();
+					}
 				}
 				break;
 					

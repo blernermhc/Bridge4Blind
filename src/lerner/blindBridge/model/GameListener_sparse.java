@@ -25,6 +25,15 @@ public interface GameListener_sparse extends GameListener
 	}
 
 	/* (non-Javadoc)
+	 * @see lerner.blindBridge.model.GameListener#sig_closeConsole()
+	 */
+	@Override
+	public default void sig_closeConsole ()
+	{
+		// nothing to do
+	}
+
+	/* (non-Javadoc)
 	 * @see lerner.blindBridge.model.GameListener#sig_initializing()
 	 */
 	@Override

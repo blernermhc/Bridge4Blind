@@ -117,14 +117,16 @@ public class GameGUI_builder
     /***********************************************************************
      * Invoke after display is visible so we can set divider to initially hide console.
      ***********************************************************************/
-    public void restoreDefaults()
+    public void restoreDefaults(boolean p_open)
     {
         SwingUtilities.invokeLater(new Runnable() {
 
             @Override
             public void run()
             {
-            		m_splitPane.setDividerLocation(0.97d);
+            		double proportionalLocation = 0d;
+            		if (! p_open) proportionalLocation = 0.97d;
+            		m_splitPane.setDividerLocation(proportionalLocation);
             }
         });
     }
@@ -137,7 +139,7 @@ public class GameGUI_builder
 	{
 		//JPanel southPanel = new JPanel(new GridLayout(1, 0));
 		JPanel southPanel = new JPanel(new FlowLayout());
-		//southPanel.add(createConsoleButtonPanel());
+		southPanel.add(createConsoleButtonPanel());
 		southPanel.add(createUndoButtonPanel());
 		southPanel.add(createRedoButtonPanel());
 		southPanel.add(createHelpButtonPanel());
@@ -453,10 +455,7 @@ public class GameGUI_builder
 			@Override
 			public void actionPerformed ( ActionEvent evt )
 			{
-				if (m_consolePanel == null) return;
-				m_consolePanel.setVisible(! m_consolePanel.isVisible());
-				
-				System.out.println("createConsoleButton: set visible to " + m_consolePanel.isVisible());
+				restoreDefaults(true);  // open console
 			}
 
 		});

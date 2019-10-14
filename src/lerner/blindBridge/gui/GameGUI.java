@@ -109,7 +109,7 @@ public class GameGUI extends JFrame implements GameListener_sparse
 		this.setVisible(true);
 		this.requestFocusInWindow();
 
-		m_gameGUI_builder.restoreDefaults();
+		m_gameGUI_builder.restoreDefaults(false);
 		
 		// System.out.println("current screen initially " + currentScreen);
 
@@ -225,6 +225,16 @@ public class GameGUI extends JFrame implements GameListener_sparse
 	//--------------------------------------------------
 	// Game Event Signal Handlers
 	//--------------------------------------------------
+
+	/***********************************************************************
+	 * Close display console
+	 ***********************************************************************/
+	@Override
+	public void sig_closeConsole()
+	{
+		m_gameGUI_builder.restoreDefaults(false);
+	}
+	
 
 	/**
 	 * Adds a message to the debugging panel

@@ -22,6 +22,11 @@ public interface GameListener
 	 */
 	public void sig_initializing();
 	
+	/***********************************************************************
+	 * Called to close display command console
+	 ***********************************************************************/
+	public void sig_closeConsole ();
+	
 	/**
 	 * Called when beginning a new hand
 	 */

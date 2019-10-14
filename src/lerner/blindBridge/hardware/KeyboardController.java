@@ -1259,6 +1259,15 @@ public class KeyboardController extends JSSCSerialController implements Runnable
 	}
 
 	/* (non-Javadoc)
+	 * @see model.GameListener#sig_closeConsole()
+	 */
+	@Override
+	public void sig_closeConsole ( )
+	{
+		// nothing to do
+	}
+
+	/* (non-Javadoc)
 	 * @see model.GameListener#sig_initializing()
 	 */
 	public void sig_initializing ()
